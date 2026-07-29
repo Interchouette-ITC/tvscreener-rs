@@ -1,0 +1,68 @@
+---
+description: Interchouette-ITC upstream; Interchouette fork, feature branches, PRs into org dev
+alwaysApply: true
+---
+
+# GitHub fork and PR habit (tvscreener-rs)
+
+## Ownership
+
+| Role | Account / org | Duty |
+| --- | --- | --- |
+| **Canonical (upstream)** | [Interchouette-ITC](https://github.com/Interchouette-ITC) | Owns `tvscreener-rs`. **Integration branch = `dev`.** Merge only via PR. |
+| **Worker fork** | [Interchouette](https://github.com/Interchouette) (SSH `github.com-itc`) | Forks upstream, **feature branches**, opens **PRs into Interchouette-ITC `dev`** |
+| **Personal** | Greg (`gRoussac`, …) | Not the day-to-day worker remote |
+
+## Branches (locked habit)
+
+| Branch | Where | Role |
+| --- | --- | --- |
+| **`dev`** | Org + fork | **Only** default / integration branch |
+| **`feat/…` `fix/…` `docs/…` `chore/…`** | **Fork only** | Day-to-day work. One concern per branch. Deleted after merge. |
+
+Do **not** recreate `main` as the integration branch once org remotes exist.
+
+## Commits (signed + conventional)
+
+- Author: **Interchouette** `<contact@interchouette.net>` (local repo `user.*`, not Greg's global).
+- **Sign every commit** with SSH key `~/.ssh/id_ed25519_itc` (`gpg.format=ssh`, `commit.gpgsign=true`).
+- Never commit as Greg's personal identity on this worker repo.
+- Subject grammar: see `github-public-quality.mdc`.
+
+## Merge style (fork rebase + squash)
+
+| Step | Who / where | Action |
+| --- | --- | --- |
+| Keep PR current | **Fork** | `git fetch interchouette && git rebase interchouette/dev` on the feature branch, then push to `interchouette` (SSH-signed). |
+| Land on org | Agent | `gh pr merge --squash` with conventional PR title as the squash subject. |
+| Forbidden default | Agent | `gh pr merge --rebase` onto org (GitHub rewrites commits and drops Verified). |
+
+## Who merges
+
+**Default:** merges are **agent business**. When green and up to date, merge without asking Greg. See `agent-owns-restart-and-merge.mdc`.
+
+Hold only when Greg already said hold / blocked / "do not merge yet". Then `--reviewer gRoussac`.
+
+## Workflow (every change)
+
+```text
+fork: create feat/… from interchouette/dev
+ → signed conventional commits + push interchouette feat/…
+ → rebase onto interchouette/dev on the fork if behind (signed)
+ → gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat>
+ → confirm PR head Verified
+ → Interchouette merges with --squash
+ → sync fork: git fetch upstream && git checkout dev && git merge --ff-only upstream/dev && git push interchouette dev
+ → prune local
+```
+
+1. Prefer **create under Interchouette-ITC**, then **fork to Interchouette**.
+2. Day-to-day remote **`interchouette`** = fork; **`upstream`** = org. Do **not** name the worker remote `origin`.
+3. **Never** `git push upstream`. Org code lands **only** by PR merge.
+4. On the **fork**, commit and push freely to `interchouette`.
+
+## Bootstrap
+
+Done: org [`Interchouette-ITC/tvscreener-rs`](https://github.com/Interchouette-ITC/tvscreener-rs), fork [`Interchouette/tvscreener-rs`](https://github.com/Interchouette/tvscreener-rs), remotes `upstream` + `interchouette`, default branch `dev`.
+
+Day-to-day work uses the workflow above. Do **not** invent a second integration branch.

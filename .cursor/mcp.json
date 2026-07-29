@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "tvscreener-rs": {
+      "command": "target/debug/tvscreener-mcp",
+      "args": []
+    },
+    "github-tvscreener": {
+      "command": "bash",
+      "args": ["scripts/github-mcp.sh"]
+    }
+  }
+}

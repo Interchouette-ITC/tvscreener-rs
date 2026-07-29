@@ -1,0 +1,88 @@
+[package]
+name = "tvscreener"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.85"
+license = "Apache-2.0"
+description = "Rust port of deepentropy/tvscreener - unofficial TradingView Screener API client"
+readme = "README.md"
+keywords = ["tradingview", "screener", "finance", "crypto", "stocks"]
+categories = ["api-bindings", "finance"]
+repository = "https://github.com/deepentropy/tvscreener"
+documentation = "https://deepentropy.github.io/tvscreener/docs/"
+authors = ["tvscreener-rs contributors"]
+
+[lib]
+name = "tvscreener"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tvscreener"
+path = "src/bin/tvscreener/main.rs"
+
+[[bin]]
+name = "tvscreener-mcp"
+path = "src/bin/tvscreener_mcp.rs"
+required-features = ["mcp"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+regex = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+
+[features]
+default = []
+# Enables `tests/e2e/live.rs` (POST to scanner.tradingview.com).
+live = []
+# Builds `tvscreener-mcp` (`mcpkit`).
+mcp = ["dep:mcpkit"]
+
+[dependencies.mcpkit]
+version = "0.7"
+optional = true
+
+[[example]]
+name = "example_crypto"
+path = "examples/example_crypto.rs"
+
+[[example]]
+name = "manual_test"
+path = "examples/manual_test.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+opt-level = "s"
+
+[package.metadata.docs.rs]
+all-features = false
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[test]]
+name = "unit_basic"
+path = "tests/unit/basic.rs"
+
+[[test]]
+name = "e2e_live"
+path = "tests/e2e/live.rs"
+required-features = ["live"]
+
+[[test]]
+name = "cli_live"
+path = "tests/e2e/cli_live.rs"
+required-features = ["live"]
