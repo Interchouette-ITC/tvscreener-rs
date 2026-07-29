@@ -8,54 +8,71 @@ Size-optimized multi-stage build → `debian:bookworm-slim` runtime (ca-certific
 | TLS        | rustls + `ca-certificates` (no OpenSSL package)             |
 | Compose    | `docker-compose.prod.yml` / `docker-compose.test.yml`       |
 
-## Registries
+## Where to pull images (public)
 
-| Registry | Image |
-| -------- | ----- |
-| Docker Hub | [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs) |
-| GHCR (personal) | `ghcr.io/groussac/tvscreener-rs` ([packages](https://github.com/gRoussac?tab=packages)) |
-| GHCR (worker) | `ghcr.io/interchouette/tvscreener-rs` ([packages](https://github.com/Interchouette?tab=packages)) |
-| GHCR (org) | `ghcr.io/interchouette-itc/tvscreener-rs` ([packages](https://github.com/orgs/Interchouette-ITC/packages)) |
+| Registry | Image | Packages page |
+| -------- | ----- | ------------- |
+| Docker Hub | `gregoshop/tvscreener-rs` | [hub.docker.com/r/gregoshop/tvscreener-rs](https://hub.docker.com/r/gregoshop/tvscreener-rs) |
+| GHCR | `ghcr.io/interchouette/tvscreener-rs` | [Interchouette packages](https://github.com/Interchouette?tab=packages) |
+| GHCR | `ghcr.io/interchouette-itc/tvscreener-rs` | [Interchouette-ITC packages](https://github.com/orgs/Interchouette-ITC/packages) |
+
+```bash
+docker pull gregoshop/tvscreener-rs:dev
+docker pull ghcr.io/interchouette/tvscreener-rs:dev
+docker pull ghcr.io/interchouette-itc/tvscreener-rs:dev
+```
+
+GHCR packages are **private by default**. After the first push, set each package to **Public** once in Package settings → Change visibility (UI only; no API). Docker Hub `gregoshop/tvscreener-rs` is public.
 
 ## Tags
 
 | Tag | Who pushes | When |
 | --- | ---------- | ---- |
-| `:dev` | You (local `make`) or Actions `workflow_dispatch` | On demand |
-| `:X.Y.Z` | GitHub Actions on **Release** | Tag must be `vX.Y.Z` matching `Cargo.toml` |
+| `:dev` | Local `make` or Actions `workflow_dispatch` (“CI/CD Image dev”) | On demand |
+| `:X.Y.Z` | GitHub Actions on **Release** | Tag `vX.Y.Z` must match `Cargo.toml` |
 | `:latest` | Same release workflow | Moves with each release |
+
+## Release status
+
+| Piece | Status |
+| ----- | ------ |
+| CI (audit, lint, test, artifacts, rustdoc pages) | Live on `dev` |
+| Manual `:dev` image push (Hub + GHCR) | Live; tested |
+| Versioned release images `:X.Y.Z` + `:latest` | Ready when you cut a GitHub Release |
+| Release binaries (`tvscreener`, `tvscreener-mcp`) | Attached on that same Release |
+
+To cut a release:
+
+1. `make version-show` (or bump with `make version-bump-patch` etc.)
+2. Merge version bump to `dev` if needed
+3. Create a GitHub Release with tag **`v$(APP_VERSION)`** (must equal `Cargo.toml`)
+4. Workflow pushes Hub + GHCR tags and attaches Linux binaries
 
 ## Local build / push `:dev`
 
 ```bash
 make docker-build-dev
-make docker-push-dev          # Hub login, then personal GHCR, then Interchouette GHCR
+make docker-push-dev
 ```
-
-## Release images (GitHub-owned)
-
-1. `make version-show` / `make version-bump-patch` (etc.)
-2. Create a GitHub Release with tag `v$(APP_VERSION)` (must match `Cargo.toml`)
-3. Workflow pushes `:X.Y.Z` and `:latest` to Hub + all three GHCR namespaces
 
 ## Other make targets
 
 ```bash
-make docker-build             # :latest + :$(APP_VERSION) on Hub name
-make docker-run               # compose prod up -d
-make docker-run-test          # compose test up (foreground)
+make docker-build
+make docker-run
+make docker-run-test
 make docker-stop
 make docker-build-no-cache
 make docker-inspect
 make version-show
 ```
 
-## Secrets (repo secrets on Interchouette-ITC/tvscreener-rs)
+## Secrets (repo secrets)
 
 | Secret | Use |
 | ------ | --- |
 | `DOCKER_USERNAME` / `DOCKER_PASSWORD` | Docker Hub |
-| `GHCR_USERNAME` / `GHCR_PAT` | `ghcr.io/groussac/...` (personal) |
+| `GHCR_USERNAME` / `GHCR_PAT` | Extra personal GHCR mirror (optional for docs) |
 | `GHCR_USERNAME_ITC` / `GHCR_PAT_ITC` | `ghcr.io/interchouette/...` and `ghcr.io/interchouette-itc/...` |
 
 ## Entrypoint behavior
@@ -65,7 +82,6 @@ Build with `--features mcp`.
 
 ## Notes
 
-- `data/fields.json` is compiled in via `include_str!` - not copied into the runtime layer.
-- Binary is `strip`’d; release profile uses `lto`, `codegen-units=1`, `opt-level=s`, `panic=abort`.
-- Builder caches crate deps in a dummy layer before copying real `src/` / `data/`.
-- Runtime stays slim: only `ca-certificates` + non-root user.
+- `data/fields.json` is compiled in via `include_str!`.
+- Binary is stripped; release profile uses `lto`, `codegen-units=1`, `opt-level=s`, `panic=abort`.
+- Runtime: `ca-certificates` + non-root user.

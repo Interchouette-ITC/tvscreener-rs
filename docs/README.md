@@ -127,7 +127,7 @@ cargo doc --no-deps --open
 
 ## Docker (Hub + GHCR)
 
-Size-optimized multi-stage image (`docker/Dockerfile`) → `debian:bookworm-slim` (ca-certificates + non-root), stripped `tvscreener-mcp` binary, rustls (no OpenSSL packages).
+Public pulls: Docker Hub `gregoshop/tvscreener-rs`, `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`.
 
 ```bash
 make docker-build-dev && make docker-push-dev   # :dev on demand
