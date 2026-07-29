@@ -4,7 +4,7 @@ Size-optimized multi-stage build → `debian:bookworm-slim` runtime (ca-certific
 
 | Item       | Value                                                 |
 | ---------- | ----------------------------------------------------- |
-| Image      | `gregoshop/tvscreener-rs`                             |
+| Image      | [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs) |
 | Entrypoint | `/usr/local/bin/tvscreener-mcp` (stdio MCP)           |
 | TLS        | rustls + `ca-certificates` (no OpenSSL package)       |
 | Tags       | `:latest` and `:$(APP_VERSION)` from `Cargo.toml`     |
