@@ -1,5 +1,5 @@
 ---
-description: Interchouette-ITC upstream; Interchouette fork, feature branches, PRs into org dev
+description: Interchouette-ITC upstream; Interchouette fork; PRs need gRoussac Approve
 alwaysApply: true
 ---
 
@@ -11,7 +11,7 @@ alwaysApply: true
 | --- | --- | --- |
 | **Canonical (upstream)** | [Interchouette-ITC](https://github.com/Interchouette-ITC) | Owns `tvscreener-rs`. **Integration branch = `dev`.** Merge only via PR. |
 | **Worker fork** | [Interchouette](https://github.com/Interchouette) (SSH `github.com-itc`) | Forks upstream, **feature branches**, opens **PRs into Interchouette-ITC `dev`** |
-| **Personal** | Greg (`gRoussac`, …) | Not the day-to-day worker remote |
+| **Personal** | Greg (`gRoussac`, …) | **Approve** = merge gate (same idea as publications BAT). Not the day-to-day worker remote |
 
 ## Branches (locked habit)
 
@@ -34,14 +34,18 @@ Do **not** recreate `main` as the integration branch once org remotes exist.
 | Step | Who / where | Action |
 | --- | --- | --- |
 | Keep PR current | **Fork** | `git fetch interchouette && git rebase interchouette/dev` on the feature branch, then push to `interchouette` (SSH-signed). |
-| Land on org | Agent | `gh pr merge --squash` with conventional PR title as the squash subject. |
+| Reviewer | Every PR | Always `--reviewer gRoussac` |
+| Merge gate | **gRoussac Approve** | Comments = babysit only. Never merge without Approve. |
+| Land on org | After Approve | `gh pr merge --squash` with conventional PR title as the squash subject. |
 | Forbidden default | Agent | `gh pr merge --rebase` onto org (GitHub rewrites commits and drops Verified). |
 
-## Who merges
+```bash
+gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat> --reviewer gRoussac
+# or on an existing PR:
+gh pr edit <n> --repo Interchouette-ITC/tvscreener-rs --add-reviewer gRoussac
+```
 
-**Default:** merges are **agent business**. When green and up to date, merge without asking Greg. See `agent-owns-restart-and-merge.mdc`.
-
-Hold only when Greg already said hold / blocked / "do not merge yet". Then `--reviewer gRoussac`.
+CODEOWNERS: `* @gRoussac` in repo-root `CODEOWNERS` (`.github/` is the local creds symlink, gitignored).
 
 ## Workflow (every change)
 
@@ -49,9 +53,9 @@ Hold only when Greg already said hold / blocked / "do not merge yet". Then `--re
 fork: create feat/… from interchouette/dev
  → signed conventional commits + push interchouette feat/…
  → rebase onto interchouette/dev on the fork if behind (signed)
- → gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat>
+ → gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat> --reviewer gRoussac
  → confirm PR head Verified
- → Interchouette merges with --squash
+ → wait gRoussac Approve, then --squash
  → sync fork: git fetch upstream && git checkout dev && git merge --ff-only upstream/dev && git push interchouette dev
  → prune local
 ```
@@ -66,3 +70,9 @@ fork: create feat/… from interchouette/dev
 Done: org [`Interchouette-ITC/tvscreener-rs`](https://github.com/Interchouette-ITC/tvscreener-rs), fork [`Interchouette/tvscreener-rs`](https://github.com/Interchouette/tvscreener-rs), remotes `upstream` + `interchouette`, default branch `dev`.
 
 Day-to-day work uses the workflow above. Do **not** invent a second integration branch.
+
+## Do not
+
+- Merge without **gRoussac** Approve.
+- Open a PR without requesting **gRoussac**.
+- Rely on Cursor chat alone for Approve (use GitHub review + `--reviewer gRoussac`).
