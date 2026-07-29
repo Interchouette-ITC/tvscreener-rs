@@ -14,6 +14,7 @@ Size-optimized multi-stage build → `debian:bookworm-slim` runtime (ca-certific
 | -------- | ----- |
 | Docker Hub | [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs) |
 | GHCR (personal) | `ghcr.io/groussac/tvscreener-rs` ([packages](https://github.com/gRoussac?tab=packages)) |
+| GHCR (worker) | `ghcr.io/interchouette/tvscreener-rs` ([packages](https://github.com/Interchouette?tab=packages)) |
 | GHCR (org) | `ghcr.io/interchouette-itc/tvscreener-rs` ([packages](https://github.com/orgs/Interchouette-ITC/packages)) |
 
 ## Tags
@@ -28,15 +29,14 @@ Size-optimized multi-stage build → `debian:bookworm-slim` runtime (ca-certific
 
 ```bash
 make docker-build-dev
-make docker-push-dev          # docker login (Hub); optional GHCR login
-# CI=1 skips interactive login (used by Actions)
+make docker-push-dev          # Hub login, then personal GHCR, then Interchouette GHCR
 ```
 
 ## Release images (GitHub-owned)
 
 1. `make version-show` / `make version-bump-patch` (etc.)
 2. Create a GitHub Release with tag `v$(APP_VERSION)` (must match `Cargo.toml`)
-3. Workflow `Release - Build and Push Versioned Images` pushes `:X.Y.Z` and `:latest` to Hub + both GHCR
+3. Workflow pushes `:X.Y.Z` and `:latest` to Hub + all three GHCR namespaces
 
 ## Other make targets
 
@@ -50,12 +50,13 @@ make docker-inspect
 make version-show
 ```
 
-## Secrets (Actions — fill later)
+## Secrets (repo secrets on Interchouette-ITC/tvscreener-rs)
 
 | Secret | Use |
 | ------ | --- |
 | `DOCKER_USERNAME` / `DOCKER_PASSWORD` | Docker Hub |
-| `GHCR_USERNAME` / `GHCR_PAT` | `ghcr.io` (gRoussac + Interchouette-ITC packages) |
+| `GHCR_USERNAME` / `GHCR_PAT` | `ghcr.io/groussac/...` (personal) |
+| `GHCR_USERNAME_ITC` / `GHCR_PAT_ITC` | `ghcr.io/interchouette/...` and `ghcr.io/interchouette-itc/...` |
 
 ## Entrypoint behavior
 

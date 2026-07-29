@@ -18,21 +18,34 @@ jobs:
       - name: Set up Make
         run: sudo apt-get install -y make
 
+      - name: Build Docker image :dev
+        run: make docker-build-dev
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Log in to GitHub Container Registry
+      - name: Push :dev to Docker Hub
+        run: make docker-push-dev-hub
+
+      - name: Log in to GHCR (personal / gRoussac)
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build Docker image :dev
-        run: make docker-build-dev
+      - name: Push :dev to ghcr.io/groussac
+        run: make docker-push-dev-ghcr-personal
 
-      - name: Push Docker image :dev
-        run: make docker-push-dev CI=1
+      - name: Log in to GHCR (Interchouette / ITC)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME_ITC }}
+          password: ${{ secrets.GHCR_PAT_ITC }}
+
+      - name: Push :dev to ghcr.io/interchouette and interchouette-itc
+        run: make docker-push-dev-ghcr-itc

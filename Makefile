@@ -13,7 +13,10 @@ NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
 HUB_IMAGE ?= gregoshop/tvscreener-rs
-GHCR_USER_IMAGE ?= ghcr.io/groussac/tvscreener-rs
+# gRoussac personal packages (GHCR_USERNAME / GHCR_PAT)
+GHCR_PERSONAL_IMAGE ?= ghcr.io/groussac/tvscreener-rs
+# Interchouette worker + org packages (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
+GHCR_WORKER_IMAGE ?= ghcr.io/interchouette/tvscreener-rs
 GHCR_ORG_IMAGE ?= ghcr.io/interchouette-itc/tvscreener-rs
 # Backward-compatible alias used by docker-build (Hub image).
 REGISTRY ?= gregoshop
@@ -36,7 +39,10 @@ CI ?= 0
 	run run-mcp \
 	audit deny regen-fields \
 	docker-build docker-build-no-cache docker-push \
-	docker-build-dev docker-push-dev docker-push-release \
+	docker-build-dev docker-push-dev \
+	docker-push-dev-hub docker-push-dev-ghcr-personal docker-push-dev-ghcr-itc \
+	docker-push-release docker-push-release-hub \
+	docker-push-release-ghcr-personal docker-push-release-ghcr-itc \
 	docker-run docker-run-test docker-stop docker-inspect \
 	version-show version-bump-patch version-bump-minor version-bump-major version-set \
 	clean
@@ -66,9 +72,9 @@ help:
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
 	@echo "                       e.g. make regen-fields PYTHON_ROOT=../tvscreener"
 	@echo "  make docker-build    Build $(HUB_IMAGE):$(TAG) (+ :$(APP_VERSION))"
-	@echo "  make docker-build-dev  Build and tag :dev (Hub + both GHCR names)"
-	@echo "  make docker-push-dev   Push :dev to Hub + GHCR (local or CI=1)"
-	@echo "  make docker-push-release  Push :$(APP_VERSION) + :latest (CI release; prefer GitHub Release)"
+	@echo "  make docker-build-dev  Build and tag :dev (Hub + 3 GHCR names)"
+	@echo "  make docker-push-dev   Push :dev (local interactive logins)"
+	@echo "  make docker-push-release  Tag release images (CI uses split push targets)"
 	@echo "  make docker-push     Deprecated alias → prefer docker-push-dev / GitHub Release"
 	@echo "  make docker-run      Compose prod up -d"
 	@echo "  make docker-run-test Compose test up"
@@ -233,47 +239,67 @@ docker-build-no-cache:
 		-f $(DOCKERFILE) \
 		.
 
-## Build once and retag :dev on Hub + both GHCR names (nctl-style).
+## Build once and retag :dev on Hub + all GHCR names.
 docker-build-dev:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
 		--network=host \
 		--build-arg APP_VERSION=$(APP_VERSION) \
 		-t tvscreener-rs:dev \
 		-t $(HUB_IMAGE):dev \
-		-t $(GHCR_USER_IMAGE):dev \
+		-t $(GHCR_PERSONAL_IMAGE):dev \
+		-t $(GHCR_WORKER_IMAGE):dev \
 		-t $(GHCR_ORG_IMAGE):dev \
 		-f $(DOCKERFILE) \
 		.
 
-## Push :dev. Local: interactive docker login (like push_to_docker.sh). CI=1: skip login.
-docker-push-dev:
-	@if [ "$(CI)" != "1" ]; then \
-		echo "Logging in to Docker Hub..."; \
-		docker login || { echo "Docker Hub login failed"; exit 1; }; \
-	fi
+docker-push-dev-hub:
 	docker push $(HUB_IMAGE):dev
-	@if [ "$(CI)" != "1" ]; then \
-		echo "Logging in to GHCR (optional for local)..."; \
-		if ! docker login ghcr.io; then \
-			echo "Skipping GHCR push (not logged into ghcr.io). Hub :dev pushed."; \
-			exit 0; \
-		fi; \
-	fi
-	docker push $(GHCR_USER_IMAGE):dev
+
+docker-push-dev-ghcr-personal:
+	docker push $(GHCR_PERSONAL_IMAGE):dev
+
+docker-push-dev-ghcr-itc:
+	docker push $(GHCR_WORKER_IMAGE):dev
 	docker push $(GHCR_ORG_IMAGE):dev
 
-## Push :$(APP_VERSION) and :latest to Hub + both GHCR (used by release workflow).
-docker-push-release:
-	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_USER_IMAGE):$(APP_VERSION)
-	docker tag $(HUB_IMAGE):latest $(GHCR_USER_IMAGE):latest
-	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_ORG_IMAGE):$(APP_VERSION)
-	docker tag $(HUB_IMAGE):latest $(GHCR_ORG_IMAGE):latest
+## Push :dev. Local: Hub then personal GHCR then ITC GHCR (re-login between). CI uses split targets.
+docker-push-dev:
+	@if [ "$(CI)" = "1" ]; then \
+		echo "Use docker-push-dev-hub / docker-push-dev-ghcr-personal / docker-push-dev-ghcr-itc in CI"; \
+		exit 1; \
+	fi
+	@echo "Logging in to Docker Hub..."; \
+	docker login || { echo "Docker Hub login failed"; exit 1; }
+	$(MAKE) docker-push-dev-hub
+	@echo "Logging in to GHCR as personal (gRoussac)..."; \
+	docker login ghcr.io || { echo "Skipping personal GHCR"; exit 0; }
+	$(MAKE) docker-push-dev-ghcr-personal
+	@echo "Logging in to GHCR as Interchouette (ITC)..."; \
+	docker login ghcr.io || { echo "Skipping ITC GHCR"; exit 0; }
+	$(MAKE) docker-push-dev-ghcr-itc
+
+docker-push-release-hub:
 	docker push $(HUB_IMAGE):$(APP_VERSION)
 	docker push $(HUB_IMAGE):latest
-	docker push $(GHCR_USER_IMAGE):$(APP_VERSION)
-	docker push $(GHCR_USER_IMAGE):latest
+
+docker-push-release-ghcr-personal:
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_PERSONAL_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(GHCR_PERSONAL_IMAGE):latest
+	docker push $(GHCR_PERSONAL_IMAGE):$(APP_VERSION)
+	docker push $(GHCR_PERSONAL_IMAGE):latest
+
+docker-push-release-ghcr-itc:
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_WORKER_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(GHCR_WORKER_IMAGE):latest
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_ORG_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(GHCR_ORG_IMAGE):latest
+	docker push $(GHCR_WORKER_IMAGE):$(APP_VERSION)
+	docker push $(GHCR_WORKER_IMAGE):latest
 	docker push $(GHCR_ORG_IMAGE):$(APP_VERSION)
 	docker push $(GHCR_ORG_IMAGE):latest
+
+## Tag helpers for release workflow (push is split per registry login).
+docker-push-release: docker-push-release-hub docker-push-release-ghcr-personal docker-push-release-ghcr-itc
 
 ## Deprecated for releases: Hub-only :$(TAG) + :$(APP_VERSION). Prefer docker-push-dev / GitHub Release.
 docker-push:

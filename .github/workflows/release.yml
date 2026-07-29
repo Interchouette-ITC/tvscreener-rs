@@ -50,24 +50,37 @@ jobs:
       - name: Set up Make
         run: sudo apt-get install -y make
 
+      - name: Build Docker image
+        run: make docker-build TAG=latest APP_VERSION=${{ needs.validate.outputs.version }}
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Log in to GitHub Container Registry
+      - name: Push :version and :latest to Docker Hub
+        run: make docker-push-release-hub APP_VERSION=${{ needs.validate.outputs.version }}
+
+      - name: Log in to GHCR (personal / gRoussac)
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build Docker image
-        run: make docker-build TAG=latest APP_VERSION=${{ needs.validate.outputs.version }}
+      - name: Push to ghcr.io/groussac
+        run: make docker-push-release-ghcr-personal APP_VERSION=${{ needs.validate.outputs.version }}
 
-      - name: Push :version and :latest to Hub + GHCR
-        run: make docker-push-release APP_VERSION=${{ needs.validate.outputs.version }}
+      - name: Log in to GHCR (Interchouette / ITC)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME_ITC }}
+          password: ${{ secrets.GHCR_PAT_ITC }}
+
+      - name: Push to ghcr.io/interchouette and interchouette-itc
+        run: make docker-push-release-ghcr-itc APP_VERSION=${{ needs.validate.outputs.version }}
 
   summary:
     name: Summary
@@ -80,4 +93,5 @@ jobs:
           V="${{ needs.validate.outputs.version }}"
           echo "Pushed gregoshop/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/groussac/tvscreener-rs:${V} and :latest"
+          echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"
