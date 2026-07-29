@@ -38,6 +38,9 @@ jobs:
     name: Build and Push Images
     needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +52,21 @@ jobs:
 
       - name: Set up Make
         run: sudo apt-get install -y make
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binaries
+        run: |
+          cargo build --release --bin tvscreener
+          cargo build --release --features mcp --bin tvscreener-mcp
+
+      - name: Upload binaries to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/release/tvscreener
+            target/release/tvscreener-mcp
 
       - name: Build Docker image
         run: make docker-build TAG=latest APP_VERSION=${{ needs.validate.outputs.version }}
@@ -95,3 +113,4 @@ jobs:
           echo "Pushed ghcr.io/groussac/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"
+          echo "Attached release binaries: tvscreener, tvscreener-mcp"

@@ -1,3 +1,6 @@
+permissions:
+  contents: write
+
 name: ci
 
 on:
@@ -26,6 +29,12 @@ jobs:
           profile: minimal
           components: rustfmt, clippy
 
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Audit
+        run: make audit
+
       - name: Check
         run: make check
 
@@ -34,3 +43,26 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Build release
+        run: |
+          cargo build --release --bin tvscreener
+          cargo build --release --features mcp --bin tvscreener-mcp
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvscreener-rs-binaries
+          path: |
+            target/release/tvscreener
+            target/release/tvscreener-mcp
+
+      - name: Doc
+        run: make doc
+
+      - name: Github pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: JamesIves/github-pages-deploy-action@ba1486788b0490a235422264426c45848eac35c6 #v4.4.1
+        with:
+          folder: docs/api-rust
+          commit-message: 'Deploy documentation for ${{ github.ref_name }}'
