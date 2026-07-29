@@ -44,4 +44,4 @@ async fn main() -> Result<()> {
 
 ## License
 
-[Apache-2.0](LICENSE). Cite [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener) for the original design.
+[Apache-2.0](LICENSE). Based on [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).
