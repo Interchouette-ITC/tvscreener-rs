@@ -1,26 +1,32 @@
 ---
-description: Agent owns tvscreener-rs merges without asking Greg
+description: tvscreener-rs PRs need gRoussac Approve before merge (no auto-merge)
 alwaysApply: true
 ---
 
-# Agent owns merge (tvscreener-rs) - hard
+# Merge gate (tvscreener-rs) - gRoussac Approve
 
-Greg does **not** need to agree before these. Do them yourself. Do **not** ask in chat for permission.
+tvscreener-rs is **not** agent-auto-merge. Same habit as **itcy-publications** BAT: Greg Approves, then merge.
 
 ## Merge
 
 | Repo | Agent duty |
 | --- | --- |
-| **tvscreener-rs** | When PR is green and up to date: merge (`gh pr merge --squash`). No Greg Approve required unless he said hold. |
+| **tvscreener-rs** | Open/update PRs green + up to date; always `--reviewer gRoussac`. **Do not merge** until `reviews` show **APPROVED** from **gRoussac**. Then `gh pr merge --squash`. |
 
-- Do **not** ask "OK to merge?" when green.
-- Do **not** `gh pr merge --rebase` onto org (strips Verified). Rebase on the **fork** first; then squash-merge.
-- Hold only when Greg already said "do not merge yet" / blocked: then `--reviewer gRoussac`.
+- Comments / review threads = babysit (fix, rework, Q&A). **Not** the merge gate.
+- Do **not** ask "OK to merge?" in chat as a substitute for GitHub Approve.
+- Do **not** `gh pr merge --rebase` onto org (strips Verified). Rebase on the **fork** first; then squash-merge after Approve.
 - After merge: sync fork `dev` from `upstream/dev` as usual.
 - Full checklist: `github-public-quality.mdc` + `github-fork-pr.mdc`.
+
+## Seeing approvals
+
+```bash
+gh pr view <n> --repo Interchouette-ITC/tvscreener-rs --json reviews,reviewRequests,state
+# reviews[].state == APPROVED, reviews[].author.login == gRoussac
+```
 
 ## Still ask Greg when
 
 - Secrets, logins, installs needing approval.
-- Creating the GitHub org repo / fork for the first time.
-- Explicit hold he set in chat or on the PR.
+- Explicit hold he set in chat or on the PR (beyond the standing Approve gate).
