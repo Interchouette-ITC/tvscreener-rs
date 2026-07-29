@@ -13,7 +13,7 @@ NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
 HUB_IMAGE ?= gregoshop/tvscreener-rs
-# gRoussac personal packages (GHCR_USERNAME / GHCR_PAT)
+# personal GHCR mirror (GHCR_USERNAME / GHCR_PAT)
 GHCR_PERSONAL_IMAGE ?= ghcr.io/groussac/tvscreener-rs
 # Interchouette worker + org packages (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
 GHCR_WORKER_IMAGE ?= ghcr.io/interchouette/tvscreener-rs
@@ -271,10 +271,10 @@ docker-push-dev:
 	@echo "Logging in to Docker Hub..."; \
 	docker login || { echo "Docker Hub login failed"; exit 1; }
 	$(MAKE) docker-push-dev-hub
-	@echo "Logging in to GHCR as personal (gRoussac)..."; \
+	@echo "Logging in to GHCR (personal)..."; \
 	docker login ghcr.io || { echo "Skipping personal GHCR"; exit 0; }
 	$(MAKE) docker-push-dev-ghcr-personal
-	@echo "Logging in to GHCR as Interchouette (ITC)..."; \
+	@echo "Logging in to GHCR (Interchouette / ITC)..."; \
 	docker login ghcr.io || { echo "Skipping ITC GHCR"; exit 0; }
 	$(MAKE) docker-push-dev-ghcr-itc
 
