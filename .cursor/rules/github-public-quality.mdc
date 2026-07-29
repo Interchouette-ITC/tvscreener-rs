@@ -1,0 +1,54 @@
+---
+description: Public GitHub quality, conventional commits/PRs, no plan jargon outside allowlist
+alwaysApply: true
+---
+
+# GitHub public quality (tvscreener-rs)
+
+Treat every README as if it could be public tomorrow.
+
+## Product voice
+
+- **tvscreener-rs** is an unofficial Rust TradingView Screener HTTP client (+ optional MCP).
+- **Not affiliated with TradingView.** Keep that clear; do not invent affiliation.
+
+## Sensitive / internal (keep out of README, docs, Makefile, scripts)
+
+Do **not** put these in committed product text:
+
+- Host-absolute paths (any `/…` machine layout)
+- Screen recipes, agent handoff tone
+- "Worker fork" / Cursor agent merge cuisine as the main contributor story
+- Cursor plan/stage IDs
+- Shared credential file paths
+
+## Plan jargon allowlist
+
+**Forbidden** in: code, comments, commit subjects/bodies, PR titles/bodies, README, public docs, MCP tool names/descriptions.
+
+**Allowed only** in:
+
+- `.cursor/plans/*`
+
+## Conventional commits and PRs
+
+Subject (≤72 chars):
+
+```text
+<type>(optional-scope): summary in imperative
+```
+
+Types: `feat` | `fix` | `docs` | `refactor` | `test` | `chore` | `ci`.
+
+PR title = same grammar. Body: Summary + Test plan only. Do **not** append "Made with Cursor".
+
+## Signing and merge checklist (every PR)
+
+1. Author Interchouette; every local commit SSH-signed (`commit.gpgsign=true`).
+2. On the **fork**: `git fetch interchouette && git rebase interchouette/dev`, resolve, push to `interchouette` (signed).
+3. PR up to date with org `dev`.
+4. Confirm PR head Verified.
+5. Merge: `gh pr merge --squash` (never `gh pr merge --rebase` onto org).
+6. Sync fork `dev` from `upstream/dev`.
+
+See `github-fork-pr.mdc`.

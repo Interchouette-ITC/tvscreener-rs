@@ -1,0 +1,30 @@
+# API overview
+
+Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../api-rust/tvscreener/index.html)).
+
+## Crate root
+
+| Item                         | Role                                                             |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `ScreenerRow`                | One scan row (`symbol` + label-keyed `data`)                     |
+| `Result` / `TvscreenerError` | Error type                                                       |
+| Re-exports                   | `FieldDef`, `FilterOperator`, `FieldCondition`, presets, markets |
+
+## Modules
+
+| Module    | Role                                                     |
+| --------- | -------------------------------------------------------- |
+| `core`    | `Screener` builder + six typed screeners                 |
+| `field`   | `FieldDef`, defaults, presets, markets                   |
+| `filter`  | Operators, `Filter`, `FieldCondition`, `ExtraFilter`     |
+| `util`    | URL, headers, millify, `format_value` / `format_row`     |
+| `logging` | `env_debug_enabled`; `init_logging`                      |
+| `error`   | Errors (`thiserror`)                                     |
+| `mcp`     | MCP tools + mcpkit stdio server (`feature = "mcp"` only) |
+
+## Binaries
+
+| Binary           | Make target    | Role                                                                            |
+| ---------------- | -------------- | ------------------------------------------------------------------------------- |
+| `tvscreener`     | `make run`     | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
+| `tvscreener-mcp` | `make run-mcp` | Stdio MCP (`--features mcp`). See [MCP binary](../README.md#mcp-binary-mcpkit). |

@@ -1,0 +1,7 @@
+services:
+  tvscreener-rs:
+    container_name: tvscreener-rs
+    image: gregoshop/tvscreener-rs:latest
+    stdin_open: true
+    tty: true
+    restart: "no"

@@ -1,0 +1,24 @@
+---
+description: Rust thiserror in library, anyhow at binary edge, tracing + specific # Errors
+globs: "**/*.rs"
+alwaysApply: false
+---
+
+# Rust errors and tracing (tvscreener-rs)
+
+## Errors
+
+| Layer | Tool |
+| --- | --- |
+| Library / domain (`src/` lib modules) | **`thiserror`** enums + `?` / `#[from]` |
+| Binary / process edge (`main`, MCP, CLI bins) | **`anyhow`** (`anyhow::Result` / `.context("…")`) |
+
+- Do **not** collapse typed library enums into `anyhow::Error` at the library boundary.
+- Do **not** introduce new `Box<dyn std::error::Error>` on binary mains.
+- `# Errors` rustdoc must name failure modes (variants / conditions). Forbidden boilerplate: `Returns an error when the operation fails.`
+
+## Tracing
+
+- Use `tracing::{info,warn,error,debug}!` for process logs. No `log::`. No `println!` for ops (CLI human output is fine).
+- Levels: `error!` = operator-visible failure; `warn!` = degraded / skipped; `info!` = lifecycle; `debug!` = detail.
+- Prefer `error = %err` (Display) unless Debug is required.

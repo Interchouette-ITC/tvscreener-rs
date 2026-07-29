@@ -1,0 +1,26 @@
+---
+description: Agent owns tvscreener-rs merges without asking Greg
+alwaysApply: true
+---
+
+# Agent owns merge (tvscreener-rs) - hard
+
+Greg does **not** need to agree before these. Do them yourself. Do **not** ask in chat for permission.
+
+## Merge
+
+| Repo | Agent duty |
+| --- | --- |
+| **tvscreener-rs** | When PR is green and up to date: merge (`gh pr merge --squash`). No Greg Approve required unless he said hold. |
+
+- Do **not** ask "OK to merge?" when green.
+- Do **not** `gh pr merge --rebase` onto org (strips Verified). Rebase on the **fork** first; then squash-merge.
+- Hold only when Greg already said "do not merge yet" / blocked: then `--reviewer gRoussac`.
+- After merge: sync fork `dev` from `upstream/dev` as usual.
+- Full checklist: `github-public-quality.mdc` + `github-fork-pr.mdc`.
+
+## Still ask Greg when
+
+- Secrets, logins, installs needing approval.
+- Creating the GitHub org repo / fork for the first time.
+- Explicit hold he set in chat or on the PR.

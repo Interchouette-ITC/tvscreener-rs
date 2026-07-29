@@ -1,0 +1,9 @@
+---
+description: All tvscreener-rs code, docs, and product copy default to English
+alwaysApply: true
+---
+
+# English-only (tvscreener-rs)
+
+- **Code, docs, comments, commit messages, README, MCP tool names/descriptions:** English.
+- Do not add non-English docs or UI strings unless explicitly requested.

@@ -1,0 +1,13 @@
+---
+description: Code comments describe code only - no product marketing prose
+globs: "**/*.{rs,mjs,js,ts,tsx}"
+alwaysApply: true
+---
+
+# Code Comments (tvscreener-rs)
+
+- **Comments describe the code.** Explain what the code does (inputs, outputs, invariants), not marketing or process narrative.
+- **Do not put app specs or marketing in code comments.** Put that in `docs/` - not in source.
+- **Doc comments:** One line on what the function/type does in code terms.
+- **Rust:** Use rustdoc `///` / `//!` on `pub` items. Prefer short `# Errors` / `# Panics` when Clippy requires them; keep them factual.
+- Still obey `english-only.mdc` and the global no-em-dash rule.
