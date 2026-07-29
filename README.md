@@ -151,7 +151,14 @@ make run-mcp
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
 
-Docker image (stdio MCP): `gregoshop/tvscreener-rs` — see [`docker/README.md`](docker/README.md).
+Docker image (stdio MCP): [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs) — also GHCR ([gRoussac](https://github.com/gRoussac?tab=packages), [Interchouette](https://github.com/Interchouette?tab=packages), [Interchouette-ITC](https://github.com/orgs/Interchouette-ITC/packages)). Details: [`docker/README.md`](docker/README.md).
+
+```bash
+make docker-build-dev && make docker-push-dev   # :dev when you want (local)
+# GitHub Actions → "CI/CD Image dev" (workflow_dispatch) for :dev
+# GitHub Release tag vX.Y.Z → pushes :X.Y.Z and :latest
+make version-show
+```
 
 ## Documentation
 

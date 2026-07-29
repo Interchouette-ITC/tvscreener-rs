@@ -79,6 +79,6 @@ LABEL org.opencontainers.image.title="tvscreener-rs" \
       org.opencontainers.image.vendor="gregoshop" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${APP_VERSION}" \
-      org.opencontainers.image.source="https://github.com/deepentropy/tvscreener"
+      org.opencontainers.image.source="https://github.com/Interchouette-ITC/tvscreener-rs"
 
 ENTRYPOINT ["/usr/local/bin/tvscreener-mcp"]

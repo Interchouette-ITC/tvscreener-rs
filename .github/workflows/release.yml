@@ -1,0 +1,97 @@
+name: Release - Build and Push Versioned Images
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  validate:
+    name: Validate Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Validate release tag matches Cargo.toml
+        id: extract
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format: $TAG"
+            echo "Expected: vX.Y.Z (e.g. v1.0.0)"
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          CARGO_VERSION="$(awk '/^version = /{gsub(/"/, "", $3); print $3; exit}' Cargo.toml)"
+          if [ "$VERSION" != "$CARGO_VERSION" ]; then
+            echo "Release tag version ($VERSION) does not match Cargo.toml ($CARGO_VERSION)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "OK: tag $TAG matches Cargo.toml $CARGO_VERSION"
+
+  build-and-push:
+    name: Build and Push Images
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Set up Make
+        run: sudo apt-get install -y make
+
+      - name: Build Docker image
+        run: make docker-build TAG=latest APP_VERSION=${{ needs.validate.outputs.version }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push :version and :latest to Docker Hub
+        run: make docker-push-release-hub APP_VERSION=${{ needs.validate.outputs.version }}
+
+      - name: Log in to GHCR (personal / gRoussac)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Push to ghcr.io/groussac
+        run: make docker-push-release-ghcr-personal APP_VERSION=${{ needs.validate.outputs.version }}
+
+      - name: Log in to GHCR (Interchouette / ITC)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME_ITC }}
+          password: ${{ secrets.GHCR_PAT_ITC }}
+
+      - name: Push to ghcr.io/interchouette and interchouette-itc
+        run: make docker-push-release-ghcr-itc APP_VERSION=${{ needs.validate.outputs.version }}
+
+  summary:
+    name: Summary
+    needs: [validate, build-and-push]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Summary
+        run: |
+          V="${{ needs.validate.outputs.version }}"
+          echo "Pushed gregoshop/tvscreener-rs:${V} and :latest"
+          echo "Pushed ghcr.io/groussac/tvscreener-rs:${V} and :latest"
+          echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
+          echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"

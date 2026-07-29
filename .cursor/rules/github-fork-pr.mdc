@@ -45,7 +45,7 @@ gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchoue
 gh pr edit <n> --repo Interchouette-ITC/tvscreener-rs --add-reviewer gRoussac
 ```
 
-CODEOWNERS: `* @gRoussac` in repo-root `CODEOWNERS` (`.github/` is the local creds symlink, gitignored).
+CODEOWNERS: `* @gRoussac` in repo-root `CODEOWNERS`. Creds: `.github_credentials`. Actions: `.github/workflows/`.
 
 ## Workflow (every change)
 

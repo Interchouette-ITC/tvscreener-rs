@@ -3,11 +3,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CREDS="${GITHUB_CREDS_FILE:-${ROOT}/.github}"
+CREDS="${GITHUB_CREDS_FILE:-${ROOT}/.github_credentials}"
 
 if [[ ! -f "${CREDS}" ]]; then
   echo "missing creds file: ${CREDS}" >&2
-  echo "set GITHUB_CREDS_FILE or create ${ROOT}/.github with GITHUB_TOKEN=…" >&2
+  echo "set GITHUB_CREDS_FILE or create ${ROOT}/.github_credentials with GITHUB_TOKEN=…" >&2
   exit 1
 fi
 
