@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_MAX_RANGE","DEFAULT_MIN_RANGE"],"mod":["bond","coin","crypto","forex","futures","stock"],"struct":["Screener"]};
