@@ -1,0 +1,32 @@
+# Build context helpers for docker/Dockerfile (context = repo root).
+.git
+.github
+.gitignore
+.idea
+.vscode
+**/*.rs.bk
+**/*~
+**/*.swp
+**/*.swo
+.DS_Store
+
+# Build artifacts / caches
+/target
+**/target
+/tmp
+**/.cargo-cache
+
+# Docs and plans not needed in the image
+*.md
+!README.md
+docs
+docs-dev
+
+# Tests / examples (binary image only needs src + data + manifests)
+/tests
+/examples
+/Makefile
+
+# Local tooling
+.dockerignore
+docker/*.md

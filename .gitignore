@@ -1,0 +1,14 @@
+/target/
+**/*.rs.bk
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Generated rustdoc copy (rebuild with `make doc`)
+/docs/api-rust/**
+!/docs/api-rust/README.md
+
+.github
+.cargo
