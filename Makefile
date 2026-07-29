@@ -12,12 +12,18 @@ CARGO_FLAGS ?=
 NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
+HUB_IMAGE ?= gregoshop/tvscreener-rs
+GHCR_USER_IMAGE ?= ghcr.io/groussac/tvscreener-rs
+GHCR_ORG_IMAGE ?= ghcr.io/interchouette-itc/tvscreener-rs
+# Backward-compatible alias used by docker-build (Hub image).
 REGISTRY ?= gregoshop
 TAG ?= latest
 APP_IMAGE = $(REGISTRY)/tvscreener-rs
 APP_VERSION ?= $(shell awk '/^version = /{gsub(/"/, "", $$3); print $$3; exit}' Cargo.toml)
 DOCKERFILE ?= docker/Dockerfile
 DOCKER_BUILDKIT ?= 1
+# Set CI=1 in GitHub Actions to skip interactive docker login.
+CI ?= 0
 
 .DEFAULT_GOAL := help
 
@@ -30,7 +36,9 @@ DOCKER_BUILDKIT ?= 1
 	run run-mcp \
 	audit deny regen-fields \
 	docker-build docker-build-no-cache docker-push \
+	docker-build-dev docker-push-dev docker-push-release \
 	docker-run docker-run-test docker-stop docker-inspect \
+	version-show version-bump-patch version-bump-minor version-bump-major version-set \
 	clean
 
 help:
@@ -57,16 +65,22 @@ help:
 	@echo "  make deny            cargo deny check"
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
 	@echo "                       e.g. make regen-fields PYTHON_ROOT=../tvscreener"
-	@echo "  make docker-build    Build $(APP_IMAGE):$(TAG) (+ :$(APP_VERSION))"
-	@echo "  make docker-push     Push image tags"
+	@echo "  make docker-build    Build $(HUB_IMAGE):$(TAG) (+ :$(APP_VERSION))"
+	@echo "  make docker-build-dev  Build and tag :dev (Hub + both GHCR names)"
+	@echo "  make docker-push-dev   Push :dev to Hub + GHCR (local or CI=1)"
+	@echo "  make docker-push-release  Push :$(APP_VERSION) + :latest (CI release; prefer GitHub Release)"
+	@echo "  make docker-push     Deprecated alias → prefer docker-push-dev / GitHub Release"
 	@echo "  make docker-run      Compose prod up -d"
 	@echo "  make docker-run-test Compose test up"
 	@echo "  make docker-stop     Compose prod stop"
 	@echo "  make docker-inspect  Local image tags / size"
+	@echo "  make version-show    Print Cargo.toml version + suggested release tag"
+	@echo "  make version-bump-patch|minor|major"
+	@echo "  make version-set VERSION=x.y.z"
 	@echo "  make clean           cargo clean"
 	@echo ""
 	@echo "Overrides: CARGO_BIN=…  CARGO_FLAGS=…  TVSCREENER_LIVE=0|1  TVSCREENER_DEBUG=0|1"
-	@echo "           REGISTRY=$(REGISTRY)  TAG=$(TAG)  APP_VERSION=$(APP_VERSION)  ARGS=…  PYTHON_ROOT=…"
+	@echo "           HUB_IMAGE=$(HUB_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
 
 all: verify
 
@@ -200,6 +214,8 @@ docker-build:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
 		--network=host \
 		--build-arg APP_VERSION=$(APP_VERSION) \
+		-t $(HUB_IMAGE):$(TAG) \
+		-t $(HUB_IMAGE):$(APP_VERSION) \
 		-t $(APP_IMAGE):$(TAG) \
 		-t $(APP_IMAGE):$(APP_VERSION) \
 		-f $(DOCKERFILE) \
@@ -210,14 +226,60 @@ docker-build-no-cache:
 		--no-cache \
 		--network=host \
 		--build-arg APP_VERSION=$(APP_VERSION) \
+		-t $(HUB_IMAGE):$(TAG) \
+		-t $(HUB_IMAGE):$(APP_VERSION) \
 		-t $(APP_IMAGE):$(TAG) \
 		-t $(APP_IMAGE):$(APP_VERSION) \
 		-f $(DOCKERFILE) \
 		.
 
+## Build once and retag :dev on Hub + both GHCR names (nctl-style).
+docker-build-dev:
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
+		--network=host \
+		--build-arg APP_VERSION=$(APP_VERSION) \
+		-t tvscreener-rs:dev \
+		-t $(HUB_IMAGE):dev \
+		-t $(GHCR_USER_IMAGE):dev \
+		-t $(GHCR_ORG_IMAGE):dev \
+		-f $(DOCKERFILE) \
+		.
+
+## Push :dev. Local: interactive docker login (like push_to_docker.sh). CI=1: skip login.
+docker-push-dev:
+	@if [ "$(CI)" != "1" ]; then \
+		echo "Logging in to Docker Hub..."; \
+		docker login || { echo "Docker Hub login failed"; exit 1; }; \
+	fi
+	docker push $(HUB_IMAGE):dev
+	@if [ "$(CI)" != "1" ]; then \
+		echo "Logging in to GHCR (optional for local)..."; \
+		if ! docker login ghcr.io; then \
+			echo "Skipping GHCR push (not logged into ghcr.io). Hub :dev pushed."; \
+			exit 0; \
+		fi; \
+	fi
+	docker push $(GHCR_USER_IMAGE):dev
+	docker push $(GHCR_ORG_IMAGE):dev
+
+## Push :$(APP_VERSION) and :latest to Hub + both GHCR (used by release workflow).
+docker-push-release:
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_USER_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(GHCR_USER_IMAGE):latest
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_ORG_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(GHCR_ORG_IMAGE):latest
+	docker push $(HUB_IMAGE):$(APP_VERSION)
+	docker push $(HUB_IMAGE):latest
+	docker push $(GHCR_USER_IMAGE):$(APP_VERSION)
+	docker push $(GHCR_USER_IMAGE):latest
+	docker push $(GHCR_ORG_IMAGE):$(APP_VERSION)
+	docker push $(GHCR_ORG_IMAGE):latest
+
+## Deprecated for releases: Hub-only :$(TAG) + :$(APP_VERSION). Prefer docker-push-dev / GitHub Release.
 docker-push:
-	docker push $(APP_IMAGE):$(TAG)
-	docker push $(APP_IMAGE):$(APP_VERSION)
+	@echo "note: make docker-push is Hub-only; prefer make docker-push-dev or a GitHub Release"
+	docker push $(HUB_IMAGE):$(TAG)
+	docker push $(HUB_IMAGE):$(APP_VERSION)
 
 docker-run:
 	docker compose -f $(COMPOSE_PROD) up -d --force-recreate
@@ -229,9 +291,50 @@ docker-stop:
 	docker compose -f $(COMPOSE_PROD) stop
 
 docker-inspect:
-	@docker image inspect $(APP_IMAGE):$(TAG) --format \
+	@docker image inspect $(HUB_IMAGE):$(TAG) --format \
 		'{{.RepoTags}} size={{.Size}} created={{.Created}}' 2>/dev/null \
-		|| echo "Image $(APP_IMAGE):$(TAG) not found - run make docker-build"
+		|| docker image inspect $(HUB_IMAGE):dev --format \
+			'{{.RepoTags}} size={{.Size}} created={{.Created}}' 2>/dev/null \
+		|| echo "Image not found - run make docker-build or make docker-build-dev"
+
+# ---------------------------------------------------------------------------
+# Version (Cargo.toml) — verq-style helpers; release images via GitHub Release
+# ---------------------------------------------------------------------------
+
+version-show:
+	@echo "Current version: $(APP_VERSION)"; \
+	echo ""; \
+	echo "Suggested GitHub Release tag:"; \
+	echo "  v$(APP_VERSION)"; \
+	echo ""; \
+	echo "When creating a GitHub Release, use the Tag field (not only the title)."
+
+version-bump-patch:
+	@current="$(APP_VERSION)"; \
+	new=$$(echo "$$current" | awk -F. '{print $$1"."$$2"."($$3+1)}'); \
+	sed -i "s/^version = \"$$current\"/version = \"$$new\"/" Cargo.toml; \
+	echo "Version bumped from $$current to $$new"
+
+version-bump-minor:
+	@current="$(APP_VERSION)"; \
+	new=$$(echo "$$current" | awk -F. '{print $$1"."($$2+1)".0"}'); \
+	sed -i "s/^version = \"$$current\"/version = \"$$new\"/" Cargo.toml; \
+	echo "Version bumped from $$current to $$new"
+
+version-bump-major:
+	@current="$(APP_VERSION)"; \
+	new=$$(echo "$$current" | awk -F. '{print ($$1+1)".0.0"}'); \
+	sed -i "s/^version = \"$$current\"/version = \"$$new\"/" Cargo.toml; \
+	echo "Version bumped from $$current to $$new"
+
+version-set:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Usage: make version-set VERSION=x.y.z"; \
+		exit 1; \
+	fi; \
+	current="$(APP_VERSION)"; \
+	sed -i "s/^version = \"$$current\"/version = \"$(VERSION)\"/" Cargo.toml; \
+	echo "Version set from $$current to $(VERSION)"
 
 # ---------------------------------------------------------------------------
 # Verify / clean

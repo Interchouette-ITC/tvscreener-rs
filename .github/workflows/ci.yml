@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [dev, 'feat/**', 'fix/**', 'docs/**', 'ci/**', 'chore/**']
+    branches: [dev, 'feat*', 'fix*', 'docs*', 'ci*', 'chore*']
     paths-ignore:
       - '**.md'
   pull_request:
@@ -11,19 +11,26 @@ on:
       - '**.md'
 
 jobs:
-  verify:
-    name: verify
+  build_and_test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-
-      - name: Cache cargo
+      - name: Swatinem cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Verify
-        run: make verify
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt, clippy
+
+      - name: Check
+        run: make check
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test

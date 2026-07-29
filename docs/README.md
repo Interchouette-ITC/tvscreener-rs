@@ -125,20 +125,16 @@ cargo check --bins --examples
 cargo doc --no-deps --open
 ```
 
-## Docker (Docker Hub `gregoshop/tvscreener-rs`)
+## Docker (Hub + GHCR)
 
 Size-optimized multi-stage image (`docker/Dockerfile`) → `debian:bookworm-slim` (ca-certificates + non-root), stripped `tvscreener-mcp` binary, rustls (no OpenSSL packages).
 
 ```bash
-make docker-build          # gregoshop/tvscreener-rs:latest + :1.0.0
-make docker-push           # requires docker login
-make docker-run            # compose prod up -d
-make docker-run-test       # compose test (foreground)
-make docker-stop
-make docker-inspect
+make docker-build-dev && make docker-push-dev   # :dev on demand
+make version-show                               # suggested GitHub Release tag vX.Y.Z
 ```
 
-Entrypoint is `tvscreener-mcp` (stdio MCP server; image built with `--features mcp`).
+Entrypoint is `tvscreener-mcp` (stdio MCP; `--features mcp`). Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
 
 Details: [`docker/README.md`](../docker/README.md).
 
