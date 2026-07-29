@@ -30,14 +30,14 @@ jobs:
       - name: Push :dev to Docker Hub
         run: make docker-push-dev-hub
 
-      - name: Log in to GHCR (personal / gRoussac)
+      - name: Log in to GHCR (personal)
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Push :dev to ghcr.io/groussac
+      - name: Push :dev to personal GHCR
         run: make docker-push-dev-ghcr-personal
 
       - name: Log in to GHCR (Interchouette / ITC)

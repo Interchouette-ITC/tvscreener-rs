@@ -80,14 +80,14 @@ jobs:
       - name: Push :version and :latest to Docker Hub
         run: make docker-push-release-hub APP_VERSION=${{ needs.validate.outputs.version }}
 
-      - name: Log in to GHCR (personal / gRoussac)
+      - name: Log in to GHCR (personal)
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Push to ghcr.io/groussac
+      - name: Push to personal GHCR
         run: make docker-push-release-ghcr-personal APP_VERSION=${{ needs.validate.outputs.version }}
 
       - name: Log in to GHCR (Interchouette / ITC)
@@ -110,7 +110,8 @@ jobs:
         run: |
           V="${{ needs.validate.outputs.version }}"
           echo "Pushed gregoshop/tvscreener-rs:${V} and :latest"
-          echo "Pushed ghcr.io/groussac/tvscreener-rs:${V} and :latest"
+          echo "Pushed personal GHCR :${V} and :latest"
           echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"
           echo "Attached release binaries: tvscreener, tvscreener-mcp"
+          echo "Note: set GHCR package visibility to Public once in the GitHub UI if still private"
