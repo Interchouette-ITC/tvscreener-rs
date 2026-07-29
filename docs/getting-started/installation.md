@@ -59,7 +59,7 @@ Run locally before releases (`make audit` / `make deny`).
 ## Docker
 
 ```bash
-make docker-build   # gregoshop/tvscreener-rs:latest
+make docker-build-dev   # :dev tags (Hub + GHCR names)
 ```
 
 See [docker/README.md](../../docker/README.md).

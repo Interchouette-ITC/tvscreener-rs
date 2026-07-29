@@ -10,5 +10,6 @@
 /docs/api-rust/**
 !/docs/api-rust/README.md
 
-.github
+.github_credentials
+
 .cargo
