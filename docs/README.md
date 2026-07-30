@@ -194,8 +194,7 @@ docker/
 cargo install --path .
 tvscreener --help
 tvscreener scan crypto --limit 5
-tvscreener payload crypto --limit 2
-tvscreener payload stock --preset stock_price --index SP500
+tvscreener scan stock --preset stock_price --index SP500 --limit 10
 tvscreener-mcp
 ```
 

@@ -9,7 +9,6 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 cargo install --path .
 tvscreener --help
 tvscreener scan crypto --limit 5
-tvscreener payload stock --limit 2     # print request JSON only
 tvscreener-mcp
 ```
 
