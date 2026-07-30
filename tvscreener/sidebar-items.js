@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["beautify","core","error","field","filter","logging","mcp","resolve","ta","tui","util"],"struct":["ScreenerRow"]};
+window.SIDEBAR_ITEMS = {"mod":["beautify","core","error","field","filter","logging","mcp","query_config","resolve","ta","tui","util"],"struct":["ScreenerRow"]};
