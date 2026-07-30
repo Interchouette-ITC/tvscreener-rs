@@ -53,6 +53,7 @@ From a checkout without installing, use `cargo run --bin …` or the Make shortc
 
 ```bash
 tvscreener --help
+tvscreener                              # interactive prompt (quit / exit to leave)
 tvscreener payload crypto --limit 2     # print request JSON only
 tvscreener scan crypto --limit 5        # live HTTP (table)
 tvscreener scan crypto --limit 5 --json
@@ -178,7 +179,9 @@ async fn main() -> Result<()> {
 
 ```bash
 tvscreener-mcp --help
-tvscreener-mcp
+tvscreener-mcp                          # stdio (default; Cursor / local clients)
+tvscreener-mcp --http                   # Streamable HTTP on 0.0.0.0:8787
+tvscreener-mcp --http --listen 127.0.0.1:8787
 
 # checkout shortcuts:
 make run-mcp
@@ -187,11 +190,19 @@ cargo run --bin tvscreener-mcp
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
 
-Docker image (stdio MCP), public pulls:
+Docker image (CLI + TUI + MCP HTTP on **8787**), public pulls:
 
-- Docker Hub: [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs)
+- Docker Hub: [`interchouette/tvscreener-rs`](https://hub.docker.com/r/interchouette/tvscreener-rs)
+- Docker Hub (legacy): [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs)
 - GHCR: [`ghcr.io/interchouette/tvscreener-rs`](https://github.com/Interchouette?tab=packages)
 - GHCR: [`ghcr.io/interchouette-itc/tvscreener-rs`](https://github.com/orgs/Interchouette-ITC/packages)
+
+```bash
+docker pull interchouette/tvscreener-rs:dev
+docker run -d -p 8787:8787 interchouette/tvscreener-rs:dev          # MCP HTTP only
+docker run -it -p 8787:8787 interchouette/tvscreener-rs:dev         # TUI + MCP
+docker run --rm interchouette/tvscreener-rs:dev tvscreener --help   # one-shot CLI
+```
 
 Details and tags: [`docker/README.md`](docker/README.md).
 

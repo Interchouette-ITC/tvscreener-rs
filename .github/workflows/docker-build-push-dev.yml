@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push :dev to Docker Hub
+      - name: Push :dev to Docker Hub (interchouette + gregoshop mirror)
         run: make docker-push-dev-hub
 
       - name: Log in to GHCR (personal)
