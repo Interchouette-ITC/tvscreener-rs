@@ -15,7 +15,7 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
 - **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
 - **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
-- **Optional TUI** `tvscreener-tui` (`--features tui`): results, builder, payload JSON, codegen
+- **TUI** `tvscreener-tui`: results, builder, payload JSON, codegen
 - **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
@@ -52,8 +52,7 @@ tvscreener scan crypto --limit 5        # live HTTP (table)
 tvscreener scan crypto --limit 5 --json
 tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
 tvscreener-mcp
-# TUI (needs --features tui):
-cargo run --features tui --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 # or: make run-tui ARGS='crypto --preset crypto_price --limit 10'
 ```
 
@@ -185,7 +184,7 @@ make version-show
 | [Filtering](docs/guide/filtering.md) | Operators, conditions, merge rules |
 | [Selecting fields](docs/guide/selecting-fields.md) | Columns, presets, `select_all` |
 | [Streaming](docs/guide/streaming.md) | Periodic `stream` polls |
-| [TUI](docs/guide/tui.md) | Optional Ratatui results pane (`--features tui`) |
+| [TUI](docs/guide/tui.md) | Ratatui results pane (`tvscreener-tui`) |
 | [Screeners](docs/guide/screeners.md) | All six typed clients |
 | [Manual test plan](docs/MANUAL_TEST_PLAN.md) | How to run tests |
 | [`CHANGELOG.md`](CHANGELOG.md) | Semver notes |
@@ -206,7 +205,7 @@ make help
 
 ## Origin
 
-Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, optional MCP server, and optional Ratatui TUI. See [License](#license).
+Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, MCP server, and Ratatui TUI. See [License](#license).
 
 ## License
 

@@ -129,7 +129,7 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         Line::from("  Uses OSC 52 (terminal clipboard)."),
         Line::from(""),
         Line::from(Span::styled("Launch", ACCENT.add_modifier(Modifier::BOLD))),
-        Line::from("  cargo run --features tui --bin tvscreener-tui -- crypto --limit 10"),
+        Line::from("  cargo run --bin tvscreener-tui -- crypto --limit 10"),
         Line::from("  Asset is fixed at launch; edit preset, limit, search, filters in Builder."),
     ];
     let body = Paragraph::new(lines).block(Block::default().borders(Borders::ALL).title(" Help "));
