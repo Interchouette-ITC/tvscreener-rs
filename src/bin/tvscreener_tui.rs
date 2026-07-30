@@ -1,10 +1,10 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! `tvscreener-tui` - Ratatui screener TUI (feature `tui`).
+//! `tvscreener-tui` - Ratatui screener TUI.
 //!
 //! ```bash
-//! cargo run --features tui --bin tvscreener-tui -- crypto --limit 10
+//! cargo run --bin tvscreener-tui -- crypto --limit 10
 //! make run-tui ARGS='crypto --preset crypto_price --limit 5'
 //! make run-tui ARGS='crypto --watch --interval 30'
 //! ```

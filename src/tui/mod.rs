@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Ratatui screener TUI (feature `tui`).
+//! Ratatui screener TUI (`tvscreener-tui` binary).
 
 mod clipboard;
 mod draw;
