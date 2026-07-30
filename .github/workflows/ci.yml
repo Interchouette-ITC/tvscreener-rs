@@ -52,7 +52,7 @@ jobs:
       - name: Build release
         run: |
           cargo build --release --bin tvscreener
-          cargo build --release --features mcp --bin tvscreener-mcp
+          cargo build --release --bin tvscreener-mcp
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

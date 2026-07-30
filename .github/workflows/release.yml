@@ -59,7 +59,7 @@ jobs:
       - name: Build release binaries
         run: |
           cargo build --release --bin tvscreener
-          cargo build --release --features mcp --bin tvscreener-mcp
+          cargo build --release --bin tvscreener-mcp
 
       - name: Upload binaries to GitHub Release
         uses: softprops/action-gh-release@v2

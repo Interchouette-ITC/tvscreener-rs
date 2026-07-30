@@ -36,7 +36,7 @@ RUN mkdir -p src/bin data \
   && printf 'fn main() {}\n' > src/bin/tvscreener_mcp.rs \
   && printf '// docker dep cache\n' > src/lib.rs \
   && printf '{}\n' > data/fields.json \
-  && cargo build --release --locked --features mcp --bin tvscreener-mcp \
+  && cargo build --release --locked --bin tvscreener-mcp \
   && rm -rf src data target/release/deps/tvscreener* \
        target/release/.fingerprint/tvscreener* \
        target/release/tvscreener-mcp \
@@ -46,7 +46,7 @@ COPY data ./data
 COPY src ./src
 
 RUN touch src/lib.rs src/bin/tvscreener_mcp.rs \
-  && cargo build --release --locked --features mcp --bin tvscreener-mcp \
+  && cargo build --release --locked --bin tvscreener-mcp \
   && strip -s target/release/tvscreener-mcp \
   && cp target/release/tvscreener-mcp /tvscreener-mcp
 

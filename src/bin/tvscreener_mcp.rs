@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! `tvscreener-mcp` - stdio MCP server (`cargo run --features mcp --bin tvscreener-mcp`).
+//! `tvscreener-mcp` - stdio MCP server.
 //!
 //! Logging (stderr): `RUST_LOG=tvscreener=debug` or `TVSCREENER_DEBUG=1`.
 

@@ -5,10 +5,11 @@ Get a first screener response in a few minutes.
 ## CLI (no code)
 
 ```bash
-make run ARGS='--help'
-make run ARGS='payload crypto --limit 2'
-make run ARGS='scan crypto --limit 5'
-make run-mcp                               # optional stdio MCP server
+cargo install --path .
+tvscreener --help
+tvscreener payload crypto --limit 2
+tvscreener scan crypto --limit 5
+tvscreener-mcp
 ```
 
 ## Create a screener and fetch rows
