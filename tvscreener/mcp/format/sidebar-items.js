@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["format_discover_fields","format_field_types","format_get_preset","format_list_countries","format_list_exchanges","format_list_filter_operators","format_list_index_symbols","format_list_industries","format_list_markets","format_list_presets","format_list_ratings","format_list_sectors","format_rows_markdown"]};

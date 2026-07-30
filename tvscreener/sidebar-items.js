@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["core","error","field","filter","logging","resolve","util"],"struct":["ScreenerRow"]};
+window.SIDEBAR_ITEMS = {"mod":["core","error","field","filter","logging","mcp","resolve","util"],"struct":["ScreenerRow"]};

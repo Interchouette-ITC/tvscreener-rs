@@ -1,2 +1,2 @@
-createSrcSidebar('[["tvscreener",["",[["core",[],["bond.rs","coin.rs","crypto.rs","forex.rs","futures.rs","mod.rs","stock.rs","typed.rs"]],["field",[["generated",[],["country.rs","exchange.rs","index_symbol.rs","industry.rs","rating.rs","sector.rs"]]],["mod.rs"]]],["error.rs","filter.rs","lib.rs","logging.rs","resolve.rs","util.rs"]]]]');
-//{"start":19,"fragment_lengths":[317]}
+createSrcSidebar('[["tvscreener",["",[["core",[],["bond.rs","coin.rs","crypto.rs","forex.rs","futures.rs","mod.rs","stock.rs","typed.rs"]],["field",[["generated",[],["country.rs","exchange.rs","index_symbol.rs","industry.rs","rating.rs","sector.rs"]]],["mod.rs"]],["mcp",[],["format.rs","mod.rs","query.rs","resolve.rs","server.rs","tools.rs"]]],["error.rs","filter.rs","lib.rs","logging.rs","resolve.rs","util.rs"]]],["tvscreener_mcp",["",[],["tvscreener_mcp.rs"]]]]');
+//{"start":19,"fragment_lengths":[398,49]}

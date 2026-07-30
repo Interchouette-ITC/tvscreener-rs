@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_payload","custom_query","custom_query_payload_preview","get_top_movers","search_by_index","search_crypto","search_forex","search_stocks"],"struct":["BuildPayloadOpts","CustomQueryOpts","PayloadPreviewOpts","SearchStocksOpts"]};
