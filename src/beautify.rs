@@ -357,15 +357,15 @@ mod tests {
         assert_eq!(down.text, "-2.50%");
         assert_eq!(down.tone, CellTone::Negative);
 
-        assert_eq!(format_cell(&json!(null), Some("percent")), FormattedCell::missing());
+        assert_eq!(
+            format_cell(&json!(null), Some("percent")),
+            FormattedCell::missing()
+        );
     }
 
     #[test]
     fn rating_uses_band_labels() {
-        assert_eq!(
-            format_cell(&json!(0.75), Some("rating")).text,
-            "Strong Buy"
-        );
+        assert_eq!(format_cell(&json!(0.75), Some("rating")).text, "Strong Buy");
         assert_eq!(format_cell(&json!(0.0), Some("rating")).text, "Neutral");
         assert_eq!(
             format_cell(&json!(-0.75), Some("rating")).text,
@@ -375,10 +375,7 @@ mod tests {
 
     #[test]
     fn currency_rounds_then_millifies() {
-        assert_eq!(
-            format_cell(&json!(1500.0), Some("currency")).text,
-            "1.500K"
-        );
+        assert_eq!(format_cell(&json!(1500.0), Some("currency")).text, "1.500K");
         assert_eq!(
             format_cell(&json!(150.256), Some("currency")).text,
             "150.260"

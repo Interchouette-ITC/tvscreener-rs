@@ -36,7 +36,13 @@ pub const fn crosses_up(x1: f64, x2: f64, y1: f64, y2: f64) -> bool {
 
 /// ADX recommendation from DI crossover and ADX strength.
 #[must_use]
-pub const fn adx(adx_value: f64, dminus: f64, dplus: f64, dminus_old: f64, dplus_old: f64) -> Signal {
+pub const fn adx(
+    adx_value: f64,
+    dminus: f64,
+    dplus: f64,
+    dminus_old: f64,
+    dplus_old: f64,
+) -> Signal {
     if crosses_up(dplus, dplus_old, dminus, dminus_old) && adx_value > 20.0 {
         Signal::Buy
     } else if crosses_up(dminus, dminus_old, dplus, dplus_old) && adx_value > 20.0 {
