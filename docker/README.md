@@ -75,13 +75,15 @@ AI clients that support Streamable HTTP can use `http://localhost:8787/mcp` when
 | --- | --- |
 | CI (audit, lint, test, artifacts, rustdoc pages) | Live on `dev` |
 | `:dev` image push (Hub + GHCR) | Live |
-| Versioned release images `:X.Y.Z` + `:latest` | GitHub Release tag `vX.Y.Z` (must match `Cargo.toml`) |
+| Versioned release images `:X.Y.Z` + `:latest` | Cut with GitHub Release tag `vX.Y.Z` (= `Cargo.toml`) |
 | Release binaries (`tvscreener`, `tvscreener-mcp`, `tvscreener-tui`) | Attached on that Release |
+
+First product release: tag **`v1.0.0`** when `Cargo.toml` is `1.0.0` (see root [`CHANGELOG.md`](../CHANGELOG.md)).
 
 To cut a release:
 
 1. `make version-show` (or bump with `make version-bump-patch` etc.)
-2. Merge version bump to `dev` if needed
+2. Merge version / changelog to `dev` if needed
 3. Create a GitHub Release with tag **`v$(APP_VERSION)`** (must equal `Cargo.toml`)
 4. Workflow pushes Hub + GHCR tags and attaches Linux binaries
 
