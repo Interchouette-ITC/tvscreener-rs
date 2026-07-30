@@ -30,6 +30,10 @@ path = "src/bin/tvscreener_mcp.rs"
 name = "tvscreener-tui"
 path = "src/bin/tvscreener_tui.rs"
 
+[[bin]]
+name = "tvscreener-entrypoint"
+path = "src/bin/tvscreener_entrypoint.rs"
+
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive", "env"] }

@@ -1,14 +1,15 @@
 # Docker image (CLI, TUI, MCP)
 
-Size-optimized multi-stage build → `debian:bookworm-slim` runtime (ca-certificates only, non-root).
+Size-optimized multi-stage build → `gcr.io/distroless/cc-debian13:nonroot` (Debian 13 / trixie family; no apt, perl, or shell).
 
 | Item | Value |
 | --- | --- |
-| Binaries | `tvscreener`, `tvscreener-mcp`, `tvscreener-tui` |
-| Entrypoint | `/usr/local/bin/entrypoint.sh` |
+| Binaries | `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`, `tvscreener-entrypoint` |
+| Entrypoint | `/usr/local/bin/tvscreener-entrypoint` |
+| Builder | `rust:slim-trixie` |
 | MCP (Docker) | Streamable HTTP on **8787** (`/mcp`) |
 | MCP (local) | `tvscreener-mcp` stdio by default |
-| TLS | rustls + `ca-certificates` (no OpenSSL package) |
+| TLS | rustls + CA bundle copied into the image (no OpenSSL package) |
 | Compose | `docker-compose.prod.yml` / `docker-compose.test.yml` |
 
 ## Where to pull images (public)
@@ -117,5 +118,5 @@ Hub **Overview** text is maintained in [`DOCKERHUB.md`](DOCKERHUB.md) and synced
 
 - `data/fields.json` is compiled in via `include_str!`.
 - Binaries are stripped; release profile uses `lto`, `codegen-units=1`, `opt-level=s`, `panic=abort`.
-- Runtime: `ca-certificates` + non-root user.
+- Runtime: distroless `cc-debian13` + non-root; entrypoint is a Rust binary (no `/bin/sh`).
 - Default TUI launch (no args + TTY): `tvscreener-tui crypto --limit 25`.
