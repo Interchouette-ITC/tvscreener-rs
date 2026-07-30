@@ -92,7 +92,7 @@ fn draw_footer(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
             "Tab views · r refresh · a watch · c copy rows · h help · ↑↓ scroll"
         }
         ViewMode::Builder => {
-            "Tab views · ←→ preset · +/- limit · s search · f filter · d del · Enter scan · j/k focus"
+            "Tab views · ←→ asset/preset · +/- limit · s search · t/u sort · m/i scope · f filter · Enter scan · j/k focus"
         }
         ViewMode::Payload | ViewMode::Codegen => "Tab views · c copy · ↑↓ scroll · h help",
         ViewMode::Help => "Tab views · h back · q quit",
@@ -117,9 +117,11 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         Line::from("  Enter (Builder)   apply config and scan"),
         Line::from(""),
         Line::from(Span::styled("Builder", ACCENT.add_modifier(Modifier::BOLD))),
-        Line::from("  ← / →             previous / next preset (Builder)"),
+        Line::from("  ← / →             cycle asset (Asset row) or preset (Preset row)"),
         Line::from("  + / -             row limit"),
         Line::from("  s                 edit name search"),
+        Line::from("  t / u             edit sort field / toggle ascending (Sort row)"),
+        Line::from("  m / i             edit markets / index (Stock, row focused)"),
         Line::from("  f                 add field filter (pick field, op, value)"),
         Line::from("  d                 remove selected filter"),
         Line::from("  j / k             move focus between rows"),
@@ -130,30 +132,54 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         Line::from(""),
         Line::from(Span::styled("Launch", ACCENT.add_modifier(Modifier::BOLD))),
         Line::from("  cargo run --bin tvscreener-tui -- crypto --limit 10"),
-        Line::from("  Asset is fixed at launch; edit preset, limit, search, filters in Builder."),
+        Line::from(
+            "  Edit asset, preset, limit, search, sort, markets, index, filters in Builder.",
+        ),
     ];
     let body = Paragraph::new(lines).block(Block::default().borders(Borders::ALL).title(" Help "));
     frame.render_widget(body, area);
 }
 
 fn draw_builder(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
+    let mut lines = builder_header_lines(model);
+    lines.extend(builder_filter_lines(model));
+    lines.push(Line::from(""));
+    lines.extend(input_hint_lines(model));
+
+    let body = Paragraph::new(lines)
+        .wrap(Wrap { trim: false })
+        .scroll((u16::try_from(model.scroll).unwrap_or(0), 0))
+        .block(Block::default().borders(Borders::ALL).title(" Builder "));
+    frame.render_widget(body, area);
+}
+
+fn builder_header_lines(model: &AppModel) -> Vec<Line<'static>> {
     let preset_name = model
         .builder
         .preset_options
         .get(model.builder.preset_index)
         .map_or("(defaults)", String::as_str);
-    let search = model
-        .config
-        .search
-        .as_deref()
-        .filter(|s| !s.is_empty())
-        .unwrap_or("(none)");
-    let mut lines = vec![
+    let search = optional_config_text(model.config.search.as_deref());
+    let sort = optional_config_text(model.config.sort_by.as_deref());
+    let sort_dir = if model.config.ascending {
+        "asc"
+    } else {
+        "desc"
+    };
+    let markets = stock_scope_text(model, model.config.markets.as_deref());
+    let index = stock_scope_text(model, model.config.index.as_deref());
+    vec![
         Line::from(Span::styled(
             "Query builder",
             ACCENT.add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
+        builder_row(
+            model,
+            BuilderFocus::Asset,
+            "Asset",
+            &format!("{}  (← → cycle)", model.config.asset.as_str()),
+        ),
         builder_row(
             model,
             BuilderFocus::Preset,
@@ -172,6 +198,24 @@ fn draw_builder(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
             "Search",
             &format!("{search}  (s edit)"),
         ),
+        builder_row(
+            model,
+            BuilderFocus::Sort,
+            "Sort",
+            &format!("{sort} {sort_dir}  (t edit · u toggle)"),
+        ),
+        builder_row(
+            model,
+            BuilderFocus::Markets,
+            "Markets",
+            &format!("{markets}  (m edit)"),
+        ),
+        builder_row(
+            model,
+            BuilderFocus::Index,
+            "Index",
+            &format!("{index}  (i edit)"),
+        ),
         Line::from(""),
         builder_row(
             model,
@@ -179,12 +223,19 @@ fn draw_builder(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
             "Filters",
             "(f add · d remove · j/k select)",
         ),
-    ];
+    ]
+}
 
+fn builder_filter_lines(model: &AppModel) -> Vec<Line<'static>> {
     if model.config.filters.is_empty() {
-        lines.push(Line::from(Span::styled("  (no filters)", MUTED)));
-    } else {
-        for (i, f) in model.config.filters.iter().enumerate() {
+        return vec![Line::from(Span::styled("  (no filters)", MUTED))];
+    }
+    model
+        .config
+        .filters
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
             let marker = if i == model.builder.filter_selected {
                 ">"
             } else {
@@ -195,32 +246,27 @@ fn draw_builder(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
             } else {
                 MUTED
             };
-            lines.push(Line::from(Span::styled(
+            Line::from(Span::styled(
                 format!("  {marker} {} {} {}", f.left, f.operation, f.value),
                 style,
-            )));
-        }
+            ))
+        })
+        .collect()
+}
+
+fn stock_scope_text(model: &AppModel, value: Option<&str>) -> String {
+    if model.config.asset != crate::field::Asset::Stock {
+        return "(n/a)".into();
     }
+    value
+        .filter(|s| !s.is_empty())
+        .map_or_else(|| "(none)".into(), String::from)
+}
 
-    if model.config.markets.is_some() || model.config.index.is_some() {
-        lines.push(Line::from(""));
-        lines.push(Line::from(Span::styled(
-            format!(
-                "Stock scope: index={:?} markets={:?} (CLI only)",
-                model.config.index, model.config.markets
-            ),
-            MUTED,
-        )));
-    }
-
-    lines.push(Line::from(""));
-    lines.extend(input_hint_lines(model));
-
-    let body = Paragraph::new(lines)
-        .wrap(Wrap { trim: false })
-        .scroll((u16::try_from(model.scroll).unwrap_or(0), 0))
-        .block(Block::default().borders(Borders::ALL).title(" Builder "));
-    frame.render_widget(body, area);
+fn optional_config_text(value: Option<&str>) -> String {
+    value
+        .filter(|s| !s.is_empty())
+        .map_or_else(|| "(none)".into(), String::from)
 }
 
 fn builder_row(model: &AppModel, row: BuilderFocus, label: &str, value: &str) -> Line<'static> {
@@ -250,6 +296,30 @@ fn input_hint_lines(model: &AppModel) -> Vec<Line<'static>> {
             Line::from(""),
             Line::from(Span::styled(
                 format!("Search: {}_", model.builder.input_buf),
+                ACTIVE,
+            )),
+            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
+        ],
+        InputMode::Sort => vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("Sort field: {}_", model.builder.input_buf),
+                ACTIVE,
+            )),
+            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
+        ],
+        InputMode::Markets => vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("Markets CSV: {}_", model.builder.input_buf),
+                ACTIVE,
+            )),
+            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
+        ],
+        InputMode::Index => vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("Index CSV: {}_", model.builder.input_buf),
                 ACTIVE,
             )),
             Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
@@ -427,6 +497,8 @@ mod tests {
             search: None,
             markets: None,
             index: None,
+            sort_by: None,
+            ascending: false,
             filters: Vec::new(),
         };
         let fields = vec![FieldDef {
@@ -486,6 +558,19 @@ mod tests {
         let text = buffer_text(&terminal);
         assert!(text.contains("Builder"), "{text}");
         assert!(text.contains("Payload"), "{text}");
+    }
+
+    #[test]
+    fn draw_builder_shows_asset_and_sort_rows() {
+        let backend = TestBackend::new(80, 28);
+        let mut terminal = Terminal::new(backend).expect("terminal");
+        let mut model = sample_model();
+        model.view = ViewMode::Builder;
+        terminal.draw(|f| draw(f, &model)).expect("draw");
+        let text = buffer_text(&terminal);
+        assert!(text.contains("Asset"), "{text}");
+        assert!(text.contains("Sort"), "{text}");
+        assert!(text.contains("crypto"), "{text}");
     }
 
     #[test]

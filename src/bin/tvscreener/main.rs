@@ -16,11 +16,14 @@ mod output;
 mod regen;
 
 use anyhow::Result;
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{ArgAction, Parser, Subcommand, ValueEnum};
 use tvscreener::core::Screener;
 use tvscreener::field::{
     all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
     FieldDef,
+};
+use tvscreener::query_config::{
+    apply_filters, apply_filters_json, apply_sort, parse_filter_token, parse_filters_arg,
 };
 use tvscreener::resolve::apply_stock_index_markets;
 use tvscreener::ScreenerRow;
@@ -121,6 +124,18 @@ struct ScanArgs {
     /// Stock index CSV (const or wire), e.g. `SP500`.
     #[arg(long)]
     index: Option<String>,
+    /// Repeatable `FIELD:OP:VALUE` filter, e.g. `close:greater:100`.
+    #[arg(long = "filter", action = ArgAction::Append)]
+    filter: Vec<String>,
+    /// JSON array or object of `{field, op, value}` filters.
+    #[arg(long)]
+    filters: Option<String>,
+    /// Sort field (const, technical, or label).
+    #[arg(long)]
+    sort_by: Option<String>,
+    /// Sort ascending (default: descending).
+    #[arg(long, default_value_t = false)]
+    ascending: bool,
     /// Output shape for `scan` (ignored by `payload`).
     #[arg(long, value_enum, default_value_t = ScanFormat::Table)]
     format: ScanFormat,
@@ -196,6 +211,7 @@ fn resolve_fields(asset: AssetArg, preset: Option<&str>) -> tvscreener::Result<V
 }
 
 fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> tvscreener::Result<()> {
+    let asset = args.asset.asset();
     let fields = resolve_fields(args.asset, args.preset.as_deref())?;
     if debug || tvscreener::logging::env_debug_enabled() {
         inner.set_debug(true);
@@ -206,6 +222,14 @@ fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> tvscre
     if let Some(q) = args.search.as_deref() {
         inner.search(q)?;
     }
+    let mut conditions = Vec::with_capacity(args.filter.len());
+    for token in &args.filter {
+        conditions.push(parse_filter_token(token)?);
+    }
+    apply_filters(inner, asset, &conditions)?;
+    let json_filters = parse_filters_arg(args.filters.as_deref())?;
+    apply_filters_json(inner, asset, &json_filters)?;
+    apply_sort(inner, asset, args.sort_by.as_deref(), args.ascending)?;
     if matches!(args.asset, AssetArg::Stock) {
         apply_stock_index_markets(inner, args.index.as_deref(), args.markets.as_deref())?;
     } else if args.markets.is_some() || args.index.is_some() {

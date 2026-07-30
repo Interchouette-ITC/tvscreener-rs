@@ -7,6 +7,7 @@ use serde_json::Value;
 
 use crate::core::{with_asset_screener, Screener};
 use crate::field::{list_presets, Asset};
+use crate::query_config::{apply_filters, apply_sort};
 use crate::resolve::apply_stock_index_markets;
 use crate::Result;
 
@@ -60,9 +61,13 @@ pub fn configure_screener(inner: &mut Screener, config: &ScanConfig, debug: bool
     if let Some(q) = config.search.as_deref().filter(|s| !s.is_empty()) {
         inner.search(q)?;
     }
-    for condition in &config.filters {
-        inner.where_condition(condition.clone())?;
-    }
+    apply_filters(inner, config.asset, &config.filters)?;
+    apply_sort(
+        inner,
+        config.asset,
+        config.sort_by.as_deref(),
+        config.ascending,
+    )?;
     if matches!(config.asset, Asset::Stock) {
         apply_stock_index_markets(inner, config.index.as_deref(), config.markets.as_deref())?;
     } else if config.markets.is_some() || config.index.is_some() {
@@ -124,8 +129,18 @@ fn render_rust_snippet(config: &ScanConfig) -> String {
         format!("use tvscreener::core::{screener};"),
         "use tvscreener::filter::{FieldCondition, FilterOperator};".to_string(),
     ];
-    if config.preset.is_some() {
-        lines.push("use tvscreener::field::get_preset;".to_string());
+    let needs_preset = config.preset.is_some();
+    let needs_resolve = config
+        .sort_by
+        .as_deref()
+        .is_some_and(|sort| !sort.is_empty());
+    match (needs_preset, needs_resolve) {
+        (true, true) => {
+            lines.push("use tvscreener::field::{get_preset, resolve_field};".to_string());
+        }
+        (true, false) => lines.push("use tvscreener::field::get_preset;".to_string()),
+        (false, true) => lines.push("use tvscreener::field::resolve_field;".to_string()),
+        (false, false) => {}
     }
     if matches!(config.asset, Asset::Stock) && (config.index.is_some() || config.markets.is_some())
     {
@@ -151,6 +166,16 @@ fn render_rust_snippet(config: &ScanConfig) -> String {
             f.left,
             f.operation,
             filter_value_literal(&f.value)
+        ));
+    }
+    if let Some(sort) = config.sort_by.as_deref().filter(|s| !s.is_empty()) {
+        lines.push(format!(
+            "let (_, sort_field) = resolve_field({}, {sort:?}).expect(\"sort field\");",
+            asset_type_expr(config.asset)
+        ));
+        lines.push(format!(
+            "screener.inner_mut().sort_by_field(&sort_field, {});",
+            config.ascending
         ));
     }
     if matches!(config.asset, Asset::Stock) {
@@ -180,11 +205,37 @@ fn filter_value_literal(value: &Value) -> String {
     }
 }
 
-fn render_cli_command(config: &ScanConfig) -> String {
-    let mut parts = vec![
-        "tvscreener-tui".to_string(),
-        config.asset.as_str().to_string(),
-    ];
+fn filter_token(condition: &crate::filter::FieldCondition) -> String {
+    format!(
+        "{}:{}:{}",
+        condition.left,
+        condition.operation.as_str(),
+        filter_value_cli_token(&condition.value)
+    )
+}
+
+fn filter_value_cli_token(value: &Value) -> String {
+    match value {
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
+        other => other.to_string(),
+    }
+}
+
+const fn asset_type_expr(asset: Asset) -> &'static str {
+    match asset {
+        Asset::Stock => "tvscreener::field::Asset::Stock",
+        Asset::Crypto => "tvscreener::field::Asset::Crypto",
+        Asset::Forex => "tvscreener::field::Asset::Forex",
+        Asset::Bond => "tvscreener::field::Asset::Bond",
+        Asset::Futures => "tvscreener::field::Asset::Futures",
+        Asset::Coin => "tvscreener::field::Asset::Coin",
+    }
+}
+
+fn append_cli_flags(parts: &mut Vec<String>, config: &ScanConfig) {
     if let Some(preset) = &config.preset {
         parts.push(format!("--preset {preset}"));
     }
@@ -197,25 +248,36 @@ fn render_cli_command(config: &ScanConfig) -> String {
     if let Some(q) = config.search.as_deref().filter(|s| !s.is_empty()) {
         parts.push(format!("--search {q:?}"));
     }
+    for filter in &config.filters {
+        parts.push(format!("--filter {}", filter_token(filter)));
+    }
+    if let Some(sort) = config.sort_by.as_deref().filter(|s| !s.is_empty()) {
+        parts.push(format!("--sort-by {sort}"));
+    }
+    if config.ascending {
+        parts.push("--ascending".into());
+    }
     if let Some(markets) = &config.markets {
         parts.push(format!("--markets {markets}"));
     }
     if let Some(index) = &config.index {
         parts.push(format!("--index {index}"));
     }
-    // Field filters are not exposed on the CLI yet; note equivalent scan command.
-    let mut scan = parts.clone();
-    scan[0] = "tvscreener".into();
-    scan.insert(1, "scan".into());
-    if config.filters.is_empty() {
-        parts.join(" ")
-    } else {
-        format!(
-            "{}\n# filters: use Rust API or TUI builder (CLI filter flags not yet available)\n{}",
-            parts.join(" "),
-            scan.join(" ")
-        )
-    }
+}
+
+fn render_cli_command(config: &ScanConfig) -> String {
+    let mut tui = vec![
+        "tvscreener-tui".to_string(),
+        config.asset.as_str().to_string(),
+    ];
+    append_cli_flags(&mut tui, config);
+    let mut scan = vec![
+        "tvscreener".to_string(),
+        "scan".to_string(),
+        config.asset.as_str().to_string(),
+    ];
+    append_cli_flags(&mut scan, config);
+    format!("{}\n{}", tui.join(" "), scan.join(" "))
 }
 
 #[cfg(test)]
@@ -234,6 +296,8 @@ mod tests {
             search: Some("BTC".into()),
             markets: None,
             index: None,
+            sort_by: None,
+            ascending: false,
             filters: vec![FieldCondition::new(
                 "close",
                 FilterOperator::Above,
@@ -262,7 +326,41 @@ mod tests {
         let text = render_codegen(&sample_config());
         assert!(text.contains("CryptoScreener"));
         assert!(text.contains("tvscreener-tui"));
+        assert!(text.contains("tvscreener scan"));
         assert!(text.contains("where_condition"));
+        assert!(text.contains("--filter close:greater:50000"));
+    }
+
+    #[test]
+    fn codegen_emits_sort_flags_and_rust_sort() {
+        let mut config = sample_config();
+        config.sort_by = Some("volume".into());
+        config.ascending = true;
+        let text = render_codegen(&config);
+        assert!(text.contains("--sort-by volume"));
+        assert!(text.contains("--ascending"));
+        assert!(text.contains("sort_by_field"));
+        assert!(text.contains("resolve_field"));
+    }
+
+    #[test]
+    fn build_payload_includes_sort() {
+        let mut config = sample_config();
+        config.sort_by = Some("volume".into());
+        config.ascending = true;
+        let payload = build_payload(&config, false).expect("payload");
+        assert_eq!(payload["sort"]["sortBy"], "volume");
+        assert_eq!(payload["sort"]["sortOrder"], "asc");
+    }
+
+    #[test]
+    fn filter_token_uses_wire_operator() {
+        let token = filter_token(&FieldCondition::new(
+            "close",
+            FilterOperator::Above,
+            json!(100),
+        ));
+        assert_eq!(token, "close:greater:100");
     }
 
     #[test]

@@ -14,12 +14,13 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use clap::{Parser, ValueEnum};
+use clap::{ArgAction, Parser, ValueEnum};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use serde_json::{json, Value};
 use tvscreener::filter::FieldCondition;
+use tvscreener::query_config::parse_filter_conditions_from_cli;
 use tvscreener::tui::{
     configure_screener, copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen,
     install_panic_hook, install_signal_handlers, is_quit_key, payload_pretty, render_codegen,
@@ -78,6 +79,18 @@ struct Cli {
     /// Stock index CSV (const or wire), e.g. `SP500`.
     #[arg(long)]
     index: Option<String>,
+    /// Repeatable `FIELD:OP:VALUE` filter, e.g. `close:greater:100`.
+    #[arg(long = "filter", action = ArgAction::Append)]
+    filter: Vec<String>,
+    /// JSON array or object of `{field, op, value}` filters.
+    #[arg(long)]
+    filters: Option<String>,
+    /// Sort field (const, technical, or label).
+    #[arg(long)]
+    sort_by: Option<String>,
+    /// Sort ascending (default: descending).
+    #[arg(long, default_value_t = false)]
+    ascending: bool,
     /// Start with auto-refresh enabled (still floored to 10s).
     #[arg(long)]
     watch: bool,
@@ -94,6 +107,9 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     tvscreener::logging::init_logging();
 
+    let filters =
+        parse_filter_conditions_from_cli(&cli.filter, cli.filters.as_deref()).context("filters")?;
+
     let config = ScanConfig {
         asset: cli.asset.asset(),
         preset: cli.preset.clone(),
@@ -102,7 +118,9 @@ async fn main() -> Result<()> {
         search: cli.search.clone(),
         markets: cli.markets.clone(),
         index: cli.index.clone(),
-        filters: Vec::new(),
+        sort_by: cli.sort_by.clone(),
+        ascending: cli.ascending,
+        filters,
     };
 
     let interval = cli.interval.max(MIN_TUI_REFRESH_SECS);
@@ -204,16 +222,50 @@ async fn handle_global_key(model: &mut AppModel, code: KeyCode, debug: bool) -> 
         KeyCode::Left
             if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
         {
-            model.step_preset(-1);
+            match model.builder.focus {
+                BuilderFocus::Asset => model.step_asset(-1),
+                BuilderFocus::Preset => model.step_preset(-1),
+                _ => {}
+            }
         }
         KeyCode::Right
             if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
         {
-            model.step_preset(1);
+            match model.builder.focus {
+                BuilderFocus::Asset => model.step_asset(1),
+                BuilderFocus::Preset => model.step_preset(1),
+                _ => {}
+            }
         }
         KeyCode::Char('+' | '=') if model.view == ViewMode::Builder => model.step_limit(1),
         KeyCode::Char('-') if model.view == ViewMode::Builder => model.step_limit(-1),
         KeyCode::Char('s') if model.view == ViewMode::Builder => start_search_input(model),
+        KeyCode::Char('t')
+            if model.view == ViewMode::Builder && model.builder.focus == BuilderFocus::Sort =>
+        {
+            start_sort_input(model);
+        }
+        KeyCode::Char('u')
+            if model.view == ViewMode::Builder
+                && model.builder.focus == BuilderFocus::Sort
+                && model.builder.input_mode == InputMode::None =>
+        {
+            model.toggle_sort_ascending();
+        }
+        KeyCode::Char('m')
+            if model.view == ViewMode::Builder
+                && model.builder.focus == BuilderFocus::Markets
+                && model.config.asset == Asset::Stock =>
+        {
+            start_markets_input(model);
+        }
+        KeyCode::Char('i')
+            if model.view == ViewMode::Builder
+                && model.builder.focus == BuilderFocus::Index
+                && model.config.asset == Asset::Stock =>
+        {
+            start_index_input(model);
+        }
         KeyCode::Char('f') if model.view == ViewMode::Builder => start_filter_input(model),
         KeyCode::Char('d') if model.view == ViewMode::Builder => remove_selected_filter(model),
         KeyCode::Char('o')
@@ -237,7 +289,11 @@ fn handle_builder_j(model: &mut AppModel) {
             step_filter_select(model, 1);
         }
         InputMode::None => model.builder_focus_by(1),
-        InputMode::Search | InputMode::FilterValue => {}
+        InputMode::Search
+        | InputMode::Sort
+        | InputMode::Markets
+        | InputMode::Index
+        | InputMode::FilterValue => {}
     }
 }
 
@@ -249,7 +305,11 @@ fn handle_builder_k(model: &mut AppModel) {
             step_filter_select(model, -1);
         }
         InputMode::None => model.builder_focus_by(-1),
-        InputMode::Search | InputMode::FilterValue => {}
+        InputMode::Search
+        | InputMode::Sort
+        | InputMode::Markets
+        | InputMode::Index
+        | InputMode::FilterValue => {}
     }
 }
 
@@ -292,6 +352,24 @@ fn start_search_input(model: &mut AppModel) {
     model.builder.cancel_input();
     model.builder.input_mode = InputMode::Search;
     model.builder.input_buf = model.config.search.clone().unwrap_or_default();
+}
+
+fn start_sort_input(model: &mut AppModel) {
+    model.builder.cancel_input();
+    model.builder.input_mode = InputMode::Sort;
+    model.builder.input_buf = model.config.sort_by.clone().unwrap_or_default();
+}
+
+fn start_markets_input(model: &mut AppModel) {
+    model.builder.cancel_input();
+    model.builder.input_mode = InputMode::Markets;
+    model.builder.input_buf = model.config.markets.clone().unwrap_or_default();
+}
+
+fn start_index_input(model: &mut AppModel) {
+    model.builder.cancel_input();
+    model.builder.input_mode = InputMode::Index;
+    model.builder.input_buf = model.config.index.clone().unwrap_or_default();
 }
 
 fn start_filter_input(model: &mut AppModel) {
@@ -341,6 +419,21 @@ fn commit_input(model: &mut AppModel) {
         InputMode::Search => {
             let text = model.builder.input_buf.trim().to_string();
             model.config.search = if text.is_empty() { None } else { Some(text) };
+            model.builder.cancel_input();
+        }
+        InputMode::Sort => {
+            let text = model.builder.input_buf.trim().to_string();
+            model.config.sort_by = if text.is_empty() { None } else { Some(text) };
+            model.builder.cancel_input();
+        }
+        InputMode::Markets => {
+            let text = model.builder.input_buf.trim().to_string();
+            model.config.markets = if text.is_empty() { None } else { Some(text) };
+            model.builder.cancel_input();
+        }
+        InputMode::Index => {
+            let text = model.builder.input_buf.trim().to_string();
+            model.config.index = if text.is_empty() { None } else { Some(text) };
             model.builder.cancel_input();
         }
         InputMode::FilterField => {

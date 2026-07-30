@@ -172,3 +172,111 @@ fn cli_payload_stock_markets_america() {
     let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
     assert_eq!(v["markets"], serde_json::json!(["america"]));
 }
+
+fn payload_filters(payload: &serde_json::Value) -> &[serde_json::Value] {
+    payload["filter"]
+        .as_array()
+        .expect("filter array")
+        .as_slice()
+}
+
+fn has_close_above_100(filters: &[serde_json::Value]) -> bool {
+    filters.iter().any(|f| {
+        f["left"] == "close" && f["operation"] == "greater" && f["right"].as_f64() == Some(100.0)
+    })
+}
+
+#[test]
+fn cli_payload_filter_token_close_above_100() {
+    let out = tvscreener()
+        .args([
+            "payload",
+            "stock",
+            "--filter",
+            "close:greater:100",
+            "--limit",
+            "2",
+        ])
+        .output()
+        .expect("run tvscreener payload --filter");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert!(has_close_above_100(payload_filters(&v)));
+}
+
+#[test]
+fn cli_payload_filters_json_close_above_100() {
+    let out = tvscreener()
+        .args([
+            "payload",
+            "stock",
+            "--filters",
+            r#"[{"field":"close","op":">","value":100}]"#,
+            "--limit",
+            "2",
+        ])
+        .output()
+        .expect("run tvscreener payload --filters");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert!(has_close_above_100(payload_filters(&v)));
+}
+
+#[test]
+fn cli_payload_sort_by_volume_desc() {
+    let out = tvscreener()
+        .args(["payload", "stock", "--sort-by", "volume", "--limit", "2"])
+        .output()
+        .expect("run tvscreener payload --sort-by");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert_eq!(v["sort"]["sortBy"], "volume");
+    assert_eq!(v["sort"]["sortOrder"], "desc");
+}
+
+#[test]
+fn cli_payload_stock_filters_markets_and_index() {
+    let out = tvscreener()
+        .args([
+            "payload",
+            "stock",
+            "--filter",
+            "close:greater:100",
+            "--markets",
+            "AMERICA",
+            "--index",
+            "SP500",
+            "--limit",
+            "2",
+        ])
+        .output()
+        .expect("run tvscreener payload stock filters+markets+index");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert!(has_close_above_100(payload_filters(&v)));
+    assert_eq!(v["markets"], serde_json::json!(["america"]));
+    let symbolset = v
+        .pointer("/symbols/symbolset")
+        .and_then(|s| s.as_array())
+        .expect("symbols.symbolset");
+    assert!(
+        symbolset.iter().any(|s| s.as_str() == Some("SYML:SP;SPX")),
+        "expected SYML:SP;SPX in {symbolset:?}"
+    );
+}

@@ -57,6 +57,8 @@ tvscreener payload crypto --limit 2     # print request JSON only
 tvscreener scan crypto --limit 5        # live HTTP (table)
 tvscreener scan crypto --limit 5 --json
 tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
+tvscreener scan stock --filter close:greater:100 --sort-by volume
+tvscreener payload stock --filters '[{"field":"close","op":">","value":100}]'
 
 # checkout shortcuts:
 make run                                # --help
@@ -66,7 +68,7 @@ cargo run --bin tvscreener -- scan crypto --limit 5
 
 ### TUI
 
-Interactive Ratatui pane: Results table, Builder (preset / limit / search / filters), Payload JSON, and Codegen (Rust + CLI).
+Interactive Ratatui pane: Results table, Builder (asset / preset / limit / search / sort / markets / index / filters), Payload JSON, and Codegen (Rust + CLI).
 
 ```bash
 tvscreener-tui --help
@@ -78,7 +80,7 @@ make run-tui ARGS='crypto --preset crypto_price --limit 10'
 cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 ```
 
-Keys (short): `Tab` / `1`–`4` switch views · `←`/`→` cycle preset · `r` refresh · `a` watch · `c` copy · `h` help · `q` quit.
+Keys (short): `Tab` / `1`–`4` switch views · `←`/`→` asset/preset · `r` refresh · `a` watch · `c` copy · `h` help · `q` quit.
 
 Full key map and Builder details: [`docs/guide/tui.md`](docs/guide/tui.md).
 

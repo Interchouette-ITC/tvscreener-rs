@@ -8,59 +8,14 @@ use crate::core::forex::ForexScreener;
 use crate::core::stock::StockScreener;
 use crate::core::Screener;
 use crate::error::{Result, TvscreenerError};
-use crate::field::{resolve_field, Asset, FieldDef};
+use crate::field::{Asset, FieldDef};
 use crate::filter::{FieldCondition, FilterOperator};
+use crate::query_config::{apply_filters_json, apply_sort, parse_filters_arg, require_resolved};
 use crate::ScreenerRow;
 use serde_json::{json, Value};
 
 use super::format::format_rows_markdown;
 use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens};
-
-fn require_resolved(asset: Asset, name: &str) -> Result<FieldDef> {
-    resolve_field(asset, name)
-        .map(|(_, def)| def)
-        .ok_or_else(|| {
-            TvscreenerError::InvalidRequest(format!(
-                "unknown field `{name}` for asset `{}`",
-                asset.as_str()
-            ))
-        })
-}
-
-fn parse_filters_arg(filters: Option<&str>) -> Result<Vec<Value>> {
-    let Some(raw) = filters.map(str::trim).filter(|s| !s.is_empty()) else {
-        return Ok(Vec::new());
-    };
-    let parsed: Value = serde_json::from_str(raw)
-        .map_err(|err| TvscreenerError::InvalidRequest(format!("filters JSON: {err}")))?;
-    match parsed {
-        Value::Array(items) => Ok(items),
-        Value::Object(_) => Ok(vec![parsed]),
-        other => Err(TvscreenerError::InvalidRequest(format!(
-            "filters must be a JSON array or object, got {other}"
-        ))),
-    }
-}
-
-fn apply_filters(screener: &mut Screener, asset: Asset, filters: &[Value]) -> Result<()> {
-    for entry in filters {
-        let field_name = entry
-            .get("field")
-            .and_then(Value::as_str)
-            .ok_or_else(|| TvscreenerError::InvalidRequest("filter missing field".into()))?;
-        let op_str = entry.get("op").and_then(Value::as_str).unwrap_or(">=");
-        let op = FilterOperator::from_wire(op_str).ok_or_else(|| {
-            TvscreenerError::InvalidRequest(format!("unknown filter op `{op_str}`"))
-        })?;
-        let value = entry
-            .get("value")
-            .cloned()
-            .ok_or_else(|| TvscreenerError::InvalidRequest("filter missing value".into()))?;
-        let def = require_resolved(asset, field_name)?;
-        screener.where_condition(FieldCondition::new(def.field_name, op, value))?;
-    }
-    Ok(())
-}
 
 fn apply_select(screener: &mut Screener, asset: Asset, fields: &[String]) -> Result<()> {
     let mut selected = Vec::new();
@@ -69,19 +24,6 @@ fn apply_select(screener: &mut Screener, asset: Asset, fields: &[String]) -> Res
     }
     if !selected.is_empty() {
         screener.select(selected);
-    }
-    Ok(())
-}
-
-fn apply_sort(
-    screener: &mut Screener,
-    asset: Asset,
-    sort_by: Option<&str>,
-    ascending: bool,
-) -> Result<()> {
-    if let Some(name) = sort_by {
-        let def = require_resolved(asset, name)?;
-        screener.sort_by_field(&def, ascending);
     }
     Ok(())
 }
@@ -126,7 +68,7 @@ pub async fn custom_query(opts: &CustomQueryOpts<'_>) -> Result<String> {
         if !field_list.is_empty() {
             apply_select(s, asset, &field_list)?;
         }
-        apply_filters(s, asset, &filter_list)?;
+        apply_filters_json(s, asset, &filter_list)?;
         apply_sort(s, asset, sort_by, opts.ascending)?;
         s.set_range(0, limit);
         Ok(())
@@ -381,7 +323,7 @@ pub fn custom_query_payload_preview(opts: &PayloadPreviewOpts<'_>) -> Result<Val
         } else {
             apply_select(screener, asset, &field_list)?;
         }
-        apply_filters(screener, asset, &filter_list)?;
+        apply_filters_json(screener, asset, &filter_list)?;
         apply_sort(screener, asset, sort_by, opts.ascending)?;
         if asset == Asset::Stock {
             apply_stock_index_markets(screener, opts.indices, opts.markets)?;
