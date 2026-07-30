@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
 | [Streaming](guide/streaming.md)                      | Periodic `stream` polls                        |
 | [TUI](guide/tui.md)                                  | Optional Ratatui results pane (`--features tui`) |
 | [Screeners](guide/screeners.md)                      | Stock / crypto / forex / bond / futures / coin |
+| [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
 | [Examples](examples/crypto.md)                       | Walkthrough of `example_crypto`                |
 | [Manual test plan](MANUAL_TEST_PLAN.md)              | How to run tests                               |
 | [API overview](api/overview.md)                      | Modules and main types                         |

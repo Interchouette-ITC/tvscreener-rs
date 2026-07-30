@@ -6,8 +6,11 @@
 use std::time::{Duration, Instant};
 
 use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
-use crate::field::{default_fields, get_preset, Asset, FieldDef};
+use crate::field::{default_fields, get_preset, search_fields, Asset, FieldDef};
+use crate::filter::{FieldCondition, FilterOperator};
 use crate::ScreenerRow;
+
+use super::scan::{preset_index, preset_options};
 
 /// Default auto-refresh interval when watch mode is on (seconds).
 pub const DEFAULT_WATCH_INTERVAL_SECS: f64 = 30.0;
@@ -24,11 +27,152 @@ pub enum ViewMode {
     /// Beautified results table.
     #[default]
     Results,
+    /// Query builder (preset, limit, search, filters).
+    Builder,
+    /// Pretty-printed `build_payload()` JSON.
+    Payload,
+    /// Rust + CLI codegen snippets.
+    Codegen,
     /// Key binding help.
     Help,
 }
 
-/// CLI / env scan parameters for the scaffold TUI.
+impl ViewMode {
+    /// Cycles to the next primary pane (skips Help).
+    #[must_use]
+    pub const fn next(self) -> Self {
+        match self {
+            Self::Results => Self::Builder,
+            Self::Builder => Self::Payload,
+            Self::Payload => Self::Codegen,
+            Self::Codegen | Self::Help => Self::Results,
+        }
+    }
+
+    /// Short label for the title bar.
+    #[must_use]
+    pub const fn tab_label(self) -> &'static str {
+        match self {
+            Self::Results => "1 Results",
+            Self::Builder => "2 Builder",
+            Self::Payload => "3 Payload",
+            Self::Codegen => "4 Codegen",
+            Self::Help => "Help",
+        }
+    }
+}
+
+/// Builder row focus for `j` / `k` navigation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BuilderFocus {
+    /// Field preset picker.
+    #[default]
+    Preset,
+    /// Row limit.
+    Limit,
+    /// Name search text.
+    Search,
+    /// Filter list.
+    Filters,
+}
+
+/// Text input sub-mode inside the builder pane.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum InputMode {
+    /// No active input.
+    #[default]
+    None,
+    /// Editing search text.
+    Search,
+    /// Picking a field from catalog search hits.
+    FilterField,
+    /// Cycling filter operator before value entry.
+    FilterOp,
+    /// Typing filter right-hand value.
+    FilterValue,
+}
+
+/// Operators offered in the simple filter wizard.
+pub const FILTER_OPS: [FilterOperator; 6] = [
+    FilterOperator::Above,
+    FilterOperator::Below,
+    FilterOperator::AboveOrEqual,
+    FilterOperator::BelowOrEqual,
+    FilterOperator::Equal,
+    FilterOperator::Match,
+];
+
+/// Builder pane UI state (not sent to the API until refresh).
+#[derive(Debug, Clone)]
+pub struct BuilderUi {
+    /// Sorted preset names for the current asset (includes `(defaults)`).
+    pub preset_options: Vec<String>,
+    /// Index into [`Self::preset_options`].
+    pub preset_index: usize,
+    /// Highlighted builder row.
+    pub focus: BuilderFocus,
+    /// Selected filter row (`d` removes this one).
+    pub filter_selected: usize,
+    /// Active text input, if any.
+    pub input_mode: InputMode,
+    /// Buffer for search / field query / filter value.
+    pub input_buf: String,
+    /// Field catalog hits while adding a filter.
+    pub field_matches: Vec<FieldDef>,
+    /// Selected index in [`Self::field_matches`].
+    pub field_pick: usize,
+    /// Index into [`FILTER_OPS`] while adding a filter.
+    pub op_index: usize,
+    /// Draft field name between field pick and value entry.
+    pub draft_field: Option<String>,
+}
+
+impl BuilderUi {
+    /// Builds picker state from scan config.
+    #[must_use]
+    pub fn from_config(config: &ScanConfig) -> Self {
+        let preset_options = preset_options(config.asset);
+        let preset_index = preset_index(config.asset, config.preset.as_deref());
+        Self {
+            preset_options,
+            preset_index,
+            focus: BuilderFocus::default(),
+            filter_selected: 0,
+            input_mode: InputMode::default(),
+            input_buf: String::new(),
+            field_matches: Vec::new(),
+            field_pick: 0,
+            op_index: 0,
+            draft_field: None,
+        }
+    }
+
+    /// Refreshes preset list after asset changes (asset is fixed at launch).
+    pub fn sync_preset_index(&mut self, config: &ScanConfig) {
+        self.preset_options = preset_options(config.asset);
+        self.preset_index = preset_index(config.asset, config.preset.as_deref());
+    }
+
+    /// Updates field matches from the current query buffer.
+    pub fn refresh_field_matches(&mut self, asset: Asset) {
+        self.field_matches = search_fields(asset, &self.input_buf);
+        if self.field_pick >= self.field_matches.len() && !self.field_matches.is_empty() {
+            self.field_pick = self.field_matches.len() - 1;
+        }
+    }
+
+    /// Clears filter-add wizard state.
+    pub fn cancel_input(&mut self) {
+        self.input_mode = InputMode::None;
+        self.input_buf.clear();
+        self.field_matches.clear();
+        self.field_pick = 0;
+        self.op_index = 0;
+        self.draft_field = None;
+    }
+}
+
+/// CLI / env scan parameters for the TUI.
 #[derive(Debug, Clone)]
 pub struct ScanConfig {
     /// Screener asset class.
@@ -45,6 +189,8 @@ pub struct ScanConfig {
     pub markets: Option<String>,
     /// Stock index CSV (const or wire).
     pub index: Option<String>,
+    /// Field conditions applied via `where_condition`.
+    pub filters: Vec<FieldCondition>,
 }
 
 impl ScanConfig {
@@ -66,6 +212,8 @@ impl ScanConfig {
 pub struct AppModel {
     /// Scan parameters.
     pub config: ScanConfig,
+    /// Builder pane state.
+    pub builder: BuilderUi,
     /// Fields used for the last scan / table columns.
     pub fields: Vec<FieldDef>,
     /// Last scan rows.
@@ -76,7 +224,7 @@ pub struct AppModel {
     pub error: Option<String>,
     /// Active view.
     pub view: ViewMode,
-    /// Vertical scroll offset into rows.
+    /// Vertical scroll offset (results rows or text panes).
     pub scroll: usize,
     /// Refresh counter.
     pub ticks: u64,
@@ -101,6 +249,7 @@ impl AppModel {
         watch_interval_secs: f64,
     ) -> Self {
         let watch_interval = Duration::from_secs_f64(watch_interval_secs.max(MIN_TUI_REFRESH_SECS));
+        let builder = BuilderUi::from_config(&config);
         let status = format!(
             "{}  rows={}  {}",
             config.asset.as_str(),
@@ -108,6 +257,7 @@ impl AppModel {
             refresh_mode_label(watch, watch_interval),
         );
         Self {
+            builder,
             config,
             fields,
             rows,
@@ -150,9 +300,32 @@ impl AppModel {
     /// Toggles Results ↔ Help.
     pub const fn toggle_help(&mut self) {
         self.view = match self.view {
-            ViewMode::Results => ViewMode::Help,
             ViewMode::Help => ViewMode::Results,
+            _ => ViewMode::Help,
         };
+        self.scroll = 0;
+    }
+
+    /// Cycles Results → Builder → Payload → Codegen.
+    pub fn cycle_view(&mut self) {
+        if self.view == ViewMode::Help {
+            self.view = ViewMode::Results;
+        } else {
+            self.view = self.view.next();
+        }
+        self.scroll = 0;
+    }
+
+    /// Jumps to a numbered pane (`1`–`4`).
+    pub const fn set_view_number(&mut self, n: u8) {
+        self.view = match n {
+            1 => ViewMode::Results,
+            2 => ViewMode::Builder,
+            3 => ViewMode::Payload,
+            4 => ViewMode::Codegen,
+            _ => return,
+        };
+        self.scroll = 0;
     }
 
     /// Toggles opt-in auto-refresh (off by default).
@@ -186,25 +359,59 @@ impl AppModel {
         self.watch && self.last_scan_at.elapsed() >= self.watch_interval
     }
 
-    /// Scrolls the results table by `delta` rows.
+    /// Scrolls the active pane by `delta` lines.
     pub fn scroll_by(&mut self, delta: isize) {
-        let len = self.rows.len();
-        if len == 0 {
-            self.scroll = 0;
-            return;
-        }
-        let max = len - 1;
         if delta >= 0 {
             self.scroll = self
                 .scroll
                 .saturating_add(usize::try_from(delta).unwrap_or(0));
-            if self.scroll > max {
-                self.scroll = max;
-            }
         } else {
             let step = usize::try_from(delta.wrapping_neg()).unwrap_or(0);
             self.scroll = self.scroll.saturating_sub(step);
         }
+    }
+
+    /// Moves builder focus up/down.
+    pub fn builder_focus_by(&mut self, delta: isize) {
+        let rows = [
+            BuilderFocus::Preset,
+            BuilderFocus::Limit,
+            BuilderFocus::Search,
+            BuilderFocus::Filters,
+        ];
+        let idx = rows
+            .iter()
+            .position(|&f| f == self.builder.focus)
+            .unwrap_or(0);
+        let next = if delta >= 0 {
+            (idx + 1).min(rows.len() - 1)
+        } else {
+            idx.saturating_sub(1)
+        };
+        self.builder.focus = rows[next];
+    }
+
+    /// Steps the preset picker and updates config.
+    pub fn step_preset(&mut self, delta: isize) {
+        let len = self.builder.preset_options.len();
+        if len == 0 {
+            return;
+        }
+        let idx = self.builder.preset_index;
+        let next = if delta >= 0 {
+            (idx + 1).min(len - 1)
+        } else {
+            idx.saturating_sub(1)
+        };
+        self.builder.preset_index = next;
+        super::scan::apply_preset_index(&mut self.config, next);
+        self.builder.sync_preset_index(&self.config);
+    }
+
+    /// Adjusts row limit (minimum 1, maximum 500).
+    pub fn step_limit(&mut self, delta: i32) {
+        let next = (i64::from(self.config.limit) + i64::from(delta)).clamp(1, 500);
+        self.config.limit = u32::try_from(next).unwrap_or(1);
     }
 }
 
@@ -230,6 +437,7 @@ mod tests {
                 search: None,
                 markets: None,
                 index: None,
+                filters: Vec::new(),
             },
             Vec::new(),
             Vec::new(),
@@ -259,5 +467,26 @@ mod tests {
         model.toggle_watch();
         assert!(!model.watch);
         assert!(model.status.contains("manual"));
+    }
+
+    #[test]
+    fn cycle_view_order() {
+        let mut model = empty_model(false, DEFAULT_WATCH_INTERVAL_SECS);
+        assert_eq!(model.view, ViewMode::Results);
+        model.cycle_view();
+        assert_eq!(model.view, ViewMode::Builder);
+        model.cycle_view();
+        assert_eq!(model.view, ViewMode::Payload);
+        model.cycle_view();
+        assert_eq!(model.view, ViewMode::Codegen);
+    }
+
+    #[test]
+    fn step_limit_clamps() {
+        let mut model = empty_model(false, DEFAULT_WATCH_INTERVAL_SECS);
+        model.step_limit(1000);
+        assert_eq!(model.config.limit, 500);
+        model.step_limit(-1000);
+        assert_eq!(model.config.limit, 1);
     }
 }

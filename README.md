@@ -15,7 +15,7 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
 - **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
 - **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
-- **Optional TUI** `tvscreener-tui` results pane (`--features tui`)
+- **Optional TUI** `tvscreener-tui` (`--features tui`): results, builder, payload JSON, codegen
 - **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
