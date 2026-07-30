@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Network e2e against `scanner.tradingview.com`.
+//! Live e2e against `scanner.tradingview.com`.
 //!
 //! Run **serially** to avoid `TradingView` rate limits / parallel timeouts:
 //!

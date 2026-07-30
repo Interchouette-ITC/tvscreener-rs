@@ -191,7 +191,7 @@ Rust **1.85+**.
 make test          # default suite (offline)
 make lint
 make verify        # format-check + clippy + tests
-make test-live     # e2e against scanner.tradingview.com
+make test-live
 make doc           # API HTML under docs/api-rust/
 make help
 ```

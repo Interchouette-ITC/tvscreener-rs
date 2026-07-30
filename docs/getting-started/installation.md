@@ -38,7 +38,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 | Feature     | Purpose                                  |
 | ----------- | ---------------------------------------- |
 | _(default)_ | Library + both binaries                  |
-| `live`      | Network e2e tests (`make test-live`)     |
+| `live`      | Live HTTP tests (`make test-live`)       |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 ```bash

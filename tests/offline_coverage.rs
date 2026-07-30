@@ -3,7 +3,7 @@
 
 //! Integration tests for util, fields, filters, payloads, and typed screeners.
 //!
-//! Default `cargo test` path. Network e2e is in `e2e_live`.
+//! Default `cargo test` path. Live HTTP is in `e2e_live`.
 
 use serde_json::json;
 use tvscreener::core::bond::BondScreener;
