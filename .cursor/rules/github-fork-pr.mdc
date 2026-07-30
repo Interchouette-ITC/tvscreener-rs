@@ -54,8 +54,10 @@ gh pr edit <n> --repo Interchouette-ITC/tvscreener-rs --add-reviewer gRoussac
 | Keep PR current | **Fork** | `git fetch interchouette && git rebase interchouette/dev` on the feature branch, then push to `interchouette` (SSH-signed). |
 | Reviewer | Ready PRs | Always `--reviewer gRoussac` (not while still draft-building). |
 | Merge gate | **gRoussac Approve** | Comments = babysit only. Never merge without Approve. |
+| Org enforcement | Branch protection on `dev` | **1** approving review + **code owner** review; admins included; no force pushes. |
 | Land on org | After Approve | `gh pr merge --squash` with conventional PR title as the squash subject. |
 | Forbidden default | Agent | `gh pr merge --rebase` onto org (GitHub rewrites commits and drops Verified). |
+| Forbidden | Agent | `gh pr merge` when `reviews` has no `APPROVED` from **gRoussac** (chat “merge anyway” does not count). |
 
 ```bash
 # Ready (non-draft) create:
@@ -105,9 +107,11 @@ Day-to-day work uses the workflow above. Do **not** invent a second integration 
 
 ## Do not
 
-- Merge without **gRoussac** Approve.
+- Merge without **gRoussac** Approve (verify via `gh pr view … --json reviews` first).
+- Lower or bypass org branch protection (`required_approving_review_count`, code owners, `enforce_admins`).
 - Open a **ready** PR before the commits for that concern are done (use **draft**, or wait).
 - Open a PR without requesting **gRoussac** once it is ready for review.
 - Rely on Cursor chat alone for Approve (use GitHub review + `--reviewer gRoussac`).
 - Push to a **merged or closed** PR head, or keep using a feature branch after merge as if the PR were still open.
 - Say “pushed to #N” without checking that #N is still `OPEN`.
+- Force-push to `dev` on org or fork (protection forbids force pushes on org `dev`).

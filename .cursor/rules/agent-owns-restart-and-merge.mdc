@@ -7,6 +7,20 @@ alwaysApply: true
 
 tvscreener-rs is **not** agent-auto-merge. Same habit as **itcy-publications** BAT: Greg Approves, then merge.
 
+## GitHub enforcement (locked)
+
+Org branch protection on **`dev`** (Interchouette-ITC):
+
+| Setting | Value |
+| --- | --- |
+| Required approving reviews | **1** |
+| Require code owner review | **yes** (`CODEOWNERS` → `@gRoussac`) |
+| Dismiss stale reviews | **yes** |
+| Enforce for admins | **yes** |
+| Allow force pushes | **no** |
+
+Chat phrases like “merge whatever” / “just merge” do **not** override this. If `gh pr merge` succeeds with zero Approves, protection is broken: **stop and fix protection**, do not celebrate.
+
 ## Merge
 
 | Repo | Agent duty |
@@ -19,6 +33,17 @@ tvscreener-rs is **not** agent-auto-merge. Same habit as **itcy-publications** B
 - After merge: sync fork `dev` from `upstream/dev` as usual.
 - Full checklist: `github-public-quality.mdc` + `github-fork-pr.mdc`.
 
+## Pre-merge check (required)
+
+Before every `gh pr merge`:
+
+```bash
+gh pr view <n> --repo Interchouette-ITC/tvscreener-rs --json reviews,reviewRequests,state
+# Must see: reviews[].state == APPROVED AND reviews[].author.login == gRoussac
+```
+
+If no `APPROVED` from **gRoussac**: **do not merge**. Leave the PR open.
+
 ## Seeing approvals
 
 ```bash
@@ -30,3 +55,4 @@ gh pr view <n> --repo Interchouette-ITC/tvscreener-rs --json reviews,reviewReque
 
 - Secrets, logins, installs needing approval.
 - Explicit hold he set in chat or on the PR (beyond the standing Approve gate).
+- Changing org branch protection settings.
