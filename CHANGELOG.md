@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-31
+
 Unofficial Rust [TradingView](https://www.tradingview.com) Screener HTTP client
 (inspired by [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)).
 Not affiliated with TradingView.
@@ -58,3 +60,4 @@ Not affiliated with TradingView.
 
 - `get()` returns `Vec<ScreenerRow>` (not a DataFrame)
 - MSRV 1.85
+- Install from git / path / Docker (not crates.io)
