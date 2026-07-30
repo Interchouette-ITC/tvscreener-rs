@@ -11,12 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Field-aware `format_cell` / `format_rows_table` for terminal display
 - CLI `scan --format table|row|json`, `--json`, `--color`
-- Optional TUI `tvscreener-tui` (`--features tui`): Results table, opt-in watch, OSC 52 copy
+- Optional TUI `tvscreener-tui` (`--features tui`): Results, Builder (preset, limit, search, filters), Payload JSON, Codegen, opt-in watch, OSC 52 copy
 - Docs: [TUI guide](docs/guide/tui.md)
 
 ### Changed
 
 - `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
+- CI / `make check` / `make test` also exercise `--features tui`; release artifacts include `tvscreener-tui`
 
 ## [1.0.0] - 2026-07-30
 

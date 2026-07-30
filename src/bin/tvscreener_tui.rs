@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! `tvscreener-tui` - Ratatui results pane (feature `tui`).
+//! `tvscreener-tui` - Ratatui screener TUI (feature `tui`).
 //!
 //! ```bash
 //! cargo run --features tui --bin tvscreener-tui -- crypto --limit 10
@@ -18,15 +18,15 @@ use clap::{Parser, ValueEnum};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use tvscreener::core::Screener;
-use tvscreener::field::Asset;
-use tvscreener::resolve::apply_stock_index_markets;
+use serde_json::{json, Value};
+use tvscreener::filter::FieldCondition;
 use tvscreener::tui::{
-    copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen, install_panic_hook,
-    install_signal_handlers, is_quit_key, AppModel, ScanConfig, TerminalGuard,
-    DEFAULT_WATCH_INTERVAL_SECS, MIN_TUI_REFRESH_SECS, STOP,
+    configure_screener, copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen,
+    install_panic_hook, install_signal_handlers, is_quit_key, payload_pretty, render_codegen,
+    AppModel, BuilderFocus, InputMode, ScanConfig, TerminalGuard, ViewMode,
+    DEFAULT_WATCH_INTERVAL_SECS, FILTER_OPS, MIN_TUI_REFRESH_SECS, STOP,
 };
-use tvscreener::ScreenerRow;
+use tvscreener::{field::Asset, ScreenerRow};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum AssetArg {
@@ -54,7 +54,7 @@ impl AssetArg {
 #[derive(Debug, Parser)]
 #[command(
     name = "tvscreener-tui",
-    about = "TradingView screener Ratatui results pane",
+    about = "TradingView screener Ratatui TUI",
     version
 )]
 struct Cli {
@@ -102,11 +102,11 @@ async fn main() -> Result<()> {
         search: cli.search.clone(),
         markets: cli.markets.clone(),
         index: cli.index.clone(),
+        filters: Vec::new(),
     };
 
     let interval = cli.interval.max(MIN_TUI_REFRESH_SECS);
 
-    // Scan before taking the tty so HTTP noise never paints into the UI.
     let fields = config.resolve_fields().context("resolve fields")?;
     let (fields, rows) = match run_scan(&config, cli.debug).await {
         Ok(rows) => (fields, rows),
@@ -167,26 +167,243 @@ async fn run_loop(
             break;
         }
 
-        match key.code {
-            KeyCode::Char('h') => model.toggle_help(),
-            KeyCode::Char('a') => model.toggle_watch(),
-            KeyCode::Char('c') => copy_rows(model),
-            KeyCode::Char('r') => {
-                if model.can_refresh() {
-                    refresh(model, debug).await;
-                } else {
-                    let wait = model.cooldown_secs_remaining();
-                    model.status = format!("cooldown {wait}s (min {MIN_TUI_REFRESH_SECS}s)");
-                }
-            }
-            KeyCode::Up => model.scroll_by(-1),
-            KeyCode::Down => model.scroll_by(1),
-            KeyCode::PageUp => model.scroll_by(-10),
-            KeyCode::PageDown => model.scroll_by(10),
-            _ => {}
+        if model.builder.input_mode != InputMode::None && handle_input_key(model, key.code) {
+            continue;
         }
+
+        handle_global_key(model, key.code, debug).await?;
     }
     Ok(())
+}
+
+async fn handle_global_key(model: &mut AppModel, code: KeyCode, debug: bool) -> Result<()> {
+    match code {
+        KeyCode::Tab => model.cycle_view(),
+        KeyCode::Char('h') => model.toggle_help(),
+        KeyCode::Char('a') => model.toggle_watch(),
+        KeyCode::Char('c') => copy_active_pane(model),
+        KeyCode::Char('r') => {
+            if model.can_refresh() {
+                refresh(model, debug).await;
+            } else {
+                let wait = model.cooldown_secs_remaining();
+                model.status = format!("cooldown {wait}s (min {MIN_TUI_REFRESH_SECS}s)");
+            }
+        }
+        KeyCode::Char('1') => model.set_view_number(1),
+        KeyCode::Char('2') => model.set_view_number(2),
+        KeyCode::Char('3') => model.set_view_number(3),
+        KeyCode::Char('4') => model.set_view_number(4),
+        KeyCode::Up => model.scroll_by(-1),
+        KeyCode::Down => model.scroll_by(1),
+        KeyCode::PageUp => model.scroll_by(-10),
+        KeyCode::PageDown => model.scroll_by(10),
+        KeyCode::Enter if model.view == ViewMode::Builder && model.can_refresh() => {
+            refresh(model, debug).await;
+        }
+        KeyCode::Left
+            if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
+        {
+            model.step_preset(-1);
+        }
+        KeyCode::Right
+            if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
+        {
+            model.step_preset(1);
+        }
+        KeyCode::Char('+' | '=') if model.view == ViewMode::Builder => model.step_limit(1),
+        KeyCode::Char('-') if model.view == ViewMode::Builder => model.step_limit(-1),
+        KeyCode::Char('s') if model.view == ViewMode::Builder => start_search_input(model),
+        KeyCode::Char('f') if model.view == ViewMode::Builder => start_filter_input(model),
+        KeyCode::Char('d') if model.view == ViewMode::Builder => remove_selected_filter(model),
+        KeyCode::Char('o')
+            if model.view == ViewMode::Builder
+                && model.builder.input_mode == InputMode::FilterOp =>
+        {
+            cycle_filter_op(model, 1);
+        }
+        KeyCode::Char('j') if model.view == ViewMode::Builder => handle_builder_j(model),
+        KeyCode::Char('k') if model.view == ViewMode::Builder => handle_builder_k(model),
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_builder_j(model: &mut AppModel) {
+    match model.builder.input_mode {
+        InputMode::FilterField => step_field_pick(model, 1),
+        InputMode::FilterOp => cycle_filter_op(model, 1),
+        InputMode::None if model.builder.focus == BuilderFocus::Filters => {
+            step_filter_select(model, 1);
+        }
+        InputMode::None => model.builder_focus_by(1),
+        InputMode::Search | InputMode::FilterValue => {}
+    }
+}
+
+fn handle_builder_k(model: &mut AppModel) {
+    match model.builder.input_mode {
+        InputMode::FilterField => step_field_pick(model, -1),
+        InputMode::FilterOp => cycle_filter_op(model, -1),
+        InputMode::None if model.builder.focus == BuilderFocus::Filters => {
+            step_filter_select(model, -1);
+        }
+        InputMode::None => model.builder_focus_by(-1),
+        InputMode::Search | InputMode::FilterValue => {}
+    }
+}
+
+/// Returns true when the key was consumed by input mode handling.
+fn handle_input_key(model: &mut AppModel, code: KeyCode) -> bool {
+    match code {
+        KeyCode::Esc => {
+            model.builder.cancel_input();
+            true
+        }
+        KeyCode::Backspace => {
+            model.builder.input_buf.pop();
+            if model.builder.input_mode == InputMode::FilterField {
+                model.builder.refresh_field_matches(model.config.asset);
+            }
+            true
+        }
+        KeyCode::Enter => {
+            commit_input(model);
+            true
+        }
+        KeyCode::Char(c) if !c.is_control() => {
+            if model.builder.input_mode == InputMode::FilterOp {
+                if c == 'o' {
+                    cycle_filter_op(model, 1);
+                }
+            } else {
+                model.builder.input_buf.push(c);
+                if model.builder.input_mode == InputMode::FilterField {
+                    model.builder.refresh_field_matches(model.config.asset);
+                }
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
+fn start_search_input(model: &mut AppModel) {
+    model.builder.cancel_input();
+    model.builder.input_mode = InputMode::Search;
+    model.builder.input_buf = model.config.search.clone().unwrap_or_default();
+}
+
+fn start_filter_input(model: &mut AppModel) {
+    model.builder.cancel_input();
+    model.builder.input_mode = InputMode::FilterField;
+    model.builder.refresh_field_matches(model.config.asset);
+}
+
+fn step_field_pick(model: &mut AppModel, delta: isize) {
+    let len = model.builder.field_matches.len();
+    if len == 0 {
+        return;
+    }
+    let idx = model.builder.field_pick;
+    model.builder.field_pick = if delta >= 0 {
+        (idx + 1).min(len - 1)
+    } else {
+        idx.saturating_sub(1)
+    };
+}
+
+fn step_filter_select(model: &mut AppModel, delta: isize) {
+    let len = model.config.filters.len();
+    if len == 0 {
+        return;
+    }
+    let idx = model.builder.filter_selected;
+    model.builder.filter_selected = if delta >= 0 {
+        (idx + 1).min(len - 1)
+    } else {
+        idx.saturating_sub(1)
+    };
+}
+
+const fn cycle_filter_op(model: &mut AppModel, delta: isize) {
+    let len = FILTER_OPS.len();
+    let idx = model.builder.op_index;
+    model.builder.op_index = if delta >= 0 {
+        (idx + 1) % len
+    } else {
+        (idx + len - 1) % len
+    };
+}
+
+fn commit_input(model: &mut AppModel) {
+    match model.builder.input_mode {
+        InputMode::Search => {
+            let text = model.builder.input_buf.trim().to_string();
+            model.config.search = if text.is_empty() { None } else { Some(text) };
+            model.builder.cancel_input();
+        }
+        InputMode::FilterField => {
+            let Some(field) = model
+                .builder
+                .field_matches
+                .get(model.builder.field_pick)
+                .map(|f| f.field_name.clone())
+            else {
+                model.status = "pick a field (type to search, j/k, Enter)".into();
+                return;
+            };
+            model.builder.draft_field = Some(field);
+            model.builder.input_buf.clear();
+            model.builder.input_mode = InputMode::FilterOp;
+        }
+        InputMode::FilterOp => {
+            model.builder.input_mode = InputMode::FilterValue;
+            model.builder.input_buf.clear();
+        }
+        InputMode::FilterValue => {
+            let Some(left) = model.builder.draft_field.clone() else {
+                model.builder.cancel_input();
+                return;
+            };
+            let op = FILTER_OPS
+                .get(model.builder.op_index)
+                .copied()
+                .unwrap_or(FILTER_OPS[0]);
+            let value = parse_filter_value(&model.builder.input_buf);
+            model
+                .config
+                .filters
+                .push(FieldCondition::new(left, op, value));
+            model.builder.filter_selected = model.config.filters.len().saturating_sub(1);
+            model.builder.cancel_input();
+            model.status = format!("filter added ({} total)", model.config.filters.len());
+        }
+        InputMode::None => {}
+    }
+}
+
+fn parse_filter_value(raw: &str) -> Value {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Value::Null;
+    }
+    if let Ok(n) = trimmed.parse::<f64>() {
+        return json!(n);
+    }
+    json!(trimmed)
+}
+
+fn remove_selected_filter(model: &mut AppModel) {
+    let idx = model.builder.filter_selected;
+    if idx < model.config.filters.len() {
+        model.config.filters.remove(idx);
+        if model.builder.filter_selected > 0
+            && model.builder.filter_selected >= model.config.filters.len()
+        {
+            model.builder.filter_selected = model.config.filters.len().saturating_sub(1);
+        }
+    }
 }
 
 async fn refresh(model: &mut AppModel, debug: bool) {
@@ -201,48 +418,28 @@ async fn refresh(model: &mut AppModel, debug: bool) {
     }
 }
 
-fn copy_rows(model: &mut AppModel) {
-    match serde_json::to_string_pretty(&model.rows) {
-        Ok(json) => match copy_via_osc52(&json) {
-            Ok(()) => {
-                model.status = format!("copied {} rows (OSC 52)", model.rows.len());
-            }
+fn copy_active_pane(model: &mut AppModel) {
+    let payload = match model.view {
+        ViewMode::Results => serde_json::to_string_pretty(&model.rows).map_err(|e| e.to_string()),
+        ViewMode::Payload => payload_pretty(&model.config, false).map_err(|e| e.to_string()),
+        ViewMode::Codegen => Ok(render_codegen(&model.config)),
+        ViewMode::Builder | ViewMode::Help => {
+            model.status = "copy on Results, Payload, or Codegen".into();
+            return;
+        }
+    };
+    match payload {
+        Ok(text) => match copy_via_osc52(&text) {
+            Ok(()) => model.status = "copied to clipboard (OSC 52)".into(),
             Err(err) => model.set_error(format!("clipboard write failed: {err}")),
         },
-        Err(err) => model.set_error(format!("json encode failed: {err}")),
+        Err(err) => model.set_error(format!("encode failed: {err}")),
     }
 }
 
 async fn run_scan(config: &ScanConfig, debug: bool) -> Result<Vec<ScreenerRow>> {
-    Ok(
-        tvscreener::core::get_for_asset(config.asset, |inner| {
-            configure_inner(inner, config, debug)
-        })
-        .await?,
-    )
-}
-
-fn configure_inner(
-    inner: &mut Screener,
-    config: &ScanConfig,
-    debug: bool,
-) -> tvscreener::Result<()> {
-    let fields = config.resolve_fields()?;
-    if debug || tvscreener::logging::env_debug_enabled() {
-        inner.set_debug(true);
-    }
-    inner
-        .select(fields)
-        .set_range(config.from, config.from.saturating_add(config.limit));
-    if let Some(q) = config.search.as_deref() {
-        inner.search(q)?;
-    }
-    if matches!(config.asset, Asset::Stock) {
-        apply_stock_index_markets(inner, config.index.as_deref(), config.markets.as_deref())?;
-    } else if config.markets.is_some() || config.index.is_some() {
-        return Err(tvscreener::TvscreenerError::InvalidRequest(
-            "--markets / --index only apply to stock".into(),
-        ));
-    }
-    Ok(())
+    Ok(tvscreener::core::get_for_asset(config.asset, |inner| {
+        configure_screener(inner, config, debug)
+    })
+    .await?)
 }
