@@ -252,6 +252,21 @@ mod tests {
     #[test]
     fn extra_filter_field_names() {
         assert_eq!(ExtraFilter::Search.field_name(), "name,description");
+        assert_eq!(ExtraFilter::CurrentTradingDay.field_name(), "active_symbol");
+        assert_eq!(ExtraFilter::Primary.field_name(), "is_primary");
+    }
+
+    #[test]
+    fn filter_on_extra_multi_value_json() {
+        let f = Filter::on_extra(
+            ExtraFilter::Primary,
+            FilterOperator::InRange,
+            [json!(true), json!(false)],
+        );
+        let obj = f.to_json();
+        assert_eq!(obj["left"], "is_primary");
+        assert_eq!(obj["operation"], "in_range");
+        assert_eq!(obj["right"], json!([true, false]));
     }
 
     #[test]

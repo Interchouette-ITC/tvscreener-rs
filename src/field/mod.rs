@@ -896,6 +896,13 @@ mod tests {
     }
 
     #[test]
+    fn require_field_unknown_is_invalid() {
+        let err = require_field(Asset::Crypto, "NOPE").expect_err("missing");
+        assert!(matches!(err, crate::TvscreenerError::InvalidRequest(_)));
+        assert!(err.to_string().contains("crypto"));
+    }
+
+    #[test]
     fn default_crypto_fields_non_empty() {
         let fields = default_crypto_fields();
         assert!(fields.len() > 50);
