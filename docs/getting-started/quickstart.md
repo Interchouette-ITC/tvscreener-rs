@@ -7,7 +7,6 @@ Get a first screener response in a few minutes.
 ```bash
 cargo install --path .
 tvscreener --help
-tvscreener payload crypto --limit 2
 tvscreener scan crypto --limit 5
 tvscreener-mcp
 ```

@@ -46,8 +46,7 @@ async fn main() -> Result<()> {
 cargo install --path .                  # installs `tvscreener` and `tvscreener-mcp`
 
 tvscreener --help
-tvscreener payload crypto --limit 2
-tvscreener scan crypto --limit 5        # live HTTP
+tvscreener scan crypto --limit 5
 tvscreener scan stock --preset stock_price --limit 10
 tvscreener-mcp
 ```
@@ -191,7 +190,7 @@ Rust **1.85+**.
 make test          # default suite (offline)
 make lint
 make verify        # format-check + clippy + tests
-make test-live     # live HTTP (network)
+make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # API HTML under docs/api-rust/
 make help
 ```

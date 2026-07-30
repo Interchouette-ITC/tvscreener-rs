@@ -112,7 +112,7 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 make test          # default test suite
 make lint          # fmt --check + clippy -D warnings
 make verify        # format-check + clippy + tests
-make test-live     # live HTTP (network)
+make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # rustdoc → docs/api-rust/
 make help          # all targets
 ```
@@ -193,9 +193,8 @@ docker/
 ```bash
 cargo install --path .
 tvscreener --help
-tvscreener payload crypto --limit 2
 tvscreener scan crypto --limit 5
-tvscreener payload stock --preset stock_price --index SP500
+tvscreener scan stock --preset stock_price --index SP500 --limit 10
 tvscreener-mcp
 ```
 
