@@ -64,7 +64,7 @@ help:
 	@echo "  make example-manual  Example: util / presets / display"
 	@echo "  make example-crypto  Example: live crypto scan"
 	@echo "  make run             CLI (bin tvscreener). ARGS='…' (default: --help)"
-	@echo "                       e.g. make run ARGS='payload crypto --limit 2'"
+	@echo "                       e.g. make run ARGS='scan crypto --limit 5'"
 	@echo "  make run-mcp         MCP server (bin tvscreener-mcp)"
 	@echo "  make audit           cargo audit"
 	@echo "  make deny            cargo deny check"
