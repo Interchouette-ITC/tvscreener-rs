@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BIN_DIR","DEFAULT_MCP_ADDR"],"fn":["command_basename","exec_command","has_tty","is_long_lived","main","mcp_enabled","resolve_bin","start_mcp_http"]};

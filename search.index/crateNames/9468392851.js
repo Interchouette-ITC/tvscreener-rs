@@ -1,1 +1,0 @@
-rd_("jtvscreenerntvscreener_mcpntvscreener_tui")

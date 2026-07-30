@@ -1,0 +1,1 @@
+rd_("jtvscreenerAetvscreener_entrypointntvscreener_mcpntvscreener_tui")
