@@ -149,3 +149,49 @@ fn emit_subtype_filters(inner: &mut Screener, mut symbol_types_to_apply: Vec<Sym
 }
 
 impl_typed_screener_common!(StockScreener);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value};
+
+    #[test]
+    fn set_symbol_types_common_stock_adds_depository_receipt() {
+        let mut ss = StockScreener::new();
+        ss.set_symbol_types(["COMMON_STOCK"]).expect("types");
+        let payload = ss.inner().build_payload().expect("payload");
+        let filters = payload["filter"].as_array().expect("filter");
+        let subtype_rights: Vec<&Value> = filters
+            .iter()
+            .filter(|f| f["left"] == "subtype")
+            .flat_map(|f| f["right"].as_array().into_iter().flatten())
+            .collect();
+        assert!(
+            subtype_rights.len() >= 2,
+            "COMMON_STOCK should also emit DEPOSITORY_RECEIPT subtypes; got {subtype_rights:?}"
+        );
+    }
+
+    #[test]
+    fn set_symbol_types_unknown_is_invalid() {
+        let mut ss = StockScreener::new();
+        let err = ss
+            .set_symbol_types(["NOT_A_TYPE"])
+            .expect_err("unknown type");
+        assert!(matches!(err, TvscreenerError::InvalidRequest(_)));
+    }
+
+    #[test]
+    fn set_symbol_types_multi_promotes_type_to_in_range() {
+        let mut ss = StockScreener::new();
+        ss.set_symbol_types(["ETF", "COMMON_STOCK"]).expect("types");
+        let payload = ss.inner().build_payload().expect("payload");
+        let filters = payload["filter"].as_array().expect("filter");
+        let type_filter = filters
+            .iter()
+            .find(|f| f["left"] == "type")
+            .expect("type filter");
+        assert_eq!(type_filter["operation"], json!("in_range"));
+        assert!(type_filter["right"].as_array().unwrap().len() >= 2);
+    }
+}

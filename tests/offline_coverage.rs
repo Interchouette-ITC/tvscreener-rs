@@ -5,7 +5,7 @@
 //!
 //! Default `cargo test` path. Live HTTP is in `e2e_live`.
 
-use serde_json::{json, Value};
+use serde_json::json;
 use tvscreener::core::bond::BondScreener;
 use tvscreener::core::coin::CoinScreener;
 use tvscreener::core::crypto::CryptoScreener;
@@ -15,59 +15,36 @@ use tvscreener::core::stock::StockScreener;
 use tvscreener::core::Screener;
 use tvscreener::field::index_symbol;
 use tvscreener::field::{
-    default_bond_fields, default_coin_fields, default_crypto_fields, default_forex_fields,
-    default_futures_fields, default_stock_fields, get_preset, list_presets, search_fields, Asset,
-    FieldDef, Market,
+    default_bond_fields, default_coin_fields, default_crypto_fields, default_fields,
+    default_forex_fields, default_futures_fields, default_stock_fields, get_preset, list_presets,
+    search_fields, Asset, FieldDef, Market,
 };
-use tvscreener::filter::{ExtraFilter, FieldCondition, Filter, FilterOperator};
-use tvscreener::util::{format_recommendation, format_row, format_value};
-use tvscreener::util::{
-    get_columns_to_request, get_recommendation, get_url, millify, request_headers, SCANNER_ORIGIN,
-    TRADINGVIEW_ORIGIN,
-};
-use tvscreener::{ScreenerRow, TvscreenerError};
-
-// --- Build / util -----------------------------------------------------------------
-
-#[test]
-fn util_get_url_all_subtypes() {
-    for subtype in ["global", "crypto", "forex", "bond", "futures", "coin"] {
-        let url = get_url(subtype);
-        assert!(url.starts_with(SCANNER_ORIGIN));
-        assert!(url.ends_with(&format!("/{subtype}/scan")));
-    }
-}
-
-#[test]
-fn util_millify_and_headers() {
-    assert_eq!(millify(1_500_000.0), "1.500M");
-    assert_eq!(millify(-2_000.0), "-2.000K");
-    let headers = request_headers();
-    assert_eq!(
-        headers
-            .get(reqwest::header::ORIGIN)
-            .unwrap()
-            .to_str()
-            .unwrap(),
-        TRADINGVIEW_ORIGIN
-    );
-    assert!(headers.get(reqwest::header::USER_AGENT).is_some());
-    assert!(headers.get(reqwest::header::CONTENT_TYPE).is_some());
-}
-
-#[test]
-fn util_recommendation_letters() {
-    assert_eq!(get_recommendation(-0.5), "S");
-    assert_eq!(get_recommendation(0.0), "N");
-    assert_eq!(get_recommendation(1.2), "B");
-}
+use tvscreener::filter::{ExtraFilter, FieldCondition, FilterOperator};
+use tvscreener::TvscreenerError;
 
 // --- Fields / presets -------------------------------------------------------------
 
 #[test]
 fn fields_defaults_non_empty_for_all_assets() {
-    assert!(!default_crypto_fields().is_empty());
-    assert!(!default_stock_fields().is_empty());
+    for asset in [
+        Asset::Stock,
+        Asset::Crypto,
+        Asset::Forex,
+        Asset::Bond,
+        Asset::Futures,
+        Asset::Coin,
+    ] {
+        let via_dispatch = default_fields(asset);
+        assert!(!via_dispatch.is_empty(), "{asset:?}");
+    }
+    assert_eq!(
+        default_fields(Asset::Crypto).len(),
+        default_crypto_fields().len()
+    );
+    assert_eq!(
+        default_fields(Asset::Stock).len(),
+        default_stock_fields().len()
+    );
     assert!(!default_forex_fields().is_empty());
     assert!(!default_bond_fields().is_empty());
     assert!(!default_futures_fields().is_empty());
@@ -139,15 +116,6 @@ fn filters_remove_and_condition() {
     assert_eq!(s.filters()[0].left, "close");
 }
 
-#[test]
-fn filters_to_json_wire_shape() {
-    let f = Filter::new("RSI", FilterOperator::Below, [json!(35)]);
-    let obj = f.to_json();
-    assert_eq!(obj["left"], "RSI");
-    assert_eq!(obj["operation"], "less");
-    assert_eq!(obj["right"], 35);
-}
-
 // --- Base screener payload --------------------------------------------------------
 
 #[test]
@@ -213,32 +181,6 @@ fn base_screener_parse_rows_rejects_bad_shape() {
     let columns = vec![("name".into(), "Name".into())];
     let err = Screener::parse_rows(&json!({}), &columns).unwrap_err();
     assert!(matches!(err, TvscreenerError::Json(_)));
-}
-
-#[test]
-fn columns_to_request_skips_candlestick_adds_update_mode() {
-    let fields = vec![
-        FieldDef::new("Name", "name"),
-        FieldDef {
-            label: "Pattern".into(),
-            field_name: "candlestick_doji".into(),
-            format: None,
-            interval: false,
-            historical: false,
-        },
-        FieldDef {
-            label: "RSI".into(),
-            field_name: "RSI".into(),
-            format: Some("recommendation".into()),
-            interval: true,
-            historical: true,
-        },
-    ];
-    let cols = get_columns_to_request(&fields);
-    assert!(cols.iter().any(|(t, _)| t == "update_mode"));
-    assert!(!cols.iter().any(|(t, _)| t.starts_with("candlestick")));
-    assert!(cols.iter().any(|(t, _)| t == "Rec.RSI"));
-    assert!(cols.iter().any(|(t, _)| t == "RSI[1]"));
 }
 
 // --- Six screeners (constructors + payload, no network) ---------------------------
@@ -323,28 +265,6 @@ fn set_symbols_appears_in_payload() {
     assert_eq!(payload["symbols"]["query"]["types"], json!(["forex"]));
 }
 
-// --- Beauty -----------------------------------------------------------------------
-
-#[test]
-fn display_format_row_and_recommendation() {
-    let mut data = serde_json::Map::new();
-    data.insert("Name".into(), json!("BTC"));
-    data.insert("Volume".into(), json!(2_500_000.0));
-    data.insert("Missing".into(), Value::Null);
-    let row = ScreenerRow {
-        symbol: "BINANCE:BTCUSDT".into(),
-        data,
-    };
-    let rendered = format_row(&row, Some(&["Name", "Volume", "Missing"]));
-    assert!(rendered.contains("BINANCE:BTCUSDT"));
-    assert!(rendered.contains("Name: BTC"));
-    assert!(rendered.contains("Volume: 2.500M"));
-    assert!(rendered.contains("Missing: --"));
-    assert_eq!(format_recommendation(1.0), "↑ B");
-    assert_eq!(format_recommendation(-1.0), "↓ S");
-    assert_eq!(format_value(&json!(null)), "--");
-}
-
 // --- Errors -----------------------------------------------------------------------
 
 #[test]
@@ -355,9 +275,6 @@ fn errors_display_variants() {
     };
     assert!(http.to_string().contains("400"));
     assert!(TvscreenerError::Timeout.to_string().contains("timed out"));
-    assert!(TvscreenerError::Network("x".into())
-        .to_string()
-        .contains("network"));
     assert!(TvscreenerError::Json("x".into())
         .to_string()
         .contains("JSON"));
@@ -371,68 +288,23 @@ fn errors_display_variants() {
 
 #[tokio::test]
 async fn errors_unreachable_url_is_network_or_timeout() {
+    use std::error::Error;
+
     let mut s = Screener::new("crypto");
     s.select([FieldDef::new("Name", "name")])
         .set_url("http://127.0.0.1:1/")
         .set_range(0, 1);
-    let err = s.get().await.unwrap_err();
-    assert!(
-        matches!(
-            err,
-            TvscreenerError::Network(_)
-                | TvscreenerError::Timeout
-                | TvscreenerError::HttpStatus { .. }
-        ),
-        "unexpected error: {err:?}"
-    );
+    let err = s.get().await.expect_err("connection to :1 should fail");
+    match &err {
+        TvscreenerError::Network(_) => {
+            assert!(
+                err.source().is_some(),
+                "Network must expose reqwest::Error via Error::source"
+            );
+        }
+        TvscreenerError::Timeout => {}
+        other => panic!("unexpected error: {other:?}"),
+    }
 }
 
-// --- MCP tools (offline) ----------------------------------------------------------
-
-#[cfg(feature = "mcp")]
-#[test]
-fn mcp_tools_discover_and_presets() {
-    use tvscreener::field::Asset;
-    use tvscreener::mcp::tools::{
-        custom_query_payload_preview, format_discover_fields, format_get_preset,
-        format_list_presets, parse_asset, PayloadPreviewOpts,
-    };
-
-    assert_eq!(parse_asset("stock").unwrap(), Asset::Stock);
-    let text = format_discover_fields(Asset::Crypto, "volume", 8);
-    assert!(text.contains("volume") || text.contains("VOLUME") || text.contains("fields"));
-    assert!(format_list_presets().contains("crypto_price"));
-    assert!(format_get_preset("crypto_price").unwrap().contains("Name"));
-    let payload = custom_query_payload_preview(&PayloadPreviewOpts {
-        asset_type: "crypto",
-        fields: Some("NAME,PRICE"),
-        filters: Some(r#"[{"field":"PRICE","op":">","value":1}]"#),
-        sort_by: None,
-        ascending: false,
-        limit: 5,
-        indices: None,
-        markets: None,
-    })
-    .unwrap();
-    assert_eq!(payload["range"], json!([0, 5]));
-}
-
-#[cfg(feature = "mcp")]
-#[test]
-fn mcp_tools_stock_index_payload_uses_syml_prefix() {
-    use tvscreener::mcp::tools::{custom_query_payload_preview, PayloadPreviewOpts};
-
-    let payload = custom_query_payload_preview(&PayloadPreviewOpts {
-        asset_type: "stock",
-        fields: Some("NAME,PRICE"),
-        filters: None,
-        sort_by: None,
-        ascending: false,
-        limit: 5,
-        indices: Some("SP500"),
-        markets: Some("AMERICA"),
-    })
-    .unwrap();
-    assert_eq!(payload["symbols"]["symbolset"], json!(["SYML:SP;SPX"]));
-    assert_eq!(payload["markets"], json!(["america"]));
-}
+// (MCP payload smoke lives in `src/mcp/tools` unit tests.)

@@ -4,13 +4,14 @@ version = "1.0.0"
 edition = "2021"
 rust-version = "1.85"
 license = "Apache-2.0"
-description = "Rust port of deepentropy/tvscreener - unofficial TradingView Screener API client"
+description = "Unofficial TradingView Screener HTTP client (Rust); inspired by deepentropy/tvscreener"
 readme = "README.md"
 keywords = ["tradingview", "screener", "finance", "crypto", "stocks"]
 categories = ["api-bindings", "finance"]
-repository = "https://github.com/deepentropy/tvscreener"
-documentation = "https://deepentropy.github.io/tvscreener/docs/"
-authors = ["tvscreener-rs contributors"]
+repository = "https://github.com/Interchouette-ITC/tvscreener-rs"
+homepage = "https://github.com/Interchouette-ITC/tvscreener-rs"
+documentation = "https://docs.rs/tvscreener"
+authors = ["Interchouette <contact@interchouette.net>"]
 
 [lib]
 name = "tvscreener"
@@ -38,7 +39,7 @@ thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-regex = "1"
+regex = { version = "1", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
@@ -49,6 +50,8 @@ default = []
 live = []
 # Builds `tvscreener-mcp` (`mcpkit`).
 mcp = ["dep:mcpkit"]
+# Maintainer: `tvscreener regen-fields` (Python field catalog import).
+regen = ["dep:regex"]
 
 [dependencies.mcpkit]
 version = "0.7"
@@ -72,10 +75,6 @@ opt-level = "s"
 [package.metadata.docs.rs]
 all-features = false
 rustdoc-args = ["--cfg", "docsrs"]
-
-[[test]]
-name = "unit_basic"
-path = "tests/unit/basic.rs"
 
 [[test]]
 name = "e2e_live"

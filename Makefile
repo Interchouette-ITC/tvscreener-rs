@@ -1,12 +1,11 @@
 # tvscreener-rs - developer targets (`make help`)
 
-# Cursor agent shells inject CARGO_TARGET_DIR / PLAYWRIGHT_BROWSERS_PATH into
-# cursor-sandbox-cache. Never build there; use the repo `target/` (and defaults).
+# Prefer the repo `target/` for builds (unset inherited sandbox target dirs).
 unexport CARGO_TARGET_DIR
 unexport PLAYWRIGHT_BROWSERS_PATH
 
 CARGO_BIN ?= cargo
-# Belt-and-suspenders: strip even if a parent re-exports into the recipe shell.
+# Strip inherited target/browser paths even if a parent re-exports them.
 CARGO = env -u CARGO_TARGET_DIR -u PLAYWRIGHT_BROWSERS_PATH $(CARGO_BIN)
 CARGO_FLAGS ?=
 NIGHTLY_FLAGS ?=
@@ -140,6 +139,7 @@ clippy:
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features live -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features mcp -- $(CLIPPY_FLAGS)
+	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features regen -- $(CLIPPY_FLAGS)
 
 lint: format-check clippy
 
@@ -207,7 +207,7 @@ deny:
 ## Example: `make regen-fields PYTHON_ROOT=../tvscreener`
 regen-fields:
 	@test -n "$(PYTHON_ROOT)" || (echo "set PYTHON_ROOT=/path/to/tvscreener"; exit 1)
-	$(CARGO) run $(CARGO_FLAGS) --bin tvscreener -- regen-fields --python-root "$(PYTHON_ROOT)"
+	$(CARGO) run $(CARGO_FLAGS) --features regen --bin tvscreener -- regen-fields --python-root "$(PYTHON_ROOT)"
 
 # ---------------------------------------------------------------------------
 # Docker

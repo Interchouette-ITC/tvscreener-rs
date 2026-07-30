@@ -84,6 +84,24 @@ fn cli_markets_lists_america() {
 }
 
 #[test]
+fn cli_sectors_lists_technology_services() {
+    let out = tvscreener()
+        .arg("sectors")
+        .output()
+        .expect("run tvscreener sectors");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let text = stdout_utf8(&out);
+    assert!(
+        text.contains("TECHNOLOGY_SERVICES") && text.contains("Technology Services"),
+        "{text}"
+    );
+}
+
+#[test]
 fn cli_fields_search_finds_volume() {
     let out = tvscreener()
         .args(["fields", "volume", "--asset", "stock", "--limit", "5"])
@@ -116,4 +134,41 @@ fn cli_payload_rejects_markets_on_crypto() {
         err.contains("markets") || err.contains("stock"),
         "unexpected stderr:\n{err}"
     );
+}
+
+#[test]
+fn cli_payload_stock_index_sp500_symbolset() {
+    let out = tvscreener()
+        .args(["payload", "stock", "--index", "SP500", "--limit", "2"])
+        .output()
+        .expect("run tvscreener payload stock --index");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    let symbolset = v
+        .pointer("/symbols/symbolset")
+        .and_then(|s| s.as_array())
+        .expect("symbols.symbolset");
+    assert!(
+        symbolset.iter().any(|s| s.as_str() == Some("SYML:SP;SPX")),
+        "expected SYML:SP;SPX in {symbolset:?}"
+    );
+}
+
+#[test]
+fn cli_payload_stock_markets_america() {
+    let out = tvscreener()
+        .args(["payload", "stock", "--markets", "AMERICA", "--limit", "2"])
+        .output()
+        .expect("run tvscreener payload stock --markets");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert_eq!(v["markets"], serde_json::json!(["america"]));
 }

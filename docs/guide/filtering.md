@@ -25,9 +25,8 @@ let condition = FieldCondition::new("close", FilterOperator::Above, json!(100));
 ## Attach to a screener
 
 ```rust
-screener.where_condition(condition);
-// or low-level:
-screener.add_filter(Filter::from(condition));
+screener.where_condition(condition)?;
+// low-level equivalent: let f = condition.into_filter(); then add_filter(f.left, f.operation, f.values)
 ```
 
 ## Merge rule

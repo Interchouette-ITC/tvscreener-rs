@@ -1,6 +1,6 @@
 # Generated field / enum modules
 
-Produced by `tvscreener regen-fields` (or `make regen-fields PYTHON_ROOT=…`) from the
+Produced by `tvscreener regen-fields` with `--features regen` (or `make regen-fields PYTHON_ROOT=…`) from the
 Python field / `__init__` enums into `data/fields.json` and these Rust modules:
 
 - `index_symbol.rs`

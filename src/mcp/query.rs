@@ -3,11 +3,8 @@
 
 //! Screener query helpers for MCP tools.
 
-use crate::core::bond::BondScreener;
-use crate::core::coin::CoinScreener;
 use crate::core::crypto::CryptoScreener;
 use crate::core::forex::ForexScreener;
-use crate::core::futures::FuturesScreener;
 use crate::core::stock::StockScreener;
 use crate::core::Screener;
 use crate::error::{Result, TvscreenerError};
@@ -17,7 +14,7 @@ use crate::ScreenerRow;
 use serde_json::{json, Value};
 
 use super::format::format_rows_markdown;
-use super::resolve::{apply_stock_index_markets, parse_asset, parse_field_list, parse_filter_op};
+use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens};
 
 fn require_resolved(asset: Asset, name: &str) -> Result<FieldDef> {
     resolve_field(asset, name)
@@ -52,7 +49,7 @@ fn apply_filters(screener: &mut Screener, asset: Asset, filters: &[Value]) -> Re
             .and_then(Value::as_str)
             .ok_or_else(|| TvscreenerError::InvalidRequest("filter missing field".into()))?;
         let op_str = entry.get("op").and_then(Value::as_str).unwrap_or(">=");
-        let op = parse_filter_op(op_str).ok_or_else(|| {
+        let op = FilterOperator::from_wire(op_str).ok_or_else(|| {
             TvscreenerError::InvalidRequest(format!("unknown filter op `{op_str}`"))
         })?;
         let value = entry
@@ -93,38 +90,7 @@ async fn run_on_screener<F>(asset: Asset, configure: F) -> Result<Vec<ScreenerRo
 where
     F: FnOnce(&mut Screener) -> Result<()>,
 {
-    match asset {
-        Asset::Stock => {
-            let mut s = StockScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Crypto => {
-            let mut s = CryptoScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Forex => {
-            let mut s = ForexScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Bond => {
-            let mut s = BondScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Futures => {
-            let mut s = FuturesScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Coin => {
-            let mut s = CoinScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-    }
+    crate::core::get_for_asset(asset, configure).await
 }
 
 /// Options for [`custom_query`].
@@ -152,7 +118,7 @@ pub struct CustomQueryOpts<'a> {
 pub async fn custom_query(opts: &CustomQueryOpts<'_>) -> Result<String> {
     let asset = parse_asset(opts.asset_type)?;
     let limit = opts.limit.clamp(1, 100);
-    let field_list = parse_field_list(opts.fields);
+    let field_list = parse_csv_tokens(opts.fields);
     let filter_list = parse_filters_arg(opts.filters)?;
     let sort_by = opts.sort_by.map(str::trim).filter(|s| !s.is_empty());
 
@@ -214,28 +180,28 @@ pub async fn search_stocks(opts: &SearchStocksOpts<'_>) -> Result<String> {
 
     if let Some(min) = opts.min_price {
         ss.where_condition(FieldCondition::new(
-            price.field_name.clone(),
+            &price.field_name,
             FilterOperator::AboveOrEqual,
             json!(min),
         ))?;
     }
     if let Some(max) = opts.max_price {
         ss.where_condition(FieldCondition::new(
-            price.field_name.clone(),
+            &price.field_name,
             FilterOperator::BelowOrEqual,
             json!(max),
         ))?;
     }
     if let Some(min_b) = opts.min_market_cap_billions {
         ss.where_condition(FieldCondition::new(
-            mcap.field_name.clone(),
+            &mcap.field_name,
             FilterOperator::AboveOrEqual,
             json!(min_b * 1e9),
         ))?;
     }
     if let Some(max_b) = opts.max_market_cap_billions {
         ss.where_condition(FieldCondition::new(
-            mcap.field_name.clone(),
+            &mcap.field_name,
             FilterOperator::BelowOrEqual,
             json!(max_b * 1e9),
         ))?;
@@ -243,7 +209,7 @@ pub async fn search_stocks(opts: &SearchStocksOpts<'_>) -> Result<String> {
     if let Some(sectors) = opts.sectors {
         for wire in crate::mcp::resolve::resolve_sector_wires(Some(sectors))? {
             ss.where_condition(FieldCondition::new(
-                sector.field_name.clone(),
+                &sector.field_name,
                 FilterOperator::Match,
                 json!(wire),
             ))?;
@@ -403,33 +369,30 @@ pub struct PayloadPreviewOpts<'a> {
 pub fn custom_query_payload_preview(opts: &PayloadPreviewOpts<'_>) -> Result<Value> {
     let asset = parse_asset(opts.asset_type)?;
     let limit = opts.limit.clamp(1, 100);
-    let mut screener = Screener::new(match asset {
-        Asset::Stock => "global",
-        other => other.as_str(),
-    });
-    let field_list = parse_field_list(opts.fields);
-    if field_list.is_empty() {
-        // minimal column so payload builds
-        screener.select([FieldDef::new("Name", "name")]);
-    } else {
-        apply_select(&mut screener, asset, &field_list)?;
-    }
-    apply_filters(&mut screener, asset, &parse_filters_arg(opts.filters)?)?;
-    apply_sort(
-        &mut screener,
-        asset,
-        opts.sort_by.map(str::trim).filter(|s| !s.is_empty()),
-        opts.ascending,
-    )?;
-    if asset == Asset::Stock {
-        apply_stock_index_markets(&mut screener, opts.indices, opts.markets)?;
-    } else if opts.indices.is_some() || opts.markets.is_some() {
-        return Err(TvscreenerError::InvalidRequest(
-            "indices/markets only apply to asset_type=stock".into(),
-        ));
-    }
-    screener.set_range(0, limit);
-    screener.build_payload()
+    let field_list = parse_csv_tokens(opts.fields);
+    let filter_list = parse_filters_arg(opts.filters)?;
+    let sort_by = opts.sort_by.map(str::trim).filter(|s| !s.is_empty());
+
+    crate::core::with_asset_screener(asset, |screener| {
+        if field_list.is_empty() {
+            if screener.selected_fields().is_empty() {
+                screener.select([FieldDef::new("Name", "name")]);
+            }
+        } else {
+            apply_select(screener, asset, &field_list)?;
+        }
+        apply_filters(screener, asset, &filter_list)?;
+        apply_sort(screener, asset, sort_by, opts.ascending)?;
+        if asset == Asset::Stock {
+            apply_stock_index_markets(screener, opts.indices, opts.markets)?;
+        } else if opts.indices.is_some() || opts.markets.is_some() {
+            return Err(TvscreenerError::InvalidRequest(
+                "indices/markets only apply to asset_type=stock".into(),
+            ));
+        }
+        screener.set_range(0, limit);
+        screener.build_payload()
+    })
 }
 
 /// Options for [`build_payload`].
@@ -482,7 +445,7 @@ pub async fn search_by_index(
 ) -> Result<String> {
     let limit = limit.clamp(1, 100);
     let mut ss = StockScreener::new();
-    let field_list = parse_field_list(fields);
+    let field_list = parse_csv_tokens(fields);
     if field_list.is_empty() {
         ss.select([
             require_resolved(Asset::Stock, "NAME")?,

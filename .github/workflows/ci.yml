@@ -23,17 +23,22 @@ jobs:
       - name: Swatinem cache
         uses: Swatinem/rust-cache@v2
 
-      - uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
           components: rustfmt, clippy
 
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
 
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
       - name: Audit
         run: make audit
+
+      - name: Deny
+        run: make deny
 
       - name: Check
         run: make check

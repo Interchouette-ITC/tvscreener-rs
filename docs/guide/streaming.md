@@ -2,6 +2,8 @@
 
 `Screener::stream` and `stream_with_callback` poll `get` on an interval. The interval is floored by `MIN_STREAM_INTERVAL_SECS`.
 
+Failed polls are logged with `tracing::warn` and skipped; only successful batches are collected or passed to the callback.
+
 ## Collect snapshots
 
 ```rust
