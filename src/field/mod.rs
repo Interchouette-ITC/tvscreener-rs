@@ -881,6 +881,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn resolve_field_const_technical_and_label() {
+        let (name, def) = resolve_field(Asset::Crypto, "PRICE").expect("const");
+        assert_eq!(name, "PRICE");
+        assert_eq!(def.field_name, "close");
+
+        let (name, def) = resolve_field(Asset::Crypto, "close").expect("technical");
+        assert_eq!(name, "PRICE");
+        assert_eq!(def.field_name, "close");
+
+        let by_label = resolve_field(Asset::Crypto, &def.label);
+        assert!(by_label.is_some());
+        assert!(resolve_field(Asset::Crypto, "not_a_real_field_xyz").is_none());
+    }
+
+    #[test]
     fn default_crypto_fields_non_empty() {
         let fields = default_crypto_fields();
         assert!(fields.len() > 50);

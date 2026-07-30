@@ -25,6 +25,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 | _(default)_ | Library + `tvscreener` CLI               |
 | `live`      | Live HTTP tests (`make test-live`)       |
 | `mcp`       | `tvscreener-mcp` stdio server (`mcpkit`) |
+| `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 ```bash
 make run ARGS='--help'

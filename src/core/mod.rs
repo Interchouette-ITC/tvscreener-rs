@@ -818,4 +818,24 @@ mod tests {
         assert_eq!(truncated.len(), HTTP_ERROR_BODY_MAX + '…'.len_utf8());
         assert!(truncated.ends_with('…'));
     }
+
+    #[test]
+    fn with_asset_screener_builds_typed_payload() {
+        let payload = with_asset_screener(crate::field::Asset::Crypto, |s| {
+            s.set_range(0, 3);
+            s.build_payload()
+        })
+        .expect("payload");
+        assert_eq!(payload["range"], json!([0, 3]));
+        assert!(payload["columns"].as_array().unwrap().len() > 1);
+    }
+
+    #[test]
+    fn stock_set_markets_all_expands_catalog() {
+        let mut ss = stock::StockScreener::new();
+        ss.set_markets([crate::field::Market::all()]);
+        let payload = ss.inner().build_payload().expect("payload");
+        let markets = payload["markets"].as_array().expect("markets");
+        assert!(markets.len() > 10, "ALL should expand; got {markets:?}");
+    }
 }

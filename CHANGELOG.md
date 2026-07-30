@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI: `dtolnay/rust-toolchain`, `make deny`; drop redundant `tests/unit/basic`
 - `regen-fields` gated behind `--features regen` (optional `regex` dep)
 - `TvscreenerError::Network` preserves `reqwest::Error` source chain
+- Crate-root re-exports `resolve_field` / `catalog_len`; filter op aliases live in `FilterOperator::from_wire`
 
 ### Fixed
 

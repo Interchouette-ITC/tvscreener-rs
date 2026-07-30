@@ -60,21 +60,24 @@ impl FilterOperator {
         }
     }
 
-    /// Parses a wire `operation` string (e.g. `"less"` → [`Self::Below`]).
+    /// Parses a wire or friendly `operation` string.
+    ///
+    /// Accepts `TradingView` wire tokens (`less`, `egreater`, …) and common aliases
+    /// (`<`, `>=`, `above`, `not_equal`, …).
     #[must_use]
     pub fn from_wire(s: &str) -> Option<Self> {
-        match s {
-            "less" => Some(Self::Below),
-            "eless" => Some(Self::BelowOrEqual),
-            "greater" => Some(Self::Above),
-            "egreater" => Some(Self::AboveOrEqual),
+        match s.trim() {
+            "less" | "<" | "below" => Some(Self::Below),
+            "eless" | "<=" | "below_or_equal" => Some(Self::BelowOrEqual),
+            "greater" | ">" | "above" => Some(Self::Above),
+            "egreater" | ">=" | "above_or_equal" => Some(Self::AboveOrEqual),
             "crosses" => Some(Self::Crosses),
-            "crosses_above" => Some(Self::CrossesUp),
-            "crosses_below" => Some(Self::CrossesDown),
+            "crosses_above" | "crosses_up" => Some(Self::CrossesUp),
+            "crosses_below" | "crosses_down" => Some(Self::CrossesDown),
             "in_range" => Some(Self::InRange),
             "not_in_range" => Some(Self::NotInRange),
-            "equal" => Some(Self::Equal),
-            "nequal" => Some(Self::NotEqual),
+            "equal" | "==" | "=" => Some(Self::Equal),
+            "nequal" | "!=" | "not_equal" => Some(Self::NotEqual),
             "match" => Some(Self::Match),
             _ => None,
         }
@@ -207,6 +210,27 @@ mod tests {
         assert_eq!(FilterOperator::Below.as_str(), "less");
         assert_eq!(FilterOperator::Match.as_str(), "match");
         assert_eq!(FilterOperator::NotEqual.as_str(), "nequal");
+    }
+
+    #[test]
+    fn filter_operator_from_wire_aliases() {
+        assert_eq!(
+            FilterOperator::from_wire(">="),
+            Some(FilterOperator::AboveOrEqual)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("above"),
+            Some(FilterOperator::Above)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("!="),
+            Some(FilterOperator::NotEqual)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("crosses_up"),
+            Some(FilterOperator::CrossesUp)
+        );
+        assert_eq!(FilterOperator::from_wire("nope"), None);
     }
 
     #[test]

@@ -43,21 +43,7 @@ pub fn parse_f64_range(raw: Option<&str>) -> (Option<f64>, Option<f64>) {
 /// Maps operator strings to [`FilterOperator`] variants.
 #[must_use]
 pub fn parse_filter_op(op: &str) -> Option<FilterOperator> {
-    match op.trim() {
-        ">=" | "egreater" | "above_or_equal" => Some(FilterOperator::AboveOrEqual),
-        ">" | "greater" | "above" => Some(FilterOperator::Above),
-        "<=" | "eless" | "below_or_equal" => Some(FilterOperator::BelowOrEqual),
-        "<" | "less" | "below" => Some(FilterOperator::Below),
-        "==" | "=" | "equal" => Some(FilterOperator::Equal),
-        "!=" | "nequal" | "not_equal" => Some(FilterOperator::NotEqual),
-        "match" => Some(FilterOperator::Match),
-        "in_range" => Some(FilterOperator::InRange),
-        "not_in_range" => Some(FilterOperator::NotInRange),
-        "crosses" => Some(FilterOperator::Crosses),
-        "crosses_up" | "crosses_above" => Some(FilterOperator::CrossesUp),
-        "crosses_down" | "crosses_below" => Some(FilterOperator::CrossesDown),
-        _ => FilterOperator::from_wire(op.trim()),
-    }
+    FilterOperator::from_wire(op)
 }
 
 /// Parses an asset type string into [`Asset`].

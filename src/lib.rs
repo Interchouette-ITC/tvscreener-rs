@@ -61,8 +61,8 @@ pub mod util;
 
 pub use error::{Result, TvscreenerError};
 pub use field::{
-    get_preset, list_fields, list_presets, search_fields, Asset, FieldDef, IndexSymbolDef, Market,
-    NamedValue, RatingBand,
+    catalog_len, get_preset, list_fields, list_presets, resolve_field, search_fields, Asset,
+    FieldDef, IndexSymbolDef, Market, NamedValue, RatingBand,
 };
 pub use filter::{ExtraFilter, FieldCondition, Filter, FilterOperator};
 pub use util::{format_recommendation, format_row, format_value};
