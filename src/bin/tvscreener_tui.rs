@@ -18,9 +18,8 @@ use clap::{ArgAction, Parser, ValueEnum};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use serde_json::{json, Value};
 use tvscreener::filter::FieldCondition;
-use tvscreener::query_config::parse_filter_conditions_from_cli;
+use tvscreener::query_config::{parse_filter_conditions_from_cli, parse_filter_value};
 use tvscreener::tui::{
     configure_screener, copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen,
     install_panic_hook, install_signal_handlers, is_quit_key, payload_pretty, render_codegen,
@@ -219,66 +218,58 @@ async fn handle_global_key(model: &mut AppModel, code: KeyCode, debug: bool) -> 
         KeyCode::Enter if model.view == ViewMode::Builder && model.can_refresh() => {
             refresh(model, debug).await;
         }
-        KeyCode::Left
-            if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
-        {
-            match model.builder.focus {
-                BuilderFocus::Asset => model.step_asset(-1),
-                BuilderFocus::Preset => model.step_preset(-1),
-                _ => {}
-            }
-        }
-        KeyCode::Right
-            if model.view == ViewMode::Builder && model.builder.input_mode == InputMode::None =>
-        {
+        _ if model.view == ViewMode::Builder => handle_builder_key(model, code),
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_builder_key(model: &mut AppModel, code: KeyCode) {
+    match code {
+        KeyCode::Left if model.builder.input_mode == InputMode::None => match model.builder.focus {
+            BuilderFocus::Asset => model.step_asset(-1),
+            BuilderFocus::Preset => model.step_preset(-1),
+            _ => {}
+        },
+        KeyCode::Right if model.builder.input_mode == InputMode::None => {
             match model.builder.focus {
                 BuilderFocus::Asset => model.step_asset(1),
                 BuilderFocus::Preset => model.step_preset(1),
                 _ => {}
             }
         }
-        KeyCode::Char('+' | '=') if model.view == ViewMode::Builder => model.step_limit(1),
-        KeyCode::Char('-') if model.view == ViewMode::Builder => model.step_limit(-1),
-        KeyCode::Char('s') if model.view == ViewMode::Builder => start_search_input(model),
-        KeyCode::Char('t')
-            if model.view == ViewMode::Builder && model.builder.focus == BuilderFocus::Sort =>
-        {
+        KeyCode::Char('+' | '=') => model.step_limit(1),
+        KeyCode::Char('-') => model.step_limit(-1),
+        KeyCode::Char('s') => start_search_input(model),
+        KeyCode::Char('t') if model.builder.focus == BuilderFocus::Sort => {
             start_sort_input(model);
         }
         KeyCode::Char('u')
-            if model.view == ViewMode::Builder
-                && model.builder.focus == BuilderFocus::Sort
+            if model.builder.focus == BuilderFocus::Sort
                 && model.builder.input_mode == InputMode::None =>
         {
             model.toggle_sort_ascending();
         }
         KeyCode::Char('m')
-            if model.view == ViewMode::Builder
-                && model.builder.focus == BuilderFocus::Markets
+            if model.builder.focus == BuilderFocus::Markets
                 && model.config.asset == Asset::Stock =>
         {
             start_markets_input(model);
         }
         KeyCode::Char('i')
-            if model.view == ViewMode::Builder
-                && model.builder.focus == BuilderFocus::Index
-                && model.config.asset == Asset::Stock =>
+            if model.builder.focus == BuilderFocus::Index && model.config.asset == Asset::Stock =>
         {
             start_index_input(model);
         }
-        KeyCode::Char('f') if model.view == ViewMode::Builder => start_filter_input(model),
-        KeyCode::Char('d') if model.view == ViewMode::Builder => remove_selected_filter(model),
-        KeyCode::Char('o')
-            if model.view == ViewMode::Builder
-                && model.builder.input_mode == InputMode::FilterOp =>
-        {
+        KeyCode::Char('f') => start_filter_input(model),
+        KeyCode::Char('d') => remove_selected_filter(model),
+        KeyCode::Char('o') if model.builder.input_mode == InputMode::FilterOp => {
             cycle_filter_op(model, 1);
         }
-        KeyCode::Char('j') if model.view == ViewMode::Builder => handle_builder_j(model),
-        KeyCode::Char('k') if model.view == ViewMode::Builder => handle_builder_k(model),
+        KeyCode::Char('j') => handle_builder_j(model),
+        KeyCode::Char('k') => handle_builder_k(model),
         _ => {}
     }
-    Ok(())
 }
 
 fn handle_builder_j(model: &mut AppModel) {
@@ -474,17 +465,6 @@ fn commit_input(model: &mut AppModel) {
         }
         InputMode::None => {}
     }
-}
-
-fn parse_filter_value(raw: &str) -> Value {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return Value::Null;
-    }
-    if let Ok(n) = trimmed.parse::<f64>() {
-        return json!(n);
-    }
-    json!(trimmed)
 }
 
 fn remove_selected_filter(model: &mut AppModel) {

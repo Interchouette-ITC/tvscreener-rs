@@ -23,10 +23,9 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 ### Library
 
 ```toml
-# Cargo.toml (when published on crates.io)
-tvscreener = "1.0"
-# or from GitHub:
-# tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
+# Cargo.toml (path or git)
+tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
+# or: tvscreener = { path = "../tvscreener-rs" }
 ```
 
 ```rust
@@ -223,6 +222,7 @@ make version-show
 | [Selecting fields](docs/guide/selecting-fields.md) | Columns, presets, `select_all` |
 | [Streaming](docs/guide/streaming.md) | Periodic `stream` polls |
 | [TUI](docs/guide/tui.md) | Ratatui: Results, Builder, Payload, Codegen |
+| [MCP](docs/guide/mcp.md) | Stdio and Streamable HTTP (`tvscreener-mcp`) |
 | [Screeners](docs/guide/screeners.md) | All six typed clients |
 | [Manual test plan](docs/MANUAL_TEST_PLAN.md) | How to run tests |
 | [`CHANGELOG.md`](CHANGELOG.md) | Semver notes |

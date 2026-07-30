@@ -3,15 +3,32 @@
 
 //! Text-formatting helpers for MCP tool responses.
 
+use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
 use crate::error::Result;
 use crate::field::{
     all_countries, all_exchanges, all_index_symbols, all_industries, all_markets, all_ratings,
     all_sectors, get_preset, list_presets, resolve_field, search_fields, to_symbolset_wire, Asset,
+    NamedValue,
 };
 use crate::util::format_value;
 use crate::ScreenerRow;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
+
+fn format_const_wire_list(title: &str, items: &[NamedValue], footer: Option<&str>) -> String {
+    let mut out = format!("{title}\n");
+    for item in items {
+        let _ = writeln!(out, "  - **{}**: `{}`", item.const_name, item.value);
+    }
+    if let Some(footer) = footer {
+        out.push('\n');
+        out.push_str(footer);
+        if !footer.ends_with('\n') {
+            out.push('\n');
+        }
+    }
+    out
+}
 
 /// Formats `discover_fields` search hits as text.
 #[must_use]
@@ -91,44 +108,35 @@ pub fn format_list_presets() -> String {
 /// Lists stock sectors (`sector::*` const → wire value).
 #[must_use]
 pub fn format_list_sectors() -> String {
-    let mut out = String::from("Available sectors (const → wire):\n");
-    for s in all_sectors() {
-        let _ = writeln!(out, "  - **{}**: `{}`", s.const_name, s.value);
-    }
-    out.push_str(
-        "\nPass const names (e.g. `TECHNOLOGY_SERVICES`) or wire values to `search_stocks` `sectors` CSV.\n",
-    );
-    out
+    format_const_wire_list(
+        "Available sectors (const → wire):",
+        all_sectors(),
+        Some(
+            "Pass const names (e.g. `TECHNOLOGY_SERVICES`) or wire values to `search_stocks` `sectors` CSV.\n",
+        ),
+    )
 }
 
 /// Lists countries (`country::*` const → wire value).
 #[must_use]
 pub fn format_list_countries() -> String {
-    let mut out = String::from("Available countries (const → wire):\n");
-    for c in all_countries() {
-        let _ = writeln!(out, "  - **{}**: `{}`", c.const_name, c.value);
-    }
-    out
+    format_const_wire_list("Available countries (const → wire):", all_countries(), None)
 }
 
 /// Lists industries (`industry::*` const → wire value).
 #[must_use]
 pub fn format_list_industries() -> String {
-    let mut out = String::from("Available industries (const → wire):\n");
-    for i in all_industries() {
-        let _ = writeln!(out, "  - **{}**: `{}`", i.const_name, i.value);
-    }
-    out
+    format_const_wire_list(
+        "Available industries (const → wire):",
+        all_industries(),
+        None,
+    )
 }
 
 /// Lists exchanges (`exchange::*` const → wire value).
 #[must_use]
 pub fn format_list_exchanges() -> String {
-    let mut out = String::from("Available exchanges (const → wire):\n");
-    for e in all_exchanges() {
-        let _ = writeln!(out, "  - **{}**: `{}`", e.const_name, e.value);
-    }
-    out
+    format_const_wire_list("Available exchanges (const → wire):", all_exchanges(), None)
 }
 
 /// Lists recommendation rating bands.
@@ -240,8 +248,8 @@ pub fn format_rows_markdown(rows: &[ScreenerRow], max_rows: usize) -> String {
         .into_iter()
         .collect();
     // Prefer a stable short set when many columns
-    if labels.len() > 12 {
-        labels.truncate(12);
+    if labels.len() > DEFAULT_TABLE_MAX_COLUMNS {
+        labels.truncate(DEFAULT_TABLE_MAX_COLUMNS);
     }
 
     let mut header = String::from("| Symbol |");

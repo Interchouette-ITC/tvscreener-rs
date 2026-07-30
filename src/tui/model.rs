@@ -171,7 +171,7 @@ impl BuilderUi {
         }
     }
 
-    /// Refreshes preset list after asset changes (asset is fixed at launch).
+    /// Refreshes preset list and index after the config asset or preset changes.
     pub fn sync_preset_index(&mut self, config: &ScanConfig) {
         self.preset_options = preset_options(config.asset);
         self.preset_index = preset_index(config.asset, config.preset.as_deref());
@@ -455,7 +455,7 @@ impl AppModel {
         self.rows.clear();
         self.fields = default_fields(self.config.asset);
         self.status = format!(
-            "{}  asset changed — Enter to scan",
+            "{}  asset changed - Enter to scan",
             self.config.asset.as_str()
         );
         self.error = None;
