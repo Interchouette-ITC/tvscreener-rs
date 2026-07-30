@@ -22,8 +22,10 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 ### Library
 
 ```toml
-# Cargo.toml
+# Cargo.toml (when published on crates.io)
 tvscreener = "1.0"
+# or from GitHub:
+# tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
 # optional MCP binary deps:
 # tvscreener = { version = "1.0", features = ["mcp"] }
 ```

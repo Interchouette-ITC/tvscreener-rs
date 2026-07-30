@@ -65,11 +65,12 @@ Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded fiel
 
 ## Depending on this crate
 
-Package name on crates.io / in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`).
+Package name in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`). Prefer a path or git dependency until the crate is published on crates.io:
 
 ```toml
-tvscreener = { path = "../tvscreener-rs" }
-# later: tvscreener = "1.0"
+tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
+# or: tvscreener = { path = "../tvscreener-rs" }
+# after crates.io publish: tvscreener = "1.0"
 ```
 
 **This crate’s Cargo features:**
@@ -79,6 +80,7 @@ tvscreener = { path = "../tvscreener-rs" }
 | _(default)_ | Library + `tvscreener` CLI + tests       |
 | `mcp`       | `tvscreener-mcp` stdio server (`mcpkit`) |
 | `live`      | Live HTTP tests (`make test-live`)       |
+| `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime. Enabling `mcp` only pulls MCP server deps; it does not change that.
 
@@ -177,8 +179,9 @@ src/
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
   mcp/             tools + mcpkit stdio server (feature = "mcp" only)
-  bin/tvscreener.rs
+  bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
+  resolve.rs       Shared market/index/sector wire resolution
 examples/
 tests/
 docs/

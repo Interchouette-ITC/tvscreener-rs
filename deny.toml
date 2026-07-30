@@ -17,6 +17,7 @@ allow = [
     "Unicode-3.0",
     "Zlib",
     "OpenSSL",
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
 

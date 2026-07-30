@@ -27,17 +27,17 @@ How to run the test suite and related examples.
 
 ## What covers what
 
-| Area                                             | Tests / examples                                                      |
-| ------------------------------------------------ | --------------------------------------------------------------------- |
-| Util (`get_url`, `millify`, headers)             | `tests/offline_coverage.rs`, `src/util.rs`, `examples/manual_test.rs` |
-| Fields / search / defaults / presets             | `offline_coverage`, `src/field`                                       |
-| Filters                                          | `offline_coverage`, `src/core`, `src/filter`                          |
-| Payloads (`select`, range, sort, index, markets) | `offline_coverage`, `offline_payload_goldens`                         |
-| Typed screeners `get()` / stream                 | `e2e_live`                                                            |
-| Display formatting                               | `offline_coverage`, `src/util`, `manual_test`                         |
-| Errors                                           | `offline_coverage`                                                    |
-| CLI (no scanner)                                 | `tests/cli.rs`                                                        |
-| CLI (live scanner: `scan`, preset, index, error) | `tests/e2e/cli_live.rs` (`--features live`)                           |
+| Area                                             | Tests / examples                                    |
+| ------------------------------------------------ | --------------------------------------------------- |
+| Util (`get_url`, `millify`, headers)             | `src/util.rs`, `examples/manual_test.rs`            |
+| Fields / search / defaults / presets             | `offline_coverage`, `src/field`                     |
+| Filters                                          | `offline_coverage`, `src/core`, `src/filter`        |
+| Payloads (`select`, range, sort, index, markets) | `offline_coverage`, `offline_payload_goldens`       |
+| Typed screeners `get()` / stream                 | `e2e_live`                                          |
+| Display formatting                               | `src/util`, `examples/manual_test.rs`               |
+| Errors                                           | `offline_coverage`                                  |
+| CLI (no scanner)                                 | `tests/cli.rs`                                      |
+| CLI (live scanner: `scan`, preset, index, error) | `tests/e2e/cli_live.rs` (`--features live`)         |
 
 | MCP tools | `cargo test --features mcp` |
 

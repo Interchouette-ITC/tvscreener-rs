@@ -60,21 +60,24 @@ impl FilterOperator {
         }
     }
 
-    /// Parses a wire `operation` string (e.g. `"less"` → [`Self::Below`]).
+    /// Parses a wire or friendly `operation` string.
+    ///
+    /// Accepts `TradingView` wire tokens (`less`, `egreater`, …) and common aliases
+    /// (`<`, `>=`, `above`, `not_equal`, …).
     #[must_use]
     pub fn from_wire(s: &str) -> Option<Self> {
-        match s {
-            "less" => Some(Self::Below),
-            "eless" => Some(Self::BelowOrEqual),
-            "greater" => Some(Self::Above),
-            "egreater" => Some(Self::AboveOrEqual),
+        match s.trim() {
+            "less" | "<" | "below" => Some(Self::Below),
+            "eless" | "<=" | "below_or_equal" => Some(Self::BelowOrEqual),
+            "greater" | ">" | "above" => Some(Self::Above),
+            "egreater" | ">=" | "above_or_equal" => Some(Self::AboveOrEqual),
             "crosses" => Some(Self::Crosses),
-            "crosses_above" => Some(Self::CrossesUp),
-            "crosses_below" => Some(Self::CrossesDown),
+            "crosses_above" | "crosses_up" => Some(Self::CrossesUp),
+            "crosses_below" | "crosses_down" => Some(Self::CrossesDown),
             "in_range" => Some(Self::InRange),
             "not_in_range" => Some(Self::NotInRange),
-            "equal" => Some(Self::Equal),
-            "nequal" => Some(Self::NotEqual),
+            "equal" | "==" | "=" => Some(Self::Equal),
+            "nequal" | "!=" | "not_equal" => Some(Self::NotEqual),
             "match" => Some(Self::Match),
             _ => None,
         }
@@ -210,6 +213,27 @@ mod tests {
     }
 
     #[test]
+    fn filter_operator_from_wire_aliases() {
+        assert_eq!(
+            FilterOperator::from_wire(">="),
+            Some(FilterOperator::AboveOrEqual)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("above"),
+            Some(FilterOperator::Above)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("!="),
+            Some(FilterOperator::NotEqual)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("crosses_up"),
+            Some(FilterOperator::CrossesUp)
+        );
+        assert_eq!(FilterOperator::from_wire("nope"), None);
+    }
+
+    #[test]
     fn filter_operator_display_from_str_roundtrip() {
         for op in [
             FilterOperator::Below,
@@ -228,6 +252,21 @@ mod tests {
     #[test]
     fn extra_filter_field_names() {
         assert_eq!(ExtraFilter::Search.field_name(), "name,description");
+        assert_eq!(ExtraFilter::CurrentTradingDay.field_name(), "active_symbol");
+        assert_eq!(ExtraFilter::Primary.field_name(), "is_primary");
+    }
+
+    #[test]
+    fn filter_on_extra_multi_value_json() {
+        let f = Filter::on_extra(
+            ExtraFilter::Primary,
+            FilterOperator::InRange,
+            [json!(true), json!(false)],
+        );
+        let obj = f.to_json();
+        assert_eq!(obj["left"], "is_primary");
+        assert_eq!(obj["operation"], "in_range");
+        assert_eq!(obj["right"], json!([true, false]));
     }
 
     #[test]

@@ -446,7 +446,7 @@ fn catalog() -> &'static FieldsCatalog {
 
 /// Looks up one catalog field by asset and constant name.
 #[must_use]
-pub fn field(asset: Asset, const_name: &str) -> Option<FieldDef> {
+pub(crate) fn field(asset: Asset, const_name: &str) -> Option<FieldDef> {
     catalog().field(asset, const_name)
 }
 
@@ -740,6 +740,19 @@ pub fn default_coin_fields() -> Vec<FieldDef> {
     catalog().defaults_for(Asset::Coin)
 }
 
+/// Default columns for `asset` (same as the typed screener constructors).
+#[must_use]
+pub fn default_fields(asset: Asset) -> Vec<FieldDef> {
+    match asset {
+        Asset::Stock => default_stock_fields(),
+        Asset::Crypto => default_crypto_fields(),
+        Asset::Forex => default_forex_fields(),
+        Asset::Bond => default_bond_fields(),
+        Asset::Futures => default_futures_fields(),
+        Asset::Coin => default_coin_fields(),
+    }
+}
+
 /// Crypto sort field: 24h volume in USD.
 ///
 /// # Panics
@@ -868,6 +881,40 @@ mod tests {
     use super::*;
 
     #[test]
+    fn resolve_field_const_technical_and_label() {
+        let (name, def) = resolve_field(Asset::Crypto, "PRICE").expect("const");
+        assert_eq!(name, "PRICE");
+        assert_eq!(def.field_name, "close");
+
+        let (name, def) = resolve_field(Asset::Crypto, "close").expect("technical");
+        assert_eq!(name, "PRICE");
+        assert_eq!(def.field_name, "close");
+
+        let by_label = resolve_field(Asset::Crypto, &def.label);
+        assert!(by_label.is_some());
+        assert!(resolve_field(Asset::Crypto, "not_a_real_field_xyz").is_none());
+    }
+
+    #[test]
+    fn require_field_unknown_is_invalid() {
+        let err = require_field(Asset::Crypto, "NOPE").expect_err("missing");
+        assert!(matches!(err, crate::TvscreenerError::InvalidRequest(_)));
+        assert!(err.to_string().contains("crypto"));
+    }
+
+    #[test]
+    fn asset_parse_round_trip() {
+        assert_eq!(Asset::parse("crypto"), Some(Asset::Crypto));
+        assert_eq!(Asset::parse("stock"), Some(Asset::Stock));
+        assert_eq!(Asset::parse("forex"), Some(Asset::Forex));
+        assert_eq!(Asset::parse("bond"), Some(Asset::Bond));
+        assert_eq!(Asset::parse("futures"), Some(Asset::Futures));
+        assert_eq!(Asset::parse("coin"), Some(Asset::Coin));
+        assert_eq!(Asset::parse("nope"), None);
+        assert_eq!(Asset::Crypto.as_str(), "crypto");
+    }
+
+    #[test]
     fn default_crypto_fields_non_empty() {
         let fields = default_crypto_fields();
         assert!(fields.len() > 50);
@@ -934,10 +981,14 @@ mod tests {
         );
         assert_eq!(all_sectors().len(), sector::ALL_CONST_NAMES.len());
         assert_eq!(country::UNITED_STATES, "United States");
+        assert_eq!(resolve_country("UNITED_STATES"), Some("United States"));
+        assert_eq!(resolve_country("United States"), Some("United States"));
         assert_eq!(all_countries().len(), country::ALL_CONST_NAMES.len());
         assert_eq!(industry::SEMICONDUCTORS, "Semiconductors");
+        assert_eq!(resolve_industry("SEMICONDUCTORS"), Some("Semiconductors"));
         assert_eq!(all_industries().len(), industry::ALL_CONST_NAMES.len());
         assert_eq!(exchange::NASDAQ, "NASDAQ");
+        assert_eq!(resolve_exchange("NASDAQ"), Some("NASDAQ"));
         assert_eq!(all_exchanges().len(), exchange::ALL_CONST_NAMES.len());
         assert_eq!(all_ratings().len(), rating::ALL_CONST_NAMES.len());
     }

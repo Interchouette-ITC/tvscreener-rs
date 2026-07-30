@@ -43,3 +43,38 @@ pub fn init_logging() {
         .with_target(true)
         .init();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::env_debug_enabled;
+
+    #[test]
+    fn env_debug_truthy_and_falsey() {
+        let prev = std::env::var_os("TVSCREENER_DEBUG");
+        // SAFETY: test-only env mutation; this suite does not run concurrent env readers.
+        unsafe {
+            std::env::remove_var("TVSCREENER_DEBUG");
+        }
+        assert!(!env_debug_enabled());
+
+        for truthy in ["1", "true", "YES", "on"] {
+            unsafe {
+                std::env::set_var("TVSCREENER_DEBUG", truthy);
+            }
+            assert!(env_debug_enabled(), "expected truthy for {truthy}");
+        }
+        for falsey in ["0", "false", "off", "no"] {
+            unsafe {
+                std::env::set_var("TVSCREENER_DEBUG", falsey);
+            }
+            assert!(!env_debug_enabled(), "expected falsey for {falsey}");
+        }
+
+        unsafe {
+            match prev {
+                Some(v) => std::env::set_var("TVSCREENER_DEBUG", v),
+                None => std::env::remove_var("TVSCREENER_DEBUG"),
+            }
+        }
+    }
+}

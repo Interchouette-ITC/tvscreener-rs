@@ -45,7 +45,8 @@ fn build_http_client(timeout: Duration) -> reqwest::Client {
 
 const HTTP_ERROR_BODY_MAX: usize = 4096;
 
-fn truncate_http_body(body: String) -> String {
+/// Truncates an HTTP error body for [`TvscreenerError::HttpStatus`] display.
+pub(crate) fn truncate_http_body(body: String) -> String {
     if body.len() <= HTTP_ERROR_BODY_MAX {
         body
     } else {
@@ -610,6 +611,60 @@ impl Screener {
     }
 }
 
+/// Configures a typed screener for `asset` and returns the result of `f`.
+///
+/// # Errors
+///
+/// Propagates errors from `f` or typed screener construction defaults.
+pub fn with_asset_screener<R, F>(asset: crate::field::Asset, f: F) -> Result<R>
+where
+    F: FnOnce(&mut Screener) -> Result<R>,
+{
+    use crate::field::Asset;
+    match asset {
+        Asset::Stock => {
+            let mut s = stock::StockScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Crypto => {
+            let mut s = crypto::CryptoScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Forex => {
+            let mut s = forex::ForexScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Bond => {
+            let mut s = bond::BondScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Futures => {
+            let mut s = futures::FuturesScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Coin => {
+            let mut s = coin::CoinScreener::new();
+            f(s.inner_mut())
+        }
+    }
+}
+
+/// Configures a typed screener for `asset`, then runs [`Screener::get`].
+///
+/// # Errors
+///
+/// Propagates configure or HTTP/scan failures.
+pub async fn get_for_asset<F>(asset: crate::field::Asset, configure: F) -> Result<Vec<ScreenerRow>>
+where
+    F: FnOnce(&mut Screener) -> Result<()>,
+{
+    let screener = with_asset_screener(asset, |inner| {
+        configure(inner)?;
+        Ok(inner.clone())
+    })?;
+    screener.get().await
+}
+
 fn values_are_subset(candidate: &[Value], current: &[Value]) -> bool {
     candidate
         .iter()
@@ -752,5 +807,61 @@ mod tests {
             payload["symbols"]["symbolset"],
             json!(["SYML:SP;SPX", "SYML:NASDAQ;NDX"])
         );
+    }
+
+    #[test]
+    fn truncate_http_body_caps_at_4kib() {
+        let short = truncate_http_body("ok".into());
+        assert_eq!(short, "ok");
+        let long = "x".repeat(HTTP_ERROR_BODY_MAX + 10);
+        let truncated = truncate_http_body(long);
+        assert_eq!(truncated.len(), HTTP_ERROR_BODY_MAX + '…'.len_utf8());
+        assert!(truncated.ends_with('…'));
+    }
+
+    #[test]
+    fn with_asset_screener_builds_typed_payload() {
+        let payload = with_asset_screener(crate::field::Asset::Crypto, |s| {
+            s.set_range(0, 3);
+            s.build_payload()
+        })
+        .expect("payload");
+        assert_eq!(payload["range"], json!([0, 3]));
+        assert!(payload["columns"].as_array().unwrap().len() > 1);
+    }
+
+    #[test]
+    fn stock_set_markets_all_expands_catalog() {
+        let mut ss = stock::StockScreener::new();
+        ss.set_markets([crate::field::Market::all()]);
+        let payload = ss.inner().build_payload().expect("payload");
+        let markets = payload["markets"].as_array().expect("markets");
+        assert!(markets.len() > 10, "ALL should expand; got {markets:?}");
+    }
+
+    #[test]
+    fn select_all_without_callback_is_invalid() {
+        let mut s = Screener::new("crypto");
+        let err = s.select_all().expect_err("no set_all_fields_fn");
+        assert!(matches!(err, TvscreenerError::InvalidRequest(_)));
+    }
+
+    #[tokio::test]
+    async fn get_for_asset_unreachable_is_network_or_timeout() {
+        use std::error::Error;
+
+        let err = get_for_asset(crate::field::Asset::Crypto, |s| {
+            s.set_url("http://127.0.0.1:1/").set_range(0, 1);
+            Ok(())
+        })
+        .await
+        .expect_err("connection to :1 should fail");
+        match &err {
+            TvscreenerError::Network(_) => {
+                assert!(err.source().is_some());
+            }
+            TvscreenerError::Timeout => {}
+            other => panic!("unexpected error: {other:?}"),
+        }
     }
 }

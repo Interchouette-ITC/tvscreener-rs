@@ -198,7 +198,7 @@ const NEUTRAL_CHAR: &str = "- N";
 
 /// Formats a numeric recommendation as an arrow + letter.
 #[must_use]
-pub fn format_rating(rating: f64) -> String {
+fn format_rating(rating: f64) -> String {
     match get_recommendation(rating) {
         "B" => BUY_CHAR.to_string(),
         "S" => SELL_CHAR.to_string(),
@@ -206,7 +206,7 @@ pub fn format_rating(rating: f64) -> String {
     }
 }
 
-/// Alias for [`format_rating`].
+/// Formats a numeric recommendation as an arrow + letter (`↑ B` / `↓ S` / `- N`).
 #[must_use]
 pub fn format_recommendation(rating: f64) -> String {
     format_rating(rating)

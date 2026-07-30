@@ -1,8 +1,10 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Unofficial `TradingView` screener API client - Rust port of
+//! Unofficial `TradingView` screener API client (Rust), inspired by
 //! [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).
+//!
+//! Canonical repository: [Interchouette-ITC/tvscreener-rs](https://github.com/Interchouette-ITC/tvscreener-rs).
 //!
 //! Builds JSON payloads and POSTs them to
 //! `https://scanner.tradingview.com/{subtype}/scan`.
@@ -54,12 +56,13 @@ pub mod filter;
 pub mod logging;
 #[cfg(feature = "mcp")]
 pub mod mcp;
+pub mod resolve;
 pub mod util;
 
 pub use error::{Result, TvscreenerError};
 pub use field::{
-    get_preset, list_fields, list_presets, search_fields, Asset, FieldDef, IndexSymbolDef, Market,
-    NamedValue, RatingBand,
+    catalog_len, get_preset, list_fields, list_presets, resolve_field, search_fields, Asset,
+    FieldDef, IndexSymbolDef, Market, NamedValue, RatingBand,
 };
 pub use filter::{ExtraFilter, FieldCondition, Filter, FilterOperator};
 pub use util::{format_recommendation, format_row, format_value};
