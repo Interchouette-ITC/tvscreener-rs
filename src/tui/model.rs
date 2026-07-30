@@ -65,6 +65,8 @@ impl ViewMode {
 /// Builder row focus for `j` / `k` navigation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BuilderFocus {
+    /// Asset class picker.
+    Asset,
     /// Field preset picker.
     #[default]
     Preset,
@@ -72,9 +74,25 @@ pub enum BuilderFocus {
     Limit,
     /// Name search text.
     Search,
+    /// Sort field and direction.
+    Sort,
+    /// Stock markets CSV.
+    Markets,
+    /// Stock index CSV.
+    Index,
     /// Filter list.
     Filters,
 }
+
+/// Assets shown in the builder picker (fixed order).
+pub const BUILDER_ASSETS: [Asset; 6] = [
+    Asset::Stock,
+    Asset::Crypto,
+    Asset::Forex,
+    Asset::Bond,
+    Asset::Futures,
+    Asset::Coin,
+];
 
 /// Text input sub-mode inside the builder pane.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -84,6 +102,12 @@ pub enum InputMode {
     None,
     /// Editing search text.
     Search,
+    /// Editing sort field text.
+    Sort,
+    /// Editing stock markets CSV.
+    Markets,
+    /// Editing stock index CSV.
+    Index,
     /// Picking a field from catalog search hits.
     FilterField,
     /// Cycling filter operator before value entry.
@@ -189,6 +213,10 @@ pub struct ScanConfig {
     pub markets: Option<String>,
     /// Stock index CSV (const or wire).
     pub index: Option<String>,
+    /// Sort field (const, technical, or label).
+    pub sort_by: Option<String>,
+    /// Sort ascending when true (default descending).
+    pub ascending: bool,
     /// Field conditions applied via `where_condition`.
     pub filters: Vec<FieldCondition>,
 }
@@ -374,9 +402,13 @@ impl AppModel {
     /// Moves builder focus up/down.
     pub fn builder_focus_by(&mut self, delta: isize) {
         let rows = [
+            BuilderFocus::Asset,
             BuilderFocus::Preset,
             BuilderFocus::Limit,
             BuilderFocus::Search,
+            BuilderFocus::Sort,
+            BuilderFocus::Markets,
+            BuilderFocus::Index,
             BuilderFocus::Filters,
         ];
         let idx = rows
@@ -389,6 +421,50 @@ impl AppModel {
             idx.saturating_sub(1)
         };
         self.builder.focus = rows[next];
+    }
+
+    /// Cycles asset when the Asset row is focused.
+    pub fn step_asset(&mut self, delta: isize) {
+        let idx = BUILDER_ASSETS
+            .iter()
+            .position(|&a| a == self.config.asset)
+            .unwrap_or(0);
+        let len = BUILDER_ASSETS.len();
+        let next = if delta >= 0 {
+            (idx + 1) % len
+        } else {
+            (idx + len - 1) % len
+        };
+        if BUILDER_ASSETS[next] != self.config.asset {
+            self.config.asset = BUILDER_ASSETS[next];
+            self.on_asset_changed();
+        }
+    }
+
+    /// Resets config after an asset switch in the builder.
+    pub fn on_asset_changed(&mut self) {
+        self.config.preset = None;
+        self.config.filters.clear();
+        if self.config.asset != Asset::Stock {
+            self.config.markets = None;
+            self.config.index = None;
+        }
+        self.builder.sync_preset_index(&self.config);
+        self.builder.filter_selected = 0;
+        self.builder.cancel_input();
+        self.rows.clear();
+        self.fields = default_fields(self.config.asset);
+        self.status = format!(
+            "{}  asset changed — Enter to scan",
+            self.config.asset.as_str()
+        );
+        self.error = None;
+        self.scroll = 0;
+    }
+
+    /// Toggles sort direction when the Sort row is focused.
+    pub const fn toggle_sort_ascending(&mut self) {
+        self.config.ascending = !self.config.ascending;
     }
 
     /// Steps the preset picker and updates config.
@@ -427,6 +503,27 @@ fn refresh_mode_label(watch: bool, interval: Duration) -> String {
 mod tests {
     use super::*;
 
+    fn stock_model() -> AppModel {
+        AppModel::new(
+            ScanConfig {
+                asset: Asset::Stock,
+                preset: None,
+                from: 0,
+                limit: 5,
+                search: None,
+                markets: Some("AMERICA".into()),
+                index: Some("SP500".into()),
+                sort_by: None,
+                ascending: false,
+                filters: Vec::new(),
+            },
+            Vec::new(),
+            Vec::new(),
+            false,
+            DEFAULT_WATCH_INTERVAL_SECS,
+        )
+    }
+
     fn empty_model(watch: bool, interval: f64) -> AppModel {
         AppModel::new(
             ScanConfig {
@@ -437,6 +534,8 @@ mod tests {
                 search: None,
                 markets: None,
                 index: None,
+                sort_by: None,
+                ascending: false,
                 filters: Vec::new(),
             },
             Vec::new(),
@@ -488,5 +587,38 @@ mod tests {
         assert_eq!(model.config.limit, 500);
         model.step_limit(-1000);
         assert_eq!(model.config.limit, 1);
+    }
+
+    #[test]
+    fn step_asset_clears_markets_when_leaving_stock() {
+        let mut model = stock_model();
+        model.step_asset(1);
+        assert_eq!(model.config.asset, Asset::Crypto);
+        assert!(model.config.markets.is_none());
+        assert!(model.config.index.is_none());
+        assert!(model.config.filters.is_empty());
+        assert!(model.config.preset.is_none());
+        assert!(model.status.contains("asset changed"));
+    }
+
+    #[test]
+    fn builder_focus_includes_asset_and_sort() {
+        let mut model = empty_model(false, DEFAULT_WATCH_INTERVAL_SECS);
+        model.builder.focus = BuilderFocus::Asset;
+        model.builder_focus_by(1);
+        assert_eq!(model.builder.focus, BuilderFocus::Preset);
+        model.builder.focus = BuilderFocus::Search;
+        model.builder_focus_by(1);
+        assert_eq!(model.builder.focus, BuilderFocus::Sort);
+        model.builder_focus_by(1);
+        assert_eq!(model.builder.focus, BuilderFocus::Markets);
+    }
+
+    #[test]
+    fn toggle_sort_ascending_flips_flag() {
+        let mut model = empty_model(false, DEFAULT_WATCH_INTERVAL_SECS);
+        assert!(!model.config.ascending);
+        model.toggle_sort_ascending();
+        assert!(model.config.ascending);
     }
 }

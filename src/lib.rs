@@ -56,6 +56,7 @@ pub mod field;
 pub mod filter;
 pub mod logging;
 pub mod mcp;
+pub mod query_config;
 pub mod resolve;
 pub mod ta;
 pub mod tui;

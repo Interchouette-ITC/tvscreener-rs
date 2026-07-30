@@ -7,45 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+Unofficial Rust [TradingView](https://www.tradingview.com) Screener HTTP client
+(inspired by [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)).
+Not affiliated with TradingView.
 
+### Library
+
+- Six typed screeners: stock, crypto, forex, bond, futures, coin
+- Filters (`FieldCondition` / `FilterOperator`), field catalog and presets, stream helpers
 - Field-aware `format_cell` / `format_rows_table` for terminal display
-- CLI `scan --format table|row|json`, `--json`, `--color`
-- TUI `tvscreener-tui`: Results, Builder (preset, limit, search, filters), Payload JSON, Codegen, opt-in watch, OSC 52 copy
-- Docs: [TUI guide](docs/guide/tui.md)
-
-### Changed
-
-- `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
-- TUI deps always on: `cargo run --bin tvscreener-tui` works without `--features tui` (feature removed)
-- Bump `ratatui` to 0.30 / `crossterm` to 0.29 (drops unmaintained `paste`, clears `make deny`)
-- CI release artifacts include `tvscreener-tui`
-
-## [1.0.0] - 2026-07-30
-
-Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).
-
-### Added
-
-- Library: six typed screeners, filters, field catalog/presets, stream, display helpers
-- CLI: `tvscreener` (`scan`, `payload`, catalog commands)
-- Optional MCP: `tvscreener-mcp` (`--features mcp`)
-- Shared `crate::resolve` wire helpers (markets, indices, sectors, …); CLI and MCP one owner
+- Shared `query_config` for filter/sort parse and apply (CLI, TUI, MCP)
+- Shared `resolve` wire helpers (markets, indices, sectors, …)
 - `core::with_asset_screener` / `get_for_asset` typed screener dispatch
-- Crate-root re-exports: `resolve_field`, `catalog_len`
-- CI: `dtolnay/rust-toolchain`, `make deny` (incl. `CDLA-Permissive-2.0`)
-- Feature `regen` for maintainer `regen-fields` (optional `regex`)
 
-### Changed
+### CLI (`tvscreener`)
 
-- `Cargo.toml` repository / homepage / authors → Interchouette-ITC
-- MCP payload preview uses typed screener defaults
-- `FilterOperator::from_wire` owns friendly op aliases; `TvscreenerError::Network` keeps `reqwest` source
-- `format_rating` private; `field()` is `pub(crate)`
+- `scan` and `payload` (offline request JSON)
+- Catalog commands: presets, fields, markets, sectors
+- Scan output: `--format table|row|json`, `--json`, `--color`
+- Query flags: `--filter`, `--filters`, `--sort-by`, `--ascending`, `--markets`, `--index`, `--search`
 
-### Fixed
+### MCP (`tvscreener-mcp`)
 
-- Docs: git install path until crates.io; filtering guide; API overview; MANUAL_TEST_PLAN coverage map
+- Stdio MCP server with discover, custom query, search helpers, catalog tools, payload preview
+
+### TUI (`tvscreener-tui`)
+
+- Results, Builder (asset, preset, limit, search, sort, markets/index, filters), Payload, Codegen
+- Opt-in watch refresh, OSC 52 clipboard copy
+- Launch flags mirror CLI filters and sort
+
+### Docs and tooling
+
+- Guides (getting started, filtering, TUI, streaming, MCP)
+- CI: `dtolnay/rust-toolchain`, `make deny`, release artifacts for all three binaries
+- Maintainer `regen-fields` (`--features regen`)
 
 ### Notes
 

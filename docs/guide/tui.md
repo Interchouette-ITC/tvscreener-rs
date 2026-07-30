@@ -18,16 +18,16 @@ cargo install --path .
 tvscreener-tui crypto --preset crypto_price --limit 10
 ```
 
-Asset class is chosen at launch (`stock`, `crypto`, `forex`, `bond`, `futures`, `coin`).
+Default asset at launch is the positional argument (`stock`, `crypto`, `forex`, `bond`, `futures`, `coin`). You can switch asset in **Builder** without restarting.
 
 ## Views
 
 | Key | Pane | Purpose |
 | --- | --- | --- |
 | `1` / Tab | **Results** | Beautified table (same tones as CLI `scan --format table`) |
-| `2` | **Builder** | Preset, limit, search, filters |
+| `2` | **Builder** | Asset, preset, limit, search, sort, markets/index (stock), filters |
 | `3` | **Payload** | Pretty `build_payload()` JSON (no network) |
-| `4` | **Codegen** | Rust snippet + equivalent CLI line |
+| `4` | **Codegen** | Rust snippet + equivalent CLI lines (`tvscreener-tui` and `tvscreener scan`) |
 | `h` | **Help** | Key reference |
 
 `Tab` cycles Results → Builder → Payload → Codegen.
@@ -46,15 +46,17 @@ Asset class is chosen at launch (`stock`, `crypto`, `forex`, `bond`, `futures`, 
 
 | Key | Action |
 | --- | --- |
-| `←` / `→` | Previous / next preset (when not typing) |
+| `←` / `→` | Cycle **asset** (Asset row) or **preset** (Preset row) |
 | `+` / `-` | Row limit (1–500) |
 | `s` | Edit name search (type, Enter save, Esc cancel) |
+| `t` / `u` | Edit sort field / toggle ascending (Sort row) |
+| `m` / `i` | Edit stock markets / index CSV (Stock only; row focused) |
 | `f` | Add field filter: search catalog, pick field, cycle operator (`o` or `j`/`k`), type value, Enter |
 | `d` | Remove selected filter |
 | `j` / `k` | Move focus between builder rows, or select filter row |
 | `Enter` | Apply config and run scan |
 
-Stock `--markets` / `--index` from the CLI are shown read-only in Builder (set them on the command line).
+Switching asset resets preset to defaults, clears filters, and clears markets/index when leaving Stock. Status shows `asset changed — Enter to scan`.
 
 ## Refresh policy
 
@@ -75,15 +77,27 @@ Supported by many Linux terminals; tmux may need clipboard passthrough.
 
 ## CLI flags
 
+Launch flags mirror `tvscreener scan` / `payload` query options:
+
 ```bash
 tvscreener-tui crypto --preset crypto_price --limit 25 --search BTC --watch --interval 30
 tvscreener-tui stock --index SP500 --markets AMERICA --limit 20
+tvscreener-tui stock --filter close:greater:100 --sort-by volume --ascending
+tvscreener-tui stock --filters '[{"field":"close","op":">","value":100}]'
 ```
 
-Field filters added in Builder are not yet exposed as CLI flags; use the TUI or Rust API (`where_condition`).
+| Flag | Meaning |
+| --- | --- |
+| `--filter FIELD:OP:VALUE` | Repeatable filter token (e.g. `close:greater:100`) |
+| `--filters '<json>'` | JSON array/object of `{field, op, value}` |
+| `--sort-by <field>` | Sort column (const, technical, or label) |
+| `--ascending` | Sort ascending (default descending) |
+| `--markets`, `--index` | Stock scope CSV (const or wire) |
+
+Codegen emits equivalent `tvscreener scan …` lines with the same flags.
 
 ## Related
 
 - Field-aware cell formatting: `format_cell` / `format_rows_table` (library; also used by CLI `scan --format table`)
-- One-shot / machine output: `tvscreener scan` / `--json`
+- One-shot / machine output: `tvscreener scan` / `payload` / `--json`
 - Periodic library polls: [Streaming](streaming.md)
