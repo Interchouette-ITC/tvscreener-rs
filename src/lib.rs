@@ -58,7 +58,6 @@ pub mod logging;
 pub mod mcp;
 pub mod resolve;
 pub mod ta;
-#[cfg(feature = "tui")]
 pub mod tui;
 pub mod util;
 

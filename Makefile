@@ -52,7 +52,7 @@ help:
 	@echo "  make build           Debug build (lib + bins + examples)"
 	@echo "  make build-release   Release build"
 	@echo "  make check           cargo check --all-targets"
-	@echo "  make test            Default suite + --features tui"
+	@echo "  make test            Default test suite"
 	@echo "  make test-live       Live e2e (TVSCREENER_LIVE=1)"
 	@echo "  make test-all        Default suite + live"
 	@echo "  make lint            fmt check + clippy"
@@ -66,7 +66,7 @@ help:
 	@echo "  make run             CLI (bin tvscreener). ARGS='…' (default: --help)"
 	@echo "                       e.g. make run ARGS='scan crypto --limit 5'"
 	@echo "  make run-mcp         MCP server (bin tvscreener-mcp)"
-	@echo "  make run-tui         Ratatui TUI (bin tvscreener-tui, --features tui)"
+	@echo "  make run-tui         Ratatui TUI (bin tvscreener-tui)"
 	@echo "                       e.g. make run-tui ARGS='crypto --limit 10'"
 	@echo "  make audit           cargo audit"
 	@echo "  make deny            cargo deny check"
@@ -104,13 +104,12 @@ build-release:
 check:
 	$(CARGO) check $(CARGO_FLAGS) --all-targets
 	$(CARGO) check $(CARGO_FLAGS) --bins --examples
-	$(CARGO) check $(CARGO_FLAGS) --all-targets --features tui
 
 # ---------------------------------------------------------------------------
 # Test
 # ---------------------------------------------------------------------------
 
-## Default suite (`cargo test` + `--features tui`).
+## Default suite (`cargo test`).
 test: test-offline
 
 test-lib:
@@ -118,7 +117,6 @@ test-lib:
 
 test-offline:
 	$(CARGO) test $(CARGO_FLAGS) -- --nocapture
-	$(CARGO) test $(CARGO_FLAGS) --features tui -- --nocapture
 
 ## Live HTTP e2e (`--features live`, serial).
 test-live:
@@ -142,7 +140,6 @@ clippy:
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features live -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features regen -- $(CLIPPY_FLAGS)
-	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features tui -- $(CLIPPY_FLAGS)
 
 lint: format-check clippy
 
@@ -196,7 +193,7 @@ run-mcp:
 
 ## Ratatui TUI (`tvscreener-tui`). Pass args with `ARGS=…`; empty ARGS → `--help`.
 run-tui:
-	$(CARGO) run $(CARGO_FLAGS) --features tui --bin tvscreener-tui -- $(if $(strip $(ARGS)),$(ARGS),--help)
+	$(CARGO) run $(CARGO_FLAGS) --bin tvscreener-tui -- $(if $(strip $(ARGS)),$(ARGS),--help)
 
 # ---------------------------------------------------------------------------
 # Supply chain / catalog

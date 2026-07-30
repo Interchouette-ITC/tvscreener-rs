@@ -1,24 +1,22 @@
 # TUI (`tvscreener-tui`)
 
-Optional Ratatui TUI (Cargo feature `tui`). Configure the scan at launch, edit preset/limit/search/filters in **Builder**, inspect **Payload** JSON and **Codegen**, then browse results in the terminal.
+Ratatui TUI for browsing screener results, editing a query in the terminal, and inspecting the request payload.
 
 ## Build and run
 
 ```bash
-cargo run --features tui --bin tvscreener-tui -- --help
-cargo run --features tui --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+cargo run --bin tvscreener-tui -- --help
+cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 make run-tui ARGS='crypto --preset crypto_price --limit 10'
 make run-tui ARGS='stock --preset stock_price --index SP500 --watch'
 ```
 
-Install with the feature enabled:
+Install (ships all three binaries):
 
 ```bash
-cargo install --path . --features tui
+cargo install --path .
 tvscreener-tui crypto --preset crypto_price --limit 10
 ```
-
-`make lint`, `make check`, and `make test` also run with `--features tui`.
 
 Asset class is chosen at launch (`stock`, `crypto`, `forex`, `bond`, `futures`, `coin`).
 

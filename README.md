@@ -15,7 +15,7 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
 - **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
 - **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
-- **Optional TUI** `tvscreener-tui` (`--features tui`): results, builder, payload JSON, codegen
+- **TUI** `tvscreener-tui`: results, builder, payload JSON, codegen
 - **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
@@ -41,25 +41,46 @@ async fn main() -> Result<()> {
 }
 ```
 
+### Install binaries
+
+```bash
+cargo install --path .   # installs tvscreener, tvscreener-mcp, tvscreener-tui
+```
+
+From a checkout without installing, use `cargo run --bin …` or the Make shortcuts below.
+
 ### CLI
 
 ```bash
-cargo install --path .                  # installs `tvscreener` and `tvscreener-mcp`
-
 tvscreener --help
 tvscreener payload crypto --limit 2     # print request JSON only
 tvscreener scan crypto --limit 5        # live HTTP (table)
 tvscreener scan crypto --limit 5 --json
 tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
-tvscreener-mcp
-# TUI (needs --features tui):
-cargo run --features tui --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
-# or: make run-tui ARGS='crypto --preset crypto_price --limit 10'
+
+# checkout shortcuts:
+make run                                # --help
+make run ARGS='scan crypto --limit 5'
+cargo run --bin tvscreener -- scan crypto --limit 5
 ```
 
-From a checkout without installing: `cargo run -- …` / `cargo run --bin tvscreener-mcp` / `make run-tui ARGS='…'`.
+### TUI
 
-Guide: [`docs/guide/tui.md`](docs/guide/tui.md).
+Interactive Ratatui pane: Results table, Builder (preset / limit / search / filters), Payload JSON, and Codegen (Rust + CLI).
+
+```bash
+tvscreener-tui --help
+tvscreener-tui crypto --preset crypto_price --limit 10
+
+# checkout shortcuts:
+make run-tui
+make run-tui ARGS='crypto --preset crypto_price --limit 10'
+cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+```
+
+Keys (short): `Tab` / `1`–`4` switch views · `←`/`→` cycle preset · `r` refresh · `a` watch · `c` copy · `h` help · `q` quit.
+
+Full key map and Builder details: [`docs/guide/tui.md`](docs/guide/tui.md).
 
 ### All six screeners
 
@@ -154,9 +175,12 @@ async fn main() -> Result<()> {
 ## MCP server (AI assistants)
 
 ```bash
-cargo install --path .
+tvscreener-mcp --help
 tvscreener-mcp
-# checkout: cargo run --bin tvscreener-mcp
+
+# checkout shortcuts:
+make run-mcp
+cargo run --bin tvscreener-mcp
 ```
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
@@ -185,7 +209,7 @@ make version-show
 | [Filtering](docs/guide/filtering.md) | Operators, conditions, merge rules |
 | [Selecting fields](docs/guide/selecting-fields.md) | Columns, presets, `select_all` |
 | [Streaming](docs/guide/streaming.md) | Periodic `stream` polls |
-| [TUI](docs/guide/tui.md) | Optional Ratatui results pane (`--features tui`) |
+| [TUI](docs/guide/tui.md) | Ratatui: Results, Builder, Payload, Codegen |
 | [Screeners](docs/guide/screeners.md) | All six typed clients |
 | [Manual test plan](docs/MANUAL_TEST_PLAN.md) | How to run tests |
 | [`CHANGELOG.md`](CHANGELOG.md) | Semver notes |
@@ -201,12 +225,15 @@ make lint
 make verify        # format-check + clippy + tests
 make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # API HTML under docs/api-rust/
+make run           # CLI (ARGS=…, default --help)
+make run-mcp       # MCP stdio server
+make run-tui       # TUI (ARGS=…, default --help)
 make help
 ```
 
 ## Origin
 
-Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, optional MCP server, and optional Ratatui TUI. See [License](#license).
+Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, MCP server, and Ratatui TUI. See [License](#license).
 
 ## License
 

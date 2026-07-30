@@ -22,7 +22,7 @@ This repository is a **Rust port and translation** of the Python library **[deep
 - **Async HTTP**: `get()` / `stream()` over `reqwest` + rustls
 - **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (and `format_value` / `format_row`)
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
-- **Optional TUI**: `tvscreener-tui` (`--features tui`)
+- **TUI**: `tvscreener-tui` Ratatui results pane
 
 ## Quick example
 
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
 | [Selecting fields](guide/selecting-fields.md)        | Columns, presets, `select_all`                 |
 | [Sorting & range](guide/sorting-pagination.md)       | `sort_by`, `set_range`                         |
 | [Streaming](guide/streaming.md)                      | Periodic `stream` polls                        |
-| [TUI](guide/tui.md)                                  | Optional Ratatui results pane (`--features tui`) |
+| [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
 | [Screeners](guide/screeners.md)                      | Stock / crypto / forex / bond / futures / coin |
 | [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
 | [Examples](examples/crypto.md)                       | Walkthrough of `example_crypto`                |
@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
 
 ## What this crate provides
 
-Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, optional TUI **`tvscreener-tui`** (`--features tui`), and MCP **`tvscreener-mcp`**.
+Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, TUI **`tvscreener-tui`**, and MCP **`tvscreener-mcp`**.
 
 ## Depending on this crate
 
@@ -100,7 +100,7 @@ Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: 
 
 Errors: library uses **`thiserror`** (`TvscreenerError`); binaries use **`anyhow`** at the process edge.
 
-This repository does **not** ship a browser UI or host-app HTTP routes. Optional terminal UI: `make run-tui` (`--features tui`). MCP is a separate stdio binary (`make run-mcp`).
+This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is a separate stdio binary (`make run-mcp`).
 
 ## Results
 
@@ -156,7 +156,7 @@ cargo run --example example_crypto    # POST to scanner.tradingview.com
 
 | Kind        | Command                                                          |
 | ----------- | ---------------------------------------------------------------- |
-| **Default** | `make test` / `cargo test` (+ `--features tui`)              |
+| **Default** | `make test` / `cargo test`                                       |
 | **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`)        |
 | **Verify**  | `make verify` (fmt + clippy + tests)                             |
 
@@ -185,7 +185,7 @@ src/
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
   mcp/             tools + mcpkit stdio server
-  tui/             Ratatui pane (feature `tui`)
+  tui/             Ratatui pane (`tvscreener-tui`)
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
   bin/tvscreener_tui.rs

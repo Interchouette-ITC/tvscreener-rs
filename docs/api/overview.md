@@ -24,7 +24,7 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `logging` | `env_debug_enabled`; `init_logging`                      |
 | `error`   | Errors (`thiserror`)                                     |
 | `mcp`     | MCP tools + mcpkit stdio server                          |
-| `tui`     | Ratatui pane (`--features tui`)                          |
+| `tui`     | Ratatui pane (`tvscreener-tui` binary)                 |
 
 ## Binaries
 
@@ -32,4 +32,4 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
 | `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
 | `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
-| `tvscreener-tui` | `cargo install --path . --features tui`      | Ratatui results pane. See [TUI](../guide/tui.md).                               |
+| `tvscreener-tui` | `cargo install --path .` then `tvscreener-tui …` | Ratatui results pane. See [TUI](../guide/tui.md).                               |
