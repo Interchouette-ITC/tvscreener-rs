@@ -20,8 +20,9 @@ This repository is a **Rust port and translation** of the Python library **[deep
 - **Filter builders**: `FieldCondition` + `FilterOperator` (same wire ops as the Python client)
 - **Fields & presets**: `FieldDef`, `get_preset` / `list_presets`, curated defaults
 - **Async HTTP**: `get()` / `stream()` over `reqwest` + rustls
-- **Terminal formatting**: `util::format_value` / `format_row`
+- **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (and `format_value` / `format_row`)
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
+- **Optional TUI**: `tvscreener-tui` (`--features tui`)
 
 ## Quick example
 
@@ -52,6 +53,7 @@ async fn main() -> Result<()> {
 | [Selecting fields](guide/selecting-fields.md)        | Columns, presets, `select_all`                 |
 | [Sorting & range](guide/sorting-pagination.md)       | `sort_by`, `set_range`                         |
 | [Streaming](guide/streaming.md)                      | Periodic `stream` polls                        |
+| [TUI](guide/tui.md)                                  | Optional Ratatui results pane (`--features tui`) |
 | [Screeners](guide/screeners.md)                      | Stock / crypto / forex / bond / futures / coin |
 | [Examples](examples/crypto.md)                       | Walkthrough of `example_crypto`                |
 | [Manual test plan](MANUAL_TEST_PLAN.md)              | How to run tests                               |
@@ -61,7 +63,7 @@ async fn main() -> Result<()> {
 
 ## What this crate provides
 
-Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, and MCP **`tvscreener-mcp`**.
+Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, optional TUI **`tvscreener-tui`** (`--features tui`), and MCP **`tvscreener-mcp`**.
 
 ## Depending on this crate
 
@@ -77,11 +79,12 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 
 | Feature     | What it enables                          |
 | ----------- | ---------------------------------------- |
-| _(default)_ | Library + both binaries + tests          |
+| _(default)_ | Library + CLI + MCP binaries + tests     |
 | `live`      | Live HTTP tests (`make test-live`)       |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
+| `tui`       | Ratatui binary `tvscreener-tui`          |
 
-Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime.
+Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan` / `tvscreener-tui`) at runtime.
 
 ### Logging / debug
 
@@ -96,13 +99,13 @@ Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: 
 
 Errors: library uses **`thiserror`** (`TvscreenerError`); binaries use **`anyhow`** at the process edge.
 
-This repository does **not** ship product UI or host-app HTTP routes. MCP is a separate stdio binary (`make run-mcp`).
+This repository does **not** ship a browser UI or host-app HTTP routes. Optional terminal UI: `make run-tui` (`--features tui`). MCP is a separate stdio binary (`make run-mcp`).
 
 ## Results
 
 `get()` returns **`Vec<ScreenerRow>`**: each row has a `symbol` string and a `data` map keyed by **column label** → JSON value.
 
-Terminal helpers: `util::format_value`, `util::format_row`.
+Terminal helpers: `format_cell` / `format_rows_table` (field-aware), plus `util::format_value` / `util::format_row`.
 
 ## Build and verify
 
@@ -175,12 +178,16 @@ src/
   error.rs         TvscreenerError
   filter.rs        FilterOperator, ExtraFilter, Filter, FieldCondition
   util.rs          get_url, headers, millify, format_value / format_row
+  beautify.rs      format_cell / format_rows_table (field-aware tones)
+  ta.rs            ADX / AO / Bollinger helpers for computed recommendations
   logging.rs       env_debug_enabled; init_logging
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
   mcp/             tools + mcpkit stdio server
+  tui/             Ratatui pane (feature `tui`)
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
+  bin/tvscreener_tui.rs
   resolve.rs       Shared market/index/sector wire resolution
 examples/
 tests/
