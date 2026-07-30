@@ -6,7 +6,7 @@
 <a href=#6 id=6 data-nosnippet>6</a>//! Applies catalog `format` hints: percent coloring, rating labels, millify groups,
 <a href=#7 id=7 data-nosnippet>7</a>//! recommendation arrows, and ADX / AO / Bollinger computed signals.
 <a href=#8 id=8 data-nosnippet>8</a>
-<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">use </span>std::collections::HashMap;
+<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">use </span>std::collections::{HashMap, HashSet};
 <a href=#10 id=10 data-nosnippet>10</a>
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>serde_json::Value;
 <a href=#12 id=12 data-nosnippet>12</a>
@@ -332,153 +332,341 @@
 <a href=#332 id=332 data-nosnippet>332</a>    }
 <a href=#333 id=333 data-nosnippet>333</a>}
 <a href=#334 id=334 data-nosnippet>334</a>
-<a href=#335 id=335 data-nosnippet>335</a><span class="attr">#[cfg(test)]
-<a href=#336 id=336 data-nosnippet>336</a></span><span class="kw">mod </span>tests {
-<a href=#337 id=337 data-nosnippet>337</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#338 id=338 data-nosnippet>338</a>    <span class="kw">use </span>serde_json::json;
-<a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a>    <span class="kw">fn </span>field(name: <span class="kw-2">&amp;</span>str, format: <span class="kw-2">&amp;</span>str) -&gt; FieldDef {
-<a href=#341 id=341 data-nosnippet>341</a>        FieldDef {
-<a href=#342 id=342 data-nosnippet>342</a>            label: name.into(),
-<a href=#343 id=343 data-nosnippet>343</a>            field_name: name.into(),
-<a href=#344 id=344 data-nosnippet>344</a>            format: <span class="prelude-val">Some</span>(format.into()),
-<a href=#345 id=345 data-nosnippet>345</a>            interval: <span class="bool-val">false</span>,
-<a href=#346 id=346 data-nosnippet>346</a>            historical: <span class="bool-val">false</span>,
-<a href=#347 id=347 data-nosnippet>347</a>        }
-<a href=#348 id=348 data-nosnippet>348</a>    }
-<a href=#349 id=349 data-nosnippet>349</a>
-<a href=#350 id=350 data-nosnippet>350</a>    <span class="attr">#[test]
-<a href=#351 id=351 data-nosnippet>351</a>    </span><span class="kw">fn </span>percent_formats_and_tones() {
-<a href=#352 id=352 data-nosnippet>352</a>        <span class="kw">let </span>up = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.234</span>), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>));
-<a href=#353 id=353 data-nosnippet>353</a>        <span class="macro">assert_eq!</span>(up.text, <span class="string">"1.23%"</span>);
-<a href=#354 id=354 data-nosnippet>354</a>        <span class="macro">assert_eq!</span>(up.tone, CellTone::Positive);
+<a href=#335 id=335 data-nosnippet>335</a><span class="doccomment">/// Default max data columns in [`format_rows_table`] (plus the Symbol column).
+<a href=#336 id=336 data-nosnippet>336</a></span><span class="kw">pub const </span>DEFAULT_TABLE_MAX_COLUMNS: usize = <span class="number">12</span>;
+<a href=#337 id=337 data-nosnippet>337</a>
+<a href=#338 id=338 data-nosnippet>338</a><span class="doccomment">/// Options for aligned table rendering.
+<a href=#339 id=339 data-nosnippet>339</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+<a href=#340 id=340 data-nosnippet>340</a></span><span class="kw">pub struct </span>TableFormatOptions {
+<a href=#341 id=341 data-nosnippet>341</a>    <span class="doccomment">/// Max field columns (Symbol is always included).
+<a href=#342 id=342 data-nosnippet>342</a>    </span><span class="kw">pub </span>max_columns: usize,
+<a href=#343 id=343 data-nosnippet>343</a>    <span class="doccomment">/// When true, apply truecolor ANSI from [`CellTone::rgb`].
+<a href=#344 id=344 data-nosnippet>344</a>    </span><span class="kw">pub </span>color: bool,
+<a href=#345 id=345 data-nosnippet>345</a>}
+<a href=#346 id=346 data-nosnippet>346</a>
+<a href=#347 id=347 data-nosnippet>347</a><span class="kw">impl </span>Default <span class="kw">for </span>TableFormatOptions {
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="self">Self </span>{
+<a href=#350 id=350 data-nosnippet>350</a>            max_columns: DEFAULT_TABLE_MAX_COLUMNS,
+<a href=#351 id=351 data-nosnippet>351</a>            color: <span class="bool-val">false</span>,
+<a href=#352 id=352 data-nosnippet>352</a>        }
+<a href=#353 id=353 data-nosnippet>353</a>    }
+<a href=#354 id=354 data-nosnippet>354</a>}
 <a href=#355 id=355 data-nosnippet>355</a>
-<a href=#356 id=356 data-nosnippet>356</a>        <span class="kw">let </span>down = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(-<span class="number">2.5</span>), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>));
-<a href=#357 id=357 data-nosnippet>357</a>        <span class="macro">assert_eq!</span>(down.text, <span class="string">"-2.50%"</span>);
-<a href=#358 id=358 data-nosnippet>358</a>        <span class="macro">assert_eq!</span>(down.tone, CellTone::Negative);
-<a href=#359 id=359 data-nosnippet>359</a>
-<a href=#360 id=360 data-nosnippet>360</a>        <span class="macro">assert_eq!</span>(
-<a href=#361 id=361 data-nosnippet>361</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(null), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>)),
-<a href=#362 id=362 data-nosnippet>362</a>            FormattedCell::missing()
-<a href=#363 id=363 data-nosnippet>363</a>        );
-<a href=#364 id=364 data-nosnippet>364</a>    }
-<a href=#365 id=365 data-nosnippet>365</a>
-<a href=#366 id=366 data-nosnippet>366</a>    <span class="attr">#[test]
-<a href=#367 id=367 data-nosnippet>367</a>    </span><span class="kw">fn </span>rating_uses_band_labels() {
-<a href=#368 id=368 data-nosnippet>368</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">0.75</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text, <span class="string">"Strong Buy"</span>);
-<a href=#369 id=369 data-nosnippet>369</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">0.0</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text, <span class="string">"Neutral"</span>);
-<a href=#370 id=370 data-nosnippet>370</a>        <span class="macro">assert_eq!</span>(
-<a href=#371 id=371 data-nosnippet>371</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(-<span class="number">0.75</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text,
-<a href=#372 id=372 data-nosnippet>372</a>            <span class="string">"Strong Sell"
-<a href=#373 id=373 data-nosnippet>373</a>        </span>);
-<a href=#374 id=374 data-nosnippet>374</a>    }
+<a href=#356 id=356 data-nosnippet>356</a><span class="doccomment">/// Renders rows as an aligned text table using field-aware [`format_cell_for_field`].
+<a href=#357 id=357 data-nosnippet>357</a>///
+<a href=#358 id=358 data-nosnippet>358</a>/// Columns follow `fields` order (skipping candlestick), preferring labels present in
+<a href=#359 id=359 data-nosnippet>359</a>/// the rows, truncated to [`TableFormatOptions::max_columns`].
+<a href=#360 id=360 data-nosnippet>360</a></span><span class="attr">#[must_use]
+<a href=#361 id=361 data-nosnippet>361</a></span><span class="kw">pub fn </span>format_rows_table(
+<a href=#362 id=362 data-nosnippet>362</a>    rows: <span class="kw-2">&amp;</span>[ScreenerRow],
+<a href=#363 id=363 data-nosnippet>363</a>    fields: <span class="kw-2">&amp;</span>[FieldDef],
+<a href=#364 id=364 data-nosnippet>364</a>    opts: <span class="kw-2">&amp;</span>TableFormatOptions,
+<a href=#365 id=365 data-nosnippet>365</a>) -&gt; String {
+<a href=#366 id=366 data-nosnippet>366</a>    <span class="kw">if </span>rows.is_empty() {
+<a href=#367 id=367 data-nosnippet>367</a>        <span class="kw">return </span><span class="string">"(no rows)"</span>.into();
+<a href=#368 id=368 data-nosnippet>368</a>    }
+<a href=#369 id=369 data-nosnippet>369</a>    <span class="kw">let </span>selected = select_table_fields(rows, fields, opts.max_columns.max(<span class="number">1</span>));
+<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">let </span>columns = <span class="kw">crate</span>::util::get_columns_to_request(fields);
+<a href=#371 id=371 data-nosnippet>371</a>
+<a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">let </span><span class="kw-2">mut </span>headers: Vec&lt;String&gt; = Vec::with_capacity(selected.len() + <span class="number">1</span>);
+<a href=#373 id=373 data-nosnippet>373</a>    headers.push(<span class="string">"Symbol"</span>.into());
+<a href=#374 id=374 data-nosnippet>374</a>    headers.extend(selected.iter().map(|f| f.label.clone()));
 <a href=#375 id=375 data-nosnippet>375</a>
-<a href=#376 id=376 data-nosnippet>376</a>    <span class="attr">#[test]
-<a href=#377 id=377 data-nosnippet>377</a>    </span><span class="kw">fn </span>currency_rounds_then_millifies() {
-<a href=#378 id=378 data-nosnippet>378</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1500.0</span>), <span class="prelude-val">Some</span>(<span class="string">"currency"</span>)).text, <span class="string">"1.500K"</span>);
-<a href=#379 id=379 data-nosnippet>379</a>        <span class="macro">assert_eq!</span>(
-<a href=#380 id=380 data-nosnippet>380</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">150.256</span>), <span class="prelude-val">Some</span>(<span class="string">"currency"</span>)).text,
-<a href=#381 id=381 data-nosnippet>381</a>            <span class="string">"150.260"
-<a href=#382 id=382 data-nosnippet>382</a>        </span>);
-<a href=#383 id=383 data-nosnippet>383</a>    }
-<a href=#384 id=384 data-nosnippet>384</a>
-<a href=#385 id=385 data-nosnippet>385</a>    <span class="attr">#[test]
-<a href=#386 id=386 data-nosnippet>386</a>    </span><span class="kw">fn </span>number_group_null_becomes_zero() {
-<a href=#387 id=387 data-nosnippet>387</a>        <span class="macro">assert_eq!</span>(
-<a href=#388 id=388 data-nosnippet>388</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(null), <span class="prelude-val">Some</span>(<span class="string">"number_group"</span>)).text,
-<a href=#389 id=389 data-nosnippet>389</a>            <span class="string">"0.000"
-<a href=#390 id=390 data-nosnippet>390</a>        </span>);
-<a href=#391 id=391 data-nosnippet>391</a>    }
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="attr">#[test]
-<a href=#394 id=394 data-nosnippet>394</a>    </span><span class="kw">fn </span>round_and_bool() {
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.239</span>), <span class="prelude-val">Some</span>(<span class="string">"round"</span>)).text, <span class="string">"1.24"</span>);
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="string">"true"</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"true"</span>);
-<a href=#397 id=397 data-nosnippet>397</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="string">"false"</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"false"</span>);
-<a href=#398 id=398 data-nosnippet>398</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="bool-val">true</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"true"</span>);
-<a href=#399 id=399 data-nosnippet>399</a>    }
-<a href=#400 id=400 data-nosnippet>400</a>
-<a href=#401 id=401 data-nosnippet>401</a>    <span class="attr">#[test]
-<a href=#402 id=402 data-nosnippet>402</a>    </span><span class="kw">fn </span>float_stays_plain_not_millified() {
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span>cell = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1500.5</span>), <span class="prelude-val">Some</span>(<span class="string">"float"</span>));
-<a href=#404 id=404 data-nosnippet>404</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"1500.5"</span>);
-<a href=#405 id=405 data-nosnippet>405</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Neutral);
-<a href=#406 id=406 data-nosnippet>406</a>    }
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a>    <span class="attr">#[test]
-<a href=#409 id=409 data-nosnippet>409</a>    </span><span class="kw">fn </span>recommendation_appends_rec_companion() {
-<a href=#410 id=410 data-nosnippet>410</a>        <span class="kw">let </span>f = field(<span class="string">"RSI"</span>, <span class="string">"recommendation"</span>);
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
-<a href=#412 id=412 data-nosnippet>412</a>        map.insert(<span class="string">"RSI"</span>, <span class="macro">json!</span>(<span class="number">55.2</span>));
-<a href=#413 id=413 data-nosnippet>413</a>        map.insert(<span class="string">"Rec.RSI"</span>, <span class="macro">json!</span>(<span class="number">1.0</span>));
-<a href=#414 id=414 data-nosnippet>414</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.2</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
-<a href=#415 id=415 data-nosnippet>415</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.2 ↑ B"</span>);
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
-<a href=#417 id=417 data-nosnippet>417</a>
-<a href=#418 id=418 data-nosnippet>418</a>        map.insert(<span class="string">"Rec.RSI"</span>, <span class="macro">json!</span>(-<span class="number">1.0</span>));
-<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.2</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
-<a href=#420 id=420 data-nosnippet>420</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.2 ↓ S"</span>);
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Sell);
-<a href=#422 id=422 data-nosnippet>422</a>    }
-<a href=#423 id=423 data-nosnippet>423</a>
-<a href=#424 id=424 data-nosnippet>424</a>    <span class="attr">#[test]
-<a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">fn </span>computed_bb_lower_buy_when_close_below() {
-<a href=#426 id=426 data-nosnippet>426</a>        <span class="kw">let </span>f = field(<span class="string">"BB.lower"</span>, <span class="string">"computed_recommendation"</span>);
-<a href=#427 id=427 data-nosnippet>427</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
-<a href=#428 id=428 data-nosnippet>428</a>        map.insert(<span class="string">"BB.lower"</span>, <span class="macro">json!</span>(<span class="number">100.0</span>));
-<a href=#429 id=429 data-nosnippet>429</a>        map.insert(<span class="string">"close"</span>, <span class="macro">json!</span>(<span class="number">99.0</span>));
-<a href=#430 id=430 data-nosnippet>430</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">100.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
-<a href=#431 id=431 data-nosnippet>431</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"100.0 ↑ B"</span>);
-<a href=#432 id=432 data-nosnippet>432</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
-<a href=#433 id=433 data-nosnippet>433</a>    }
-<a href=#434 id=434 data-nosnippet>434</a>
-<a href=#435 id=435 data-nosnippet>435</a>    <span class="attr">#[test]
-<a href=#436 id=436 data-nosnippet>436</a>    </span><span class="kw">fn </span>computed_adx_buy_on_cross() {
-<a href=#437 id=437 data-nosnippet>437</a>        <span class="kw">let </span>f = field(<span class="string">"ADX"</span>, <span class="string">"computed_recommendation"</span>);
-<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
-<a href=#439 id=439 data-nosnippet>439</a>        map.insert(<span class="string">"ADX"</span>, <span class="macro">json!</span>(<span class="number">25.0</span>));
-<a href=#440 id=440 data-nosnippet>440</a>        map.insert(<span class="string">"ADX-DI"</span>, <span class="macro">json!</span>(<span class="number">10.0</span>));
-<a href=#441 id=441 data-nosnippet>441</a>        map.insert(<span class="string">"ADX+DI"</span>, <span class="macro">json!</span>(<span class="number">15.0</span>));
-<a href=#442 id=442 data-nosnippet>442</a>        map.insert(<span class="string">"ADX-DI[1]"</span>, <span class="macro">json!</span>(<span class="number">12.0</span>));
-<a href=#443 id=443 data-nosnippet>443</a>        map.insert(<span class="string">"ADX+DI[1]"</span>, <span class="macro">json!</span>(<span class="number">8.0</span>));
-<a href=#444 id=444 data-nosnippet>444</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">25.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
-<a href=#445 id=445 data-nosnippet>445</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"25.0 ↑ B"</span>);
-<a href=#446 id=446 data-nosnippet>446</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
-<a href=#447 id=447 data-nosnippet>447</a>    }
-<a href=#448 id=448 data-nosnippet>448</a>
-<a href=#449 id=449 data-nosnippet>449</a>    <span class="attr">#[test]
-<a href=#450 id=450 data-nosnippet>450</a>    </span><span class="kw">fn </span>computed_unknown_indicator_stays_plain() {
-<a href=#451 id=451 data-nosnippet>451</a>        <span class="kw">let </span>f = field(<span class="string">"RSI"</span>, <span class="string">"computed_recommendation"</span>);
-<a href=#452 id=452 data-nosnippet>452</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">None</span>);
-<a href=#453 id=453 data-nosnippet>453</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.0"</span>);
-<a href=#454 id=454 data-nosnippet>454</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Neutral);
-<a href=#455 id=455 data-nosnippet>455</a>    }
-<a href=#456 id=456 data-nosnippet>456</a>
-<a href=#457 id=457 data-nosnippet>457</a>    <span class="attr">#[test]
-<a href=#458 id=458 data-nosnippet>458</a>    </span><span class="kw">fn </span>row_tech_map_from_labels() {
-<a href=#459 id=459 data-nosnippet>459</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = serde_json::Map::new();
-<a href=#460 id=460 data-nosnippet>460</a>        data.insert(<span class="string">"Price"</span>.into(), <span class="macro">json!</span>(<span class="number">42.0</span>));
-<a href=#461 id=461 data-nosnippet>461</a>        data.insert(<span class="string">"Reco. RSI"</span>.into(), <span class="macro">json!</span>(<span class="number">1.0</span>));
-<a href=#462 id=462 data-nosnippet>462</a>        <span class="kw">let </span>row = ScreenerRow {
-<a href=#463 id=463 data-nosnippet>463</a>            symbol: <span class="string">"X"</span>.into(),
-<a href=#464 id=464 data-nosnippet>464</a>            data,
-<a href=#465 id=465 data-nosnippet>465</a>        };
-<a href=#466 id=466 data-nosnippet>466</a>        <span class="kw">let </span>cols = <span class="macro">vec!</span>[
-<a href=#467 id=467 data-nosnippet>467</a>            (<span class="string">"close"</span>.into(), <span class="string">"Price"</span>.into()),
-<a href=#468 id=468 data-nosnippet>468</a>            (<span class="string">"Rec.RSI"</span>.into(), <span class="string">"Reco. RSI"</span>.into()),
-<a href=#469 id=469 data-nosnippet>469</a>        ];
-<a href=#470 id=470 data-nosnippet>470</a>        <span class="kw">let </span>map = RowTechMap::from_row(<span class="kw-2">&amp;</span>row, <span class="kw-2">&amp;</span>cols);
-<a href=#471 id=471 data-nosnippet>471</a>        <span class="macro">assert_eq!</span>(map.get(<span class="string">"close"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">42.0</span>)));
-<a href=#472 id=472 data-nosnippet>472</a>        <span class="macro">assert_eq!</span>(map.get(<span class="string">"Rec.RSI"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.0</span>)));
-<a href=#473 id=473 data-nosnippet>473</a>    }
-<a href=#474 id=474 data-nosnippet>474</a>
-<a href=#475 id=475 data-nosnippet>475</a>    <span class="attr">#[test]
-<a href=#476 id=476 data-nosnippet>476</a>    </span><span class="kw">fn </span>cell_tone_rgb_matches_python() {
-<a href=#477 id=477 data-nosnippet>477</a>        <span class="macro">assert_eq!</span>(CellTone::Positive.rgb(), (<span class="number">0</span>, <span class="number">169</span>, <span class="number">127</span>));
-<a href=#478 id=478 data-nosnippet>478</a>        <span class="macro">assert_eq!</span>(CellTone::Negative.rgb(), (<span class="number">255</span>, <span class="number">23</span>, <span class="number">62</span>));
-<a href=#479 id=479 data-nosnippet>479</a>        <span class="macro">assert_eq!</span>(CellTone::Buy.rgb(), (<span class="number">41</span>, <span class="number">98</span>, <span class="number">255</span>));
-<a href=#480 id=480 data-nosnippet>480</a>        <span class="macro">assert_eq!</span>(CellTone::Sell.rgb(), (<span class="number">255</span>, <span class="number">74</span>, <span class="number">104</span>));
-<a href=#481 id=481 data-nosnippet>481</a>        <span class="macro">assert_eq!</span>(CellTone::Neutral.rgb(), (<span class="number">157</span>, <span class="number">178</span>, <span class="number">189</span>));
-<a href=#482 id=482 data-nosnippet>482</a>    }
-<a href=#483 id=483 data-nosnippet>483</a>}
+<a href=#376 id=376 data-nosnippet>376</a>    <span class="kw">let </span><span class="kw-2">mut </span>plain_rows: Vec&lt;Vec&lt;String&gt;&gt; = Vec::with_capacity(rows.len());
+<a href=#377 id=377 data-nosnippet>377</a>    <span class="kw">let </span><span class="kw-2">mut </span>tones: Vec&lt;Vec&lt;CellTone&gt;&gt; = Vec::with_capacity(rows.len());
+<a href=#378 id=378 data-nosnippet>378</a>
+<a href=#379 id=379 data-nosnippet>379</a>    <span class="kw">for </span>row <span class="kw">in </span>rows {
+<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span>tech = RowTechMap::from_row(row, <span class="kw-2">&amp;</span>columns);
+<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span><span class="kw-2">mut </span>plain = Vec::with_capacity(selected.len() + <span class="number">1</span>);
+<a href=#382 id=382 data-nosnippet>382</a>        <span class="kw">let </span><span class="kw-2">mut </span>row_tones = Vec::with_capacity(selected.len() + <span class="number">1</span>);
+<a href=#383 id=383 data-nosnippet>383</a>        plain.push(row.symbol.clone());
+<a href=#384 id=384 data-nosnippet>384</a>        row_tones.push(CellTone::Neutral);
+<a href=#385 id=385 data-nosnippet>385</a>        <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>selected {
+<a href=#386 id=386 data-nosnippet>386</a>            <span class="kw">let </span>value = row.data.get(<span class="kw-2">&amp;</span>field.label).unwrap_or(<span class="kw-2">&amp;</span>Value::Null);
+<a href=#387 id=387 data-nosnippet>387</a>            <span class="kw">let </span>cell = format_cell_for_field(value, field, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>tech));
+<a href=#388 id=388 data-nosnippet>388</a>            plain.push(cell.text);
+<a href=#389 id=389 data-nosnippet>389</a>            row_tones.push(cell.tone);
+<a href=#390 id=390 data-nosnippet>390</a>        }
+<a href=#391 id=391 data-nosnippet>391</a>        plain_rows.push(plain);
+<a href=#392 id=392 data-nosnippet>392</a>        tones.push(row_tones);
+<a href=#393 id=393 data-nosnippet>393</a>    }
+<a href=#394 id=394 data-nosnippet>394</a>
+<a href=#395 id=395 data-nosnippet>395</a>    <span class="kw">let </span>widths = column_widths(<span class="kw-2">&amp;</span>headers, <span class="kw-2">&amp;</span>plain_rows);
+<a href=#396 id=396 data-nosnippet>396</a>    <span class="kw">let </span><span class="kw-2">mut </span>out = String::new();
+<a href=#397 id=397 data-nosnippet>397</a>    out.push_str(<span class="kw-2">&amp;</span>format_table_line(<span class="kw-2">&amp;</span>headers, <span class="kw-2">&amp;</span>widths, <span class="prelude-val">None</span>, <span class="bool-val">false</span>));
+<a href=#398 id=398 data-nosnippet>398</a>    out.push(<span class="string">'\n'</span>);
+<a href=#399 id=399 data-nosnippet>399</a>    <span class="kw">for </span>(plain, row_tones) <span class="kw">in </span>plain_rows.iter().zip(tones.iter()) {
+<a href=#400 id=400 data-nosnippet>400</a>        out.push_str(<span class="kw-2">&amp;</span>format_table_line(
+<a href=#401 id=401 data-nosnippet>401</a>            plain,
+<a href=#402 id=402 data-nosnippet>402</a>            <span class="kw-2">&amp;</span>widths,
+<a href=#403 id=403 data-nosnippet>403</a>            <span class="prelude-val">Some</span>(row_tones),
+<a href=#404 id=404 data-nosnippet>404</a>            opts.color,
+<a href=#405 id=405 data-nosnippet>405</a>        ));
+<a href=#406 id=406 data-nosnippet>406</a>        out.push(<span class="string">'\n'</span>);
+<a href=#407 id=407 data-nosnippet>407</a>    }
+<a href=#408 id=408 data-nosnippet>408</a>    out
+<a href=#409 id=409 data-nosnippet>409</a>}
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a><span class="kw">fn </span>select_table_fields&lt;<span class="lifetime">'a</span>&gt;(
+<a href=#412 id=412 data-nosnippet>412</a>    rows: <span class="kw-2">&amp;</span>[ScreenerRow],
+<a href=#413 id=413 data-nosnippet>413</a>    fields: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[FieldDef],
+<a href=#414 id=414 data-nosnippet>414</a>    max_columns: usize,
+<a href=#415 id=415 data-nosnippet>415</a>) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>FieldDef&gt; {
+<a href=#416 id=416 data-nosnippet>416</a>    <span class="kw">let </span>present: HashSet&lt;<span class="kw-2">&amp;</span>str&gt; = rows
+<a href=#417 id=417 data-nosnippet>417</a>        .iter()
+<a href=#418 id=418 data-nosnippet>418</a>        .flat_map(|r| r.data.keys().map(String::as_str))
+<a href=#419 id=419 data-nosnippet>419</a>        .collect();
+<a href=#420 id=420 data-nosnippet>420</a>
+<a href=#421 id=421 data-nosnippet>421</a>    <span class="kw">let </span><span class="kw-2">mut </span>selected: Vec&lt;<span class="kw-2">&amp;</span>FieldDef&gt; = fields
+<a href=#422 id=422 data-nosnippet>422</a>        .iter()
+<a href=#423 id=423 data-nosnippet>423</a>        .filter(|f| !f.field_name.starts_with(<span class="string">"candlestick"</span>))
+<a href=#424 id=424 data-nosnippet>424</a>        .filter(|f| present.contains(f.label.as_str()))
+<a href=#425 id=425 data-nosnippet>425</a>        .take(max_columns)
+<a href=#426 id=426 data-nosnippet>426</a>        .collect();
+<a href=#427 id=427 data-nosnippet>427</a>
+<a href=#428 id=428 data-nosnippet>428</a>    <span class="kw">if </span>selected.is_empty() {
+<a href=#429 id=429 data-nosnippet>429</a>        selected = fields
+<a href=#430 id=430 data-nosnippet>430</a>            .iter()
+<a href=#431 id=431 data-nosnippet>431</a>            .filter(|f| !f.field_name.starts_with(<span class="string">"candlestick"</span>))
+<a href=#432 id=432 data-nosnippet>432</a>            .take(max_columns)
+<a href=#433 id=433 data-nosnippet>433</a>            .collect();
+<a href=#434 id=434 data-nosnippet>434</a>    }
+<a href=#435 id=435 data-nosnippet>435</a>    selected
+<a href=#436 id=436 data-nosnippet>436</a>}
+<a href=#437 id=437 data-nosnippet>437</a>
+<a href=#438 id=438 data-nosnippet>438</a><span class="kw">fn </span>column_widths(headers: <span class="kw-2">&amp;</span>[String], rows: <span class="kw-2">&amp;</span>[Vec&lt;String&gt;]) -&gt; Vec&lt;usize&gt; {
+<a href=#439 id=439 data-nosnippet>439</a>    <span class="kw">let </span><span class="kw-2">mut </span>widths: Vec&lt;usize&gt; = headers.iter().map(String::len).collect();
+<a href=#440 id=440 data-nosnippet>440</a>    <span class="kw">for </span>row <span class="kw">in </span>rows {
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="kw">for </span>(i, cell) <span class="kw">in </span>row.iter().enumerate() {
+<a href=#442 id=442 data-nosnippet>442</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(w) = widths.get_mut(i) {
+<a href=#443 id=443 data-nosnippet>443</a>                <span class="kw-2">*</span>w = (<span class="kw-2">*</span>w).max(cell.len());
+<a href=#444 id=444 data-nosnippet>444</a>            }
+<a href=#445 id=445 data-nosnippet>445</a>        }
+<a href=#446 id=446 data-nosnippet>446</a>    }
+<a href=#447 id=447 data-nosnippet>447</a>    widths
+<a href=#448 id=448 data-nosnippet>448</a>}
+<a href=#449 id=449 data-nosnippet>449</a>
+<a href=#450 id=450 data-nosnippet>450</a><span class="kw">fn </span>format_table_line(
+<a href=#451 id=451 data-nosnippet>451</a>    cells: <span class="kw-2">&amp;</span>[String],
+<a href=#452 id=452 data-nosnippet>452</a>    widths: <span class="kw-2">&amp;</span>[usize],
+<a href=#453 id=453 data-nosnippet>453</a>    tones: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[CellTone]&gt;,
+<a href=#454 id=454 data-nosnippet>454</a>    color: bool,
+<a href=#455 id=455 data-nosnippet>455</a>) -&gt; String {
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="kw">let </span><span class="kw-2">mut </span>parts = Vec::with_capacity(cells.len());
+<a href=#457 id=457 data-nosnippet>457</a>    <span class="kw">for </span>(i, cell) <span class="kw">in </span>cells.iter().enumerate() {
+<a href=#458 id=458 data-nosnippet>458</a>        <span class="kw">let </span>width = widths.get(i).copied().unwrap_or(cell.len());
+<a href=#459 id=459 data-nosnippet>459</a>        <span class="kw">let </span>padded = <span class="macro">format!</span>(<span class="string">"{cell:&lt;width$}"</span>);
+<a href=#460 id=460 data-nosnippet>460</a>        <span class="kw">let </span>tone = tones.and_then(|t| t.get(i)).copied().unwrap_or_default();
+<a href=#461 id=461 data-nosnippet>461</a>        parts.push(paint_cell(<span class="kw-2">&amp;</span>padded, tone, color));
+<a href=#462 id=462 data-nosnippet>462</a>    }
+<a href=#463 id=463 data-nosnippet>463</a>    parts.join(<span class="string">"  "</span>)
+<a href=#464 id=464 data-nosnippet>464</a>}
+<a href=#465 id=465 data-nosnippet>465</a>
+<a href=#466 id=466 data-nosnippet>466</a><span class="kw">fn </span>paint_cell(text: <span class="kw-2">&amp;</span>str, tone: CellTone, color: bool) -&gt; String {
+<a href=#467 id=467 data-nosnippet>467</a>    <span class="kw">if </span>!color || <span class="macro">matches!</span>(tone, CellTone::Neutral) {
+<a href=#468 id=468 data-nosnippet>468</a>        <span class="kw">return </span>text.to_string();
+<a href=#469 id=469 data-nosnippet>469</a>    }
+<a href=#470 id=470 data-nosnippet>470</a>    <span class="kw">let </span>(r, g, b) = tone.rgb();
+<a href=#471 id=471 data-nosnippet>471</a>    <span class="macro">format!</span>(<span class="string">"\x1b[38;2;{r};{g};{b}m{text}\x1b[0m"</span>)
+<a href=#472 id=472 data-nosnippet>472</a>}
+<a href=#473 id=473 data-nosnippet>473</a>
+<a href=#474 id=474 data-nosnippet>474</a><span class="attr">#[cfg(test)]
+<a href=#475 id=475 data-nosnippet>475</a></span><span class="kw">mod </span>tests {
+<a href=#476 id=476 data-nosnippet>476</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#477 id=477 data-nosnippet>477</a>    <span class="kw">use </span>serde_json::json;
+<a href=#478 id=478 data-nosnippet>478</a>
+<a href=#479 id=479 data-nosnippet>479</a>    <span class="kw">fn </span>field(name: <span class="kw-2">&amp;</span>str, format: <span class="kw-2">&amp;</span>str) -&gt; FieldDef {
+<a href=#480 id=480 data-nosnippet>480</a>        FieldDef {
+<a href=#481 id=481 data-nosnippet>481</a>            label: name.into(),
+<a href=#482 id=482 data-nosnippet>482</a>            field_name: name.into(),
+<a href=#483 id=483 data-nosnippet>483</a>            format: <span class="prelude-val">Some</span>(format.into()),
+<a href=#484 id=484 data-nosnippet>484</a>            interval: <span class="bool-val">false</span>,
+<a href=#485 id=485 data-nosnippet>485</a>            historical: <span class="bool-val">false</span>,
+<a href=#486 id=486 data-nosnippet>486</a>        }
+<a href=#487 id=487 data-nosnippet>487</a>    }
+<a href=#488 id=488 data-nosnippet>488</a>
+<a href=#489 id=489 data-nosnippet>489</a>    <span class="attr">#[test]
+<a href=#490 id=490 data-nosnippet>490</a>    </span><span class="kw">fn </span>percent_formats_and_tones() {
+<a href=#491 id=491 data-nosnippet>491</a>        <span class="kw">let </span>up = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.234</span>), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>));
+<a href=#492 id=492 data-nosnippet>492</a>        <span class="macro">assert_eq!</span>(up.text, <span class="string">"1.23%"</span>);
+<a href=#493 id=493 data-nosnippet>493</a>        <span class="macro">assert_eq!</span>(up.tone, CellTone::Positive);
+<a href=#494 id=494 data-nosnippet>494</a>
+<a href=#495 id=495 data-nosnippet>495</a>        <span class="kw">let </span>down = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(-<span class="number">2.5</span>), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>));
+<a href=#496 id=496 data-nosnippet>496</a>        <span class="macro">assert_eq!</span>(down.text, <span class="string">"-2.50%"</span>);
+<a href=#497 id=497 data-nosnippet>497</a>        <span class="macro">assert_eq!</span>(down.tone, CellTone::Negative);
+<a href=#498 id=498 data-nosnippet>498</a>
+<a href=#499 id=499 data-nosnippet>499</a>        <span class="macro">assert_eq!</span>(
+<a href=#500 id=500 data-nosnippet>500</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(null), <span class="prelude-val">Some</span>(<span class="string">"percent"</span>)),
+<a href=#501 id=501 data-nosnippet>501</a>            FormattedCell::missing()
+<a href=#502 id=502 data-nosnippet>502</a>        );
+<a href=#503 id=503 data-nosnippet>503</a>    }
+<a href=#504 id=504 data-nosnippet>504</a>
+<a href=#505 id=505 data-nosnippet>505</a>    <span class="attr">#[test]
+<a href=#506 id=506 data-nosnippet>506</a>    </span><span class="kw">fn </span>rating_uses_band_labels() {
+<a href=#507 id=507 data-nosnippet>507</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">0.75</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text, <span class="string">"Strong Buy"</span>);
+<a href=#508 id=508 data-nosnippet>508</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">0.0</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text, <span class="string">"Neutral"</span>);
+<a href=#509 id=509 data-nosnippet>509</a>        <span class="macro">assert_eq!</span>(
+<a href=#510 id=510 data-nosnippet>510</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(-<span class="number">0.75</span>), <span class="prelude-val">Some</span>(<span class="string">"rating"</span>)).text,
+<a href=#511 id=511 data-nosnippet>511</a>            <span class="string">"Strong Sell"
+<a href=#512 id=512 data-nosnippet>512</a>        </span>);
+<a href=#513 id=513 data-nosnippet>513</a>    }
+<a href=#514 id=514 data-nosnippet>514</a>
+<a href=#515 id=515 data-nosnippet>515</a>    <span class="attr">#[test]
+<a href=#516 id=516 data-nosnippet>516</a>    </span><span class="kw">fn </span>currency_rounds_then_millifies() {
+<a href=#517 id=517 data-nosnippet>517</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1500.0</span>), <span class="prelude-val">Some</span>(<span class="string">"currency"</span>)).text, <span class="string">"1.500K"</span>);
+<a href=#518 id=518 data-nosnippet>518</a>        <span class="macro">assert_eq!</span>(
+<a href=#519 id=519 data-nosnippet>519</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">150.256</span>), <span class="prelude-val">Some</span>(<span class="string">"currency"</span>)).text,
+<a href=#520 id=520 data-nosnippet>520</a>            <span class="string">"150.260"
+<a href=#521 id=521 data-nosnippet>521</a>        </span>);
+<a href=#522 id=522 data-nosnippet>522</a>    }
+<a href=#523 id=523 data-nosnippet>523</a>
+<a href=#524 id=524 data-nosnippet>524</a>    <span class="attr">#[test]
+<a href=#525 id=525 data-nosnippet>525</a>    </span><span class="kw">fn </span>number_group_null_becomes_zero() {
+<a href=#526 id=526 data-nosnippet>526</a>        <span class="macro">assert_eq!</span>(
+<a href=#527 id=527 data-nosnippet>527</a>            format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(null), <span class="prelude-val">Some</span>(<span class="string">"number_group"</span>)).text,
+<a href=#528 id=528 data-nosnippet>528</a>            <span class="string">"0.000"
+<a href=#529 id=529 data-nosnippet>529</a>        </span>);
+<a href=#530 id=530 data-nosnippet>530</a>    }
+<a href=#531 id=531 data-nosnippet>531</a>
+<a href=#532 id=532 data-nosnippet>532</a>    <span class="attr">#[test]
+<a href=#533 id=533 data-nosnippet>533</a>    </span><span class="kw">fn </span>round_and_bool() {
+<a href=#534 id=534 data-nosnippet>534</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.239</span>), <span class="prelude-val">Some</span>(<span class="string">"round"</span>)).text, <span class="string">"1.24"</span>);
+<a href=#535 id=535 data-nosnippet>535</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="string">"true"</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"true"</span>);
+<a href=#536 id=536 data-nosnippet>536</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="string">"false"</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"false"</span>);
+<a href=#537 id=537 data-nosnippet>537</a>        <span class="macro">assert_eq!</span>(format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="bool-val">true</span>), <span class="prelude-val">Some</span>(<span class="string">"bool"</span>)).text, <span class="string">"true"</span>);
+<a href=#538 id=538 data-nosnippet>538</a>    }
+<a href=#539 id=539 data-nosnippet>539</a>
+<a href=#540 id=540 data-nosnippet>540</a>    <span class="attr">#[test]
+<a href=#541 id=541 data-nosnippet>541</a>    </span><span class="kw">fn </span>float_stays_plain_not_millified() {
+<a href=#542 id=542 data-nosnippet>542</a>        <span class="kw">let </span>cell = format_cell(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1500.5</span>), <span class="prelude-val">Some</span>(<span class="string">"float"</span>));
+<a href=#543 id=543 data-nosnippet>543</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"1500.5"</span>);
+<a href=#544 id=544 data-nosnippet>544</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Neutral);
+<a href=#545 id=545 data-nosnippet>545</a>    }
+<a href=#546 id=546 data-nosnippet>546</a>
+<a href=#547 id=547 data-nosnippet>547</a>    <span class="attr">#[test]
+<a href=#548 id=548 data-nosnippet>548</a>    </span><span class="kw">fn </span>recommendation_appends_rec_companion() {
+<a href=#549 id=549 data-nosnippet>549</a>        <span class="kw">let </span>f = field(<span class="string">"RSI"</span>, <span class="string">"recommendation"</span>);
+<a href=#550 id=550 data-nosnippet>550</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
+<a href=#551 id=551 data-nosnippet>551</a>        map.insert(<span class="string">"RSI"</span>, <span class="macro">json!</span>(<span class="number">55.2</span>));
+<a href=#552 id=552 data-nosnippet>552</a>        map.insert(<span class="string">"Rec.RSI"</span>, <span class="macro">json!</span>(<span class="number">1.0</span>));
+<a href=#553 id=553 data-nosnippet>553</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.2</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
+<a href=#554 id=554 data-nosnippet>554</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.2 ↑ B"</span>);
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
+<a href=#556 id=556 data-nosnippet>556</a>
+<a href=#557 id=557 data-nosnippet>557</a>        map.insert(<span class="string">"Rec.RSI"</span>, <span class="macro">json!</span>(-<span class="number">1.0</span>));
+<a href=#558 id=558 data-nosnippet>558</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.2</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
+<a href=#559 id=559 data-nosnippet>559</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.2 ↓ S"</span>);
+<a href=#560 id=560 data-nosnippet>560</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Sell);
+<a href=#561 id=561 data-nosnippet>561</a>    }
+<a href=#562 id=562 data-nosnippet>562</a>
+<a href=#563 id=563 data-nosnippet>563</a>    <span class="attr">#[test]
+<a href=#564 id=564 data-nosnippet>564</a>    </span><span class="kw">fn </span>computed_bb_lower_buy_when_close_below() {
+<a href=#565 id=565 data-nosnippet>565</a>        <span class="kw">let </span>f = field(<span class="string">"BB.lower"</span>, <span class="string">"computed_recommendation"</span>);
+<a href=#566 id=566 data-nosnippet>566</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
+<a href=#567 id=567 data-nosnippet>567</a>        map.insert(<span class="string">"BB.lower"</span>, <span class="macro">json!</span>(<span class="number">100.0</span>));
+<a href=#568 id=568 data-nosnippet>568</a>        map.insert(<span class="string">"close"</span>, <span class="macro">json!</span>(<span class="number">99.0</span>));
+<a href=#569 id=569 data-nosnippet>569</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">100.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
+<a href=#570 id=570 data-nosnippet>570</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"100.0 ↑ B"</span>);
+<a href=#571 id=571 data-nosnippet>571</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
+<a href=#572 id=572 data-nosnippet>572</a>    }
+<a href=#573 id=573 data-nosnippet>573</a>
+<a href=#574 id=574 data-nosnippet>574</a>    <span class="attr">#[test]
+<a href=#575 id=575 data-nosnippet>575</a>    </span><span class="kw">fn </span>computed_adx_buy_on_cross() {
+<a href=#576 id=576 data-nosnippet>576</a>        <span class="kw">let </span>f = field(<span class="string">"ADX"</span>, <span class="string">"computed_recommendation"</span>);
+<a href=#577 id=577 data-nosnippet>577</a>        <span class="kw">let </span><span class="kw-2">mut </span>map = RowTechMap::default();
+<a href=#578 id=578 data-nosnippet>578</a>        map.insert(<span class="string">"ADX"</span>, <span class="macro">json!</span>(<span class="number">25.0</span>));
+<a href=#579 id=579 data-nosnippet>579</a>        map.insert(<span class="string">"ADX-DI"</span>, <span class="macro">json!</span>(<span class="number">10.0</span>));
+<a href=#580 id=580 data-nosnippet>580</a>        map.insert(<span class="string">"ADX+DI"</span>, <span class="macro">json!</span>(<span class="number">15.0</span>));
+<a href=#581 id=581 data-nosnippet>581</a>        map.insert(<span class="string">"ADX-DI[1]"</span>, <span class="macro">json!</span>(<span class="number">12.0</span>));
+<a href=#582 id=582 data-nosnippet>582</a>        map.insert(<span class="string">"ADX+DI[1]"</span>, <span class="macro">json!</span>(<span class="number">8.0</span>));
+<a href=#583 id=583 data-nosnippet>583</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">25.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
+<a href=#584 id=584 data-nosnippet>584</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"25.0 ↑ B"</span>);
+<a href=#585 id=585 data-nosnippet>585</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Buy);
+<a href=#586 id=586 data-nosnippet>586</a>    }
+<a href=#587 id=587 data-nosnippet>587</a>
+<a href=#588 id=588 data-nosnippet>588</a>    <span class="attr">#[test]
+<a href=#589 id=589 data-nosnippet>589</a>    </span><span class="kw">fn </span>computed_unknown_indicator_stays_plain() {
+<a href=#590 id=590 data-nosnippet>590</a>        <span class="kw">let </span>f = field(<span class="string">"RSI"</span>, <span class="string">"computed_recommendation"</span>);
+<a href=#591 id=591 data-nosnippet>591</a>        <span class="kw">let </span>cell = format_cell_for_field(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">55.0</span>), <span class="kw-2">&amp;</span>f, <span class="prelude-val">None</span>);
+<a href=#592 id=592 data-nosnippet>592</a>        <span class="macro">assert_eq!</span>(cell.text, <span class="string">"55.0"</span>);
+<a href=#593 id=593 data-nosnippet>593</a>        <span class="macro">assert_eq!</span>(cell.tone, CellTone::Neutral);
+<a href=#594 id=594 data-nosnippet>594</a>    }
+<a href=#595 id=595 data-nosnippet>595</a>
+<a href=#596 id=596 data-nosnippet>596</a>    <span class="attr">#[test]
+<a href=#597 id=597 data-nosnippet>597</a>    </span><span class="kw">fn </span>row_tech_map_from_labels() {
+<a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = serde_json::Map::new();
+<a href=#599 id=599 data-nosnippet>599</a>        data.insert(<span class="string">"Price"</span>.into(), <span class="macro">json!</span>(<span class="number">42.0</span>));
+<a href=#600 id=600 data-nosnippet>600</a>        data.insert(<span class="string">"Reco. RSI"</span>.into(), <span class="macro">json!</span>(<span class="number">1.0</span>));
+<a href=#601 id=601 data-nosnippet>601</a>        <span class="kw">let </span>row = ScreenerRow {
+<a href=#602 id=602 data-nosnippet>602</a>            symbol: <span class="string">"X"</span>.into(),
+<a href=#603 id=603 data-nosnippet>603</a>            data,
+<a href=#604 id=604 data-nosnippet>604</a>        };
+<a href=#605 id=605 data-nosnippet>605</a>        <span class="kw">let </span>cols = <span class="macro">vec!</span>[
+<a href=#606 id=606 data-nosnippet>606</a>            (<span class="string">"close"</span>.into(), <span class="string">"Price"</span>.into()),
+<a href=#607 id=607 data-nosnippet>607</a>            (<span class="string">"Rec.RSI"</span>.into(), <span class="string">"Reco. RSI"</span>.into()),
+<a href=#608 id=608 data-nosnippet>608</a>        ];
+<a href=#609 id=609 data-nosnippet>609</a>        <span class="kw">let </span>map = RowTechMap::from_row(<span class="kw-2">&amp;</span>row, <span class="kw-2">&amp;</span>cols);
+<a href=#610 id=610 data-nosnippet>610</a>        <span class="macro">assert_eq!</span>(map.get(<span class="string">"close"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">42.0</span>)));
+<a href=#611 id=611 data-nosnippet>611</a>        <span class="macro">assert_eq!</span>(map.get(<span class="string">"Rec.RSI"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="macro">json!</span>(<span class="number">1.0</span>)));
+<a href=#612 id=612 data-nosnippet>612</a>    }
+<a href=#613 id=613 data-nosnippet>613</a>
+<a href=#614 id=614 data-nosnippet>614</a>    <span class="attr">#[test]
+<a href=#615 id=615 data-nosnippet>615</a>    </span><span class="kw">fn </span>format_rows_table_aligns_and_beautifies() {
+<a href=#616 id=616 data-nosnippet>616</a>        <span class="kw">let </span>fields = <span class="macro">vec!</span>[
+<a href=#617 id=617 data-nosnippet>617</a>            FieldDef {
+<a href=#618 id=618 data-nosnippet>618</a>                label: <span class="string">"Change %"</span>.into(),
+<a href=#619 id=619 data-nosnippet>619</a>                field_name: <span class="string">"change"</span>.into(),
+<a href=#620 id=620 data-nosnippet>620</a>                format: <span class="prelude-val">Some</span>(<span class="string">"percent"</span>.into()),
+<a href=#621 id=621 data-nosnippet>621</a>                interval: <span class="bool-val">true</span>,
+<a href=#622 id=622 data-nosnippet>622</a>                historical: <span class="bool-val">false</span>,
+<a href=#623 id=623 data-nosnippet>623</a>            },
+<a href=#624 id=624 data-nosnippet>624</a>            FieldDef {
+<a href=#625 id=625 data-nosnippet>625</a>                label: <span class="string">"Volume"</span>.into(),
+<a href=#626 id=626 data-nosnippet>626</a>                field_name: <span class="string">"volume"</span>.into(),
+<a href=#627 id=627 data-nosnippet>627</a>                format: <span class="prelude-val">Some</span>(<span class="string">"number_group"</span>.into()),
+<a href=#628 id=628 data-nosnippet>628</a>                interval: <span class="bool-val">false</span>,
+<a href=#629 id=629 data-nosnippet>629</a>                historical: <span class="bool-val">false</span>,
+<a href=#630 id=630 data-nosnippet>630</a>            },
+<a href=#631 id=631 data-nosnippet>631</a>        ];
+<a href=#632 id=632 data-nosnippet>632</a>        <span class="kw">let </span><span class="kw-2">mut </span>data = serde_json::Map::new();
+<a href=#633 id=633 data-nosnippet>633</a>        data.insert(<span class="string">"Change %"</span>.into(), <span class="macro">json!</span>(-<span class="number">1.5</span>));
+<a href=#634 id=634 data-nosnippet>634</a>        data.insert(<span class="string">"Volume"</span>.into(), <span class="macro">json!</span>(<span class="number">1_500_000.0</span>));
+<a href=#635 id=635 data-nosnippet>635</a>        <span class="kw">let </span>row = ScreenerRow {
+<a href=#636 id=636 data-nosnippet>636</a>            symbol: <span class="string">"X"</span>.into(),
+<a href=#637 id=637 data-nosnippet>637</a>            data,
+<a href=#638 id=638 data-nosnippet>638</a>        };
+<a href=#639 id=639 data-nosnippet>639</a>        <span class="kw">let </span>plain = format_rows_table(
+<a href=#640 id=640 data-nosnippet>640</a>            std::slice::from_ref(<span class="kw-2">&amp;</span>row),
+<a href=#641 id=641 data-nosnippet>641</a>            <span class="kw-2">&amp;</span>fields,
+<a href=#642 id=642 data-nosnippet>642</a>            <span class="kw-2">&amp;</span>TableFormatOptions {
+<a href=#643 id=643 data-nosnippet>643</a>                max_columns: <span class="number">12</span>,
+<a href=#644 id=644 data-nosnippet>644</a>                color: <span class="bool-val">false</span>,
+<a href=#645 id=645 data-nosnippet>645</a>            },
+<a href=#646 id=646 data-nosnippet>646</a>        );
+<a href=#647 id=647 data-nosnippet>647</a>        <span class="macro">assert!</span>(plain.contains(<span class="string">"Symbol"</span>));
+<a href=#648 id=648 data-nosnippet>648</a>        <span class="macro">assert!</span>(plain.contains(<span class="string">"Change %"</span>));
+<a href=#649 id=649 data-nosnippet>649</a>        <span class="macro">assert!</span>(plain.contains(<span class="string">"-1.50%"</span>));
+<a href=#650 id=650 data-nosnippet>650</a>        <span class="macro">assert!</span>(plain.contains(<span class="string">"1.500M"</span>));
+<a href=#651 id=651 data-nosnippet>651</a>
+<a href=#652 id=652 data-nosnippet>652</a>        <span class="kw">let </span>colored = format_rows_table(
+<a href=#653 id=653 data-nosnippet>653</a>            <span class="kw-2">&amp;</span>[row],
+<a href=#654 id=654 data-nosnippet>654</a>            <span class="kw-2">&amp;</span>fields,
+<a href=#655 id=655 data-nosnippet>655</a>            <span class="kw-2">&amp;</span>TableFormatOptions {
+<a href=#656 id=656 data-nosnippet>656</a>                max_columns: <span class="number">12</span>,
+<a href=#657 id=657 data-nosnippet>657</a>                color: <span class="bool-val">true</span>,
+<a href=#658 id=658 data-nosnippet>658</a>            },
+<a href=#659 id=659 data-nosnippet>659</a>        );
+<a href=#660 id=660 data-nosnippet>660</a>        <span class="macro">assert!</span>(colored.contains(<span class="string">"\x1b[38;2;255;23;62m"</span>));
+<a href=#661 id=661 data-nosnippet>661</a>    }
+<a href=#662 id=662 data-nosnippet>662</a>
+<a href=#663 id=663 data-nosnippet>663</a>    <span class="attr">#[test]
+<a href=#664 id=664 data-nosnippet>664</a>    </span><span class="kw">fn </span>cell_tone_rgb_matches_python() {
+<a href=#665 id=665 data-nosnippet>665</a>        <span class="macro">assert_eq!</span>(CellTone::Positive.rgb(), (<span class="number">0</span>, <span class="number">169</span>, <span class="number">127</span>));
+<a href=#666 id=666 data-nosnippet>666</a>        <span class="macro">assert_eq!</span>(CellTone::Negative.rgb(), (<span class="number">255</span>, <span class="number">23</span>, <span class="number">62</span>));
+<a href=#667 id=667 data-nosnippet>667</a>        <span class="macro">assert_eq!</span>(CellTone::Buy.rgb(), (<span class="number">41</span>, <span class="number">98</span>, <span class="number">255</span>));
+<a href=#668 id=668 data-nosnippet>668</a>        <span class="macro">assert_eq!</span>(CellTone::Sell.rgb(), (<span class="number">255</span>, <span class="number">74</span>, <span class="number">104</span>));
+<a href=#669 id=669 data-nosnippet>669</a>        <span class="macro">assert_eq!</span>(CellTone::Neutral.rgb(), (<span class="number">157</span>, <span class="number">178</span>, <span class="number">189</span>));
+<a href=#670 id=670 data-nosnippet>670</a>    }
+<a href=#671 id=671 data-nosnippet>671</a>}
 </code></pre></div></section></main></body></html>

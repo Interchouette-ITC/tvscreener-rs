@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CellTone"],"fn":["format_cell","format_cell_for_field"],"struct":["FormattedCell","RowTechMap"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_TABLE_MAX_COLUMNS"],"enum":["CellTone"],"fn":["format_cell","format_cell_for_field","format_rows_table"],"struct":["FormattedCell","RowTechMap","TableFormatOptions"]};
