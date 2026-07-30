@@ -1,13 +1,14 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! MCP stdio server (`mcpkit`) for `tvscreener-mcp`.
+//! MCP server (`mcpkit`) for `tvscreener-mcp` (stdio or Streamable HTTP).
 
 #![allow(clippy::unused_async)]
 
 use crate::mcp::tools;
 use mcpkit::prelude::*;
 use mcpkit::transport::stdio::StdioTransport;
+use mcpkit_axum::McpRouter;
 
 /// MCP server handle exposing screener tools.
 pub struct TvscreenerMcp;
@@ -285,6 +286,53 @@ pub async fn run() -> Result<(), McpError> {
         .with_tools(TvscreenerMcp)
         .build();
     server.serve(transport).await
+}
+
+/// Default HTTP bind address for Streamable MCP (`mcpkit-axum`).
+pub const DEFAULT_HTTP_LISTEN: &str = "0.0.0.0:8787";
+
+/// Serves MCP over Streamable HTTP until the process is stopped.
+///
+/// # Errors
+///
+/// Returns I/O errors from binding or serving the Axum listener.
+pub async fn run_http(addr: &str) -> std::io::Result<()> {
+    McpRouter::new(TvscreenerMcp).serve(addr).await
+}
+
+impl ResourceHandler for TvscreenerMcp {
+    async fn list_resources(&self, _ctx: &Context<'_>) -> Result<Vec<Resource>, McpError> {
+        Ok(Vec::new())
+    }
+
+    async fn read_resource(
+        &self,
+        uri: &str,
+        _ctx: &Context<'_>,
+    ) -> Result<Vec<ResourceContents>, McpError> {
+        Err(McpError::invalid_params(
+            "resources/read",
+            format!("unknown resource: {uri}"),
+        ))
+    }
+}
+
+impl PromptHandler for TvscreenerMcp {
+    async fn list_prompts(&self, _ctx: &Context<'_>) -> Result<Vec<Prompt>, McpError> {
+        Ok(Vec::new())
+    }
+
+    async fn get_prompt(
+        &self,
+        name: &str,
+        _args: Option<serde_json::Map<String, serde_json::Value>>,
+        _ctx: &Context<'_>,
+    ) -> Result<GetPromptResult, McpError> {
+        Err(McpError::invalid_params(
+            "prompts/get",
+            format!("unknown prompt: {name}"),
+        ))
+    }
 }
 
 #[cfg(test)]
