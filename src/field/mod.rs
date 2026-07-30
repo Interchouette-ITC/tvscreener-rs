@@ -446,7 +446,7 @@ fn catalog() -> &'static FieldsCatalog {
 
 /// Looks up one catalog field by asset and constant name.
 #[must_use]
-pub fn field(asset: Asset, const_name: &str) -> Option<FieldDef> {
+pub(crate) fn field(asset: Asset, const_name: &str) -> Option<FieldDef> {
     catalog().field(asset, const_name)
 }
 
@@ -900,6 +900,18 @@ mod tests {
         let err = require_field(Asset::Crypto, "NOPE").expect_err("missing");
         assert!(matches!(err, crate::TvscreenerError::InvalidRequest(_)));
         assert!(err.to_string().contains("crypto"));
+    }
+
+    #[test]
+    fn asset_parse_round_trip() {
+        assert_eq!(Asset::parse("crypto"), Some(Asset::Crypto));
+        assert_eq!(Asset::parse("stock"), Some(Asset::Stock));
+        assert_eq!(Asset::parse("forex"), Some(Asset::Forex));
+        assert_eq!(Asset::parse("bond"), Some(Asset::Bond));
+        assert_eq!(Asset::parse("futures"), Some(Asset::Futures));
+        assert_eq!(Asset::parse("coin"), Some(Asset::Coin));
+        assert_eq!(Asset::parse("nope"), None);
+        assert_eq!(Asset::Crypto.as_str(), "crypto");
     }
 
     #[test]

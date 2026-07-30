@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared `resolve_token_csv` helper for market/index/named wire lists
 - Drop `parse_filter_op` shim; trim duplicate offline util/MCP integration cases
 - `format_rating` private; stock `set_symbol_types` / ExtraFilter / `require_field` offline coverage
+- `field()` is `pub(crate)`; offline tests for `get_for_asset`, bare `select_all`, `Asset::parse`, CLI `sectors`
 
 ### Fixed
 

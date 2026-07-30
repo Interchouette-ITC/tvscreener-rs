@@ -838,4 +838,30 @@ mod tests {
         let markets = payload["markets"].as_array().expect("markets");
         assert!(markets.len() > 10, "ALL should expand; got {markets:?}");
     }
+
+    #[test]
+    fn select_all_without_callback_is_invalid() {
+        let mut s = Screener::new("crypto");
+        let err = s.select_all().expect_err("no set_all_fields_fn");
+        assert!(matches!(err, TvscreenerError::InvalidRequest(_)));
+    }
+
+    #[tokio::test]
+    async fn get_for_asset_unreachable_is_network_or_timeout() {
+        use std::error::Error;
+
+        let err = get_for_asset(crate::field::Asset::Crypto, |s| {
+            s.set_url("http://127.0.0.1:1/").set_range(0, 1);
+            Ok(())
+        })
+        .await
+        .expect_err("connection to :1 should fail");
+        match &err {
+            TvscreenerError::Network(_) => {
+                assert!(err.source().is_some());
+            }
+            TvscreenerError::Timeout => {}
+            other => panic!("unexpected error: {other:?}"),
+        }
+    }
 }

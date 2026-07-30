@@ -84,6 +84,24 @@ fn cli_markets_lists_america() {
 }
 
 #[test]
+fn cli_sectors_lists_technology_services() {
+    let out = tvscreener()
+        .arg("sectors")
+        .output()
+        .expect("run tvscreener sectors");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let text = stdout_utf8(&out);
+    assert!(
+        text.contains("TECHNOLOGY_SERVICES") && text.contains("Technology Services"),
+        "{text}"
+    );
+}
+
+#[test]
 fn cli_fields_search_finds_volume() {
     let out = tvscreener()
         .args(["fields", "volume", "--asset", "stock", "--limit", "5"])
