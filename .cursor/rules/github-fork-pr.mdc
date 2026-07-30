@@ -78,13 +78,24 @@ fork: create feat/… from interchouette/dev
  → confirm PR head Verified
  → wait gRoussac Approve, then --squash
  → sync fork: git fetch upstream && git checkout dev && git merge --ff-only upstream/dev && git push interchouette dev
- → prune local
+ → prune local (delete the feature branch on the fork and locally)
 ```
+
+### After merge (locked)
+
+A **MERGED** or **CLOSED** PR is dead. Further work does **not** go on that PR or its head branch.
+
+1. Before any push you would describe as “to PR #N”, run `gh pr view <n> --repo Interchouette-ITC/tvscreener-rs --json state,mergedAt`.
+2. If `state` is `MERGED` or `CLOSED`: **stop**. Do **not** `git push` that head branch and claim it updates the PR. Org `dev` will not move.
+3. Leftover commits: new branch from `upstream/dev` (or synced `interchouette/dev`), new PR. Never revive a merged PR by pushing the old head.
+4. After squash-merge: sync fork `dev`, then **delete** the feature branch on the fork (`git push interchouette --delete <branch>`) and locally. A surviving fork branch after merge is garbage, not an open PR.
+
+Pushing more commits onto a merged PR’s head (or a deleted/recreated leftover of it) is forbidden agent failure. It does not land on the org.
 
 1. Prefer **create under Interchouette-ITC**, then **fork to Interchouette**.
 2. Day-to-day remote **`interchouette`** = fork; **`upstream`** = org. Do **not** name the worker remote `origin`.
 3. **Never** `git push upstream`. Org code lands **only** by PR merge.
-4. On the **fork**, commit and push freely to `interchouette`.
+4. On the **fork**, commit and push freely to `interchouette` (only while the PR for that branch is still **OPEN**).
 
 ## Bootstrap
 
@@ -98,3 +109,5 @@ Day-to-day work uses the workflow above. Do **not** invent a second integration 
 - Open a **ready** PR before the commits for that concern are done (use **draft**, or wait).
 - Open a PR without requesting **gRoussac** once it is ready for review.
 - Rely on Cursor chat alone for Approve (use GitHub review + `--reviewer gRoussac`).
+- Push to a **merged or closed** PR head, or keep using a feature branch after merge as if the PR were still open.
+- Say “pushed to #N” without checking that #N is still `OPEN`.
