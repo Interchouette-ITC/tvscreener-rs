@@ -54,8 +54,8 @@ async fn main() -> Result<()> {
 | [Sorting & range](guide/sorting-pagination.md)       | `sort_by`, `set_range`                         |
 | [Streaming](guide/streaming.md)                      | Periodic `stream` polls                        |
 | [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
+| [MCP](guide/mcp.md)                                  | `tvscreener-mcp` stdio and Streamable HTTP     |
 | [Screeners](guide/screeners.md)                      | Stock / crypto / forex / bond / futures / coin |
-| [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
 | [Examples](examples/crypto.md)                       | Walkthrough of `example_crypto`                |
 | [Manual test plan](MANUAL_TEST_PLAN.md)              | How to run tests                               |
 | [API overview](api/overview.md)                      | Modules and main types                         |
@@ -68,28 +68,26 @@ Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded fiel
 
 ## Depending on this crate
 
-Package name in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`). Prefer a path or git dependency until the crate is published on crates.io:
+Package name in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`). Use a path or git dependency:
 
 ```toml
 tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
 # or: tvscreener = { path = "../tvscreener-rs" }
-# after crates.io publish: tvscreener = "1.0"
 ```
 
 **This crate’s Cargo features:**
 
 | Feature     | What it enables                          |
 | ----------- | ---------------------------------------- |
-| _(default)_ | Library + CLI + MCP binaries + tests     |
+| _(default)_ | Library + CLI + MCP + TUI binaries       |
 | `live`      | Live HTTP tests (`make test-live`)       |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
-| `tui`       | Ratatui binary `tvscreener-tui`          |
 
 Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan` / `tvscreener-tui`) at runtime.
 
 ### Logging / debug
 
-Library emits [`tracing`](https://docs.rs/tracing) events. Both binaries call `init_logging()`:
+Library emits [`tracing`](https://docs.rs/tracing) events. All three binaries call `init_logging()`:
 
 ```bash
 TVSCREENER_DEBUG=1 tvscreener scan crypto --limit 3

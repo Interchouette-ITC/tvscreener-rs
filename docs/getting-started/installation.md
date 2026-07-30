@@ -13,8 +13,6 @@ tvscreener-mcp
 tvscreener-tui crypto --limit 5
 ```
 
-From crates.io (when published): `cargo install tvscreener`.
-
 From a checkout without installing: `cargo run -- …`.
 
 ## From source (develop this repository)

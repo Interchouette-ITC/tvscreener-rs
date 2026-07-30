@@ -408,11 +408,14 @@ pub fn format_rows_table(
     out
 }
 
-fn select_table_fields<'a>(
+/// Picks non-candlestick fields present in `rows`, capped at `max_columns`.
+#[must_use]
+pub(crate) fn select_table_fields<'a>(
     rows: &[ScreenerRow],
     fields: &'a [FieldDef],
     max_columns: usize,
 ) -> Vec<&'a FieldDef> {
+    let max_columns = max_columns.max(1);
     let present: HashSet<&str> = rows
         .iter()
         .flat_map(|r| r.data.keys().map(String::as_str))

@@ -21,13 +21,13 @@ Size-optimized multi-stage build → `gcr.io/distroless/cc-debian13:nonroot` (De
 | GHCR | `ghcr.io/interchouette/tvscreener-rs` | [Interchouette packages](https://github.com/Interchouette?tab=packages) |
 | GHCR | `ghcr.io/interchouette-itc/tvscreener-rs` | [Interchouette-ITC packages](https://github.com/orgs/Interchouette-ITC/packages) |
 
+Public pulls: Docker Hub `interchouette/tvscreener-rs` (and legacy `gregoshop/tvscreener-rs`), plus GHCR `ghcr.io/interchouette/tvscreener-rs` and `ghcr.io/interchouette-itc/tvscreener-rs`.
+
 ```bash
 docker pull interchouette/tvscreener-rs:dev
 docker pull ghcr.io/interchouette/tvscreener-rs:dev
 docker pull ghcr.io/interchouette-itc/tvscreener-rs:dev
 ```
-
-GHCR packages are **private by default**. After the first push, set each package to **Public** once in Package settings → Change visibility (UI only; no API). Docker Hub `interchouette/tvscreener-rs` (and legacy `gregoshop/tvscreener-rs`) are public.
 
 ## Run modes
 
@@ -69,14 +69,14 @@ AI clients that support Streamable HTTP can use `http://localhost:8787/mcp` when
 | `:X.Y.Z` | GitHub Actions on **Release** | Tag `vX.Y.Z` must match `Cargo.toml` |
 | `:latest` | Same release workflow | Moves with each release |
 
-## Release status
+## Release images and binaries
 
 | Piece | Status |
 | --- | --- |
 | CI (audit, lint, test, artifacts, rustdoc pages) | Live on `dev` |
-| Manual `:dev` image push (Hub + GHCR) | Live; tested |
-| Versioned release images `:X.Y.Z` + `:latest` | Ready when you cut a GitHub Release |
-| Release binaries (`tvscreener`, `tvscreener-mcp`, `tvscreener-tui`) | Attached on that same Release |
+| `:dev` image push (Hub + GHCR) | Live |
+| Versioned release images `:X.Y.Z` + `:latest` | GitHub Release tag `vX.Y.Z` (must match `Cargo.toml`) |
+| Release binaries (`tvscreener`, `tvscreener-mcp`, `tvscreener-tui`) | Attached on that Release |
 
 To cut a release:
 

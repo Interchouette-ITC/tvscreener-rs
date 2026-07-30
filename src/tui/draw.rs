@@ -3,8 +3,6 @@
 
 //! Ratatui draw routines for the screener TUI.
 
-use std::collections::HashSet;
-
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
@@ -15,8 +13,7 @@ use serde_json::Value;
 use super::model::{AppModel, BuilderFocus, InputMode, ViewMode, FILTER_OPS};
 use super::scan::{payload_pretty, render_codegen};
 use super::style::tone_color;
-use crate::beautify::{format_cell_for_field, RowTechMap};
-use crate::field::FieldDef;
+use crate::beautify::{format_cell_for_field, select_table_fields, RowTechMap};
 use crate::util::get_columns_to_request;
 
 const LABEL: Style = Style::new().fg(Color::DarkGray);
@@ -289,41 +286,21 @@ fn builder_row(model: &AppModel, row: BuilderFocus, label: &str, value: &str) ->
     ])
 }
 
+fn prompt_input_lines(label: &str, buf: &str) -> Vec<Line<'static>> {
+    vec![
+        Line::from(""),
+        Line::from(Span::styled(format!("{label}: {buf}_"), ACTIVE)),
+        Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
+    ]
+}
+
 fn input_hint_lines(model: &AppModel) -> Vec<Line<'static>> {
     match model.builder.input_mode {
         InputMode::None => Vec::new(),
-        InputMode::Search => vec![
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("Search: {}_", model.builder.input_buf),
-                ACTIVE,
-            )),
-            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
-        ],
-        InputMode::Sort => vec![
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("Sort field: {}_", model.builder.input_buf),
-                ACTIVE,
-            )),
-            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
-        ],
-        InputMode::Markets => vec![
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("Markets CSV: {}_", model.builder.input_buf),
-                ACTIVE,
-            )),
-            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
-        ],
-        InputMode::Index => vec![
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("Index CSV: {}_", model.builder.input_buf),
-                ACTIVE,
-            )),
-            Line::from(Span::styled("Enter save · Esc cancel", LABEL)),
-        ],
+        InputMode::Search => prompt_input_lines("Search", &model.builder.input_buf),
+        InputMode::Sort => prompt_input_lines("Sort field", &model.builder.input_buf),
+        InputMode::Markets => prompt_input_lines("Markets CSV", &model.builder.input_buf),
+        InputMode::Index => prompt_input_lines("Index CSV", &model.builder.input_buf),
         InputMode::FilterField => {
             let mut out = vec![
                 Line::from(""),
@@ -452,37 +429,10 @@ fn draw_results(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
     frame.render_widget(table, area);
 }
 
-fn select_table_fields<'a>(
-    rows: &[crate::ScreenerRow],
-    fields: &'a [FieldDef],
-    max_columns: usize,
-) -> Vec<&'a FieldDef> {
-    let present: HashSet<&str> = rows
-        .iter()
-        .flat_map(|r| r.data.keys().map(String::as_str))
-        .collect();
-
-    let mut selected: Vec<&FieldDef> = fields
-        .iter()
-        .filter(|f| !f.field_name.starts_with("candlestick"))
-        .filter(|f| present.contains(f.label.as_str()))
-        .take(max_columns.max(1))
-        .collect();
-
-    if selected.is_empty() {
-        selected = fields
-            .iter()
-            .filter(|f| !f.field_name.starts_with("candlestick"))
-            .take(max_columns.max(1))
-            .collect();
-    }
-    selected
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::field::Asset;
+    use crate::field::{Asset, FieldDef};
     use crate::tui::model::{ScanConfig, DEFAULT_WATCH_INTERVAL_SECS};
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
