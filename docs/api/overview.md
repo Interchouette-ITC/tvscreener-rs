@@ -18,10 +18,13 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `field`   | `FieldDef`, defaults (`default_fields`), presets, markets                   |
 | `filter`  | Operators, `Filter`, `FieldCondition`, `ExtraFilter`     |
 | `util`    | URL, headers, millify, `format_value` / `format_row`     |
+| `beautify`| Field-aware `format_cell` / `format_rows_table`, `CellTone` |
+| `ta`      | ADX / AO / Bollinger helpers for computed recommendations |
 | `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
 | `logging` | `env_debug_enabled`; `init_logging`                      |
 | `error`   | Errors (`thiserror`)                                     |
 | `mcp`     | MCP tools + mcpkit stdio server                          |
+| `tui`     | Ratatui pane (`--features tui`)                          |
 
 ## Binaries
 
@@ -29,3 +32,4 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
 | `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
 | `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
+| `tvscreener-tui` | `cargo install --path . --features tui`      | Ratatui results pane. See [TUI](../guide/tui.md).                               |

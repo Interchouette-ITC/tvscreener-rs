@@ -7,9 +7,12 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 ```bash
 # from this repository (installs `tvscreener` and `tvscreener-mcp`)
 cargo install --path .
+# optional TUI:
+cargo install --path . --features tui
 tvscreener --help
 tvscreener scan crypto --limit 5
 tvscreener-mcp
+tvscreener-tui crypto --limit 5   # only if installed with --features tui
 ```
 
 From crates.io (when published): `cargo install tvscreener`.
@@ -36,12 +39,14 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 | Feature     | Purpose                                  |
 | ----------- | ---------------------------------------- |
-| _(default)_ | Library + both binaries                  |
+| _(default)_ | Library + CLI + MCP binaries             |
 | `live`      | Live HTTP tests (`make test-live`)       |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
+| `tui`       | Ratatui binary `tvscreener-tui`          |
 
 ```bash
 cargo test --features live          # still needs TVSCREENER_LIVE=1 for e2e
+cargo run --features tui --bin tvscreener-tui -- crypto --limit 5
 ```
 
 ## Field catalog regen

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Field-aware `format_cell` / `format_rows_table` (Python `beautify` parity without Jupyter HTML)
+- CLI `scan --format table|row|json`, `--json`, `--color`
+- Optional TUI `tvscreener-tui` (`--features tui`): Results table, opt-in watch, OSC 52 copy
+- Docs: [TUI guide](docs/guide/tui.md)
+
 ### Changed
 
 - `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
