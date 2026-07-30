@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
 
 ## What this crate provides
 
-Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), default CLI **`tvscreener`**, and optional **`tvscreener-mcp`** (`feature = "mcp"`).
+Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, and MCP **`tvscreener-mcp`**.
 
 ## Depending on this crate
 
@@ -77,20 +77,19 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 
 | Feature     | What it enables                          |
 | ----------- | ---------------------------------------- |
-| _(default)_ | Library + `tvscreener` CLI + tests       |
-| `mcp`       | `tvscreener-mcp` stdio server (`mcpkit`) |
+| _(default)_ | Library + both binaries + tests          |
 | `live`      | Live HTTP tests (`make test-live`)       |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
 
-Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime. Enabling `mcp` only pulls MCP server deps; it does not change that.
+Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime.
 
 ### Logging / debug
 
 Library emits [`tracing`](https://docs.rs/tracing) events. Both binaries call `init_logging()`:
 
 ```bash
-TVSCREENER_DEBUG=1 cargo run --bin tvscreener -- scan crypto --limit 3
-RUST_LOG=tvscreener=debug,info cargo run --features mcp --bin tvscreener-mcp
+TVSCREENER_DEBUG=1 tvscreener scan crypto --limit 3
+RUST_LOG=tvscreener=debug,info tvscreener-mcp
 ```
 
 Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: `set_print_request(true)`).
@@ -136,7 +135,7 @@ make docker-build-dev && make docker-push-dev   # :dev on demand
 make version-show                               # suggested GitHub Release tag vX.Y.Z
 ```
 
-Entrypoint is `tvscreener-mcp` (stdio MCP; `--features mcp`). Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
+Entrypoint is `tvscreener-mcp` (stdio MCP). Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
 
 Details: [`docker/README.md`](../docker/README.md).
 
@@ -155,14 +154,15 @@ cargo run --example example_crypto    # POST to scanner.tradingview.com
 | ----------- | ---------------------------------------------------------------- |
 | **Default** | `make test` / `cargo test`                                       |
 | **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`)        |
-| **Verify**  | `make verify` (fmt + clippy + tests, including `--features mcp`) |
+| **Verify**  | `make verify` (fmt + clippy + tests)                             |
 
 Default suite does not call the scanner. Live tests need the `live` feature and `TVSCREENER_LIVE=1`.
 
 ## MCP binary (`mcpkit`)
 
 ```bash
-make run-mcp             # cargo run --features mcp --bin tvscreener-mcp
+cargo run --bin tvscreener-mcp
+# or: make run-mcp / tvscreener-mcp after cargo install --path .
 ```
 
 Tools: `discover_fields`, `list_field_types`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets`, `get_preset`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_markets`, `list_index_symbols`, `build_payload`, `search_by_index`.
@@ -178,7 +178,7 @@ src/
   logging.rs       env_debug_enabled; init_logging
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
-  mcp/             tools + mcpkit stdio server (feature = "mcp" only)
+  mcp/             tools + mcpkit stdio server
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
   resolve.rs       Shared market/index/sector wire resolution
@@ -190,17 +190,15 @@ docker/
 
 ## CLI (`tvscreener`) / MCP (`tvscreener-mcp`)
 
-| Make target    | Binary           | Notes                                     |
-| -------------- | ---------------- | ----------------------------------------- |
-| `make run`     | `tvscreener`     | Default CLI. Pass args: `ARGS='…'`        |
-| `make run-mcp` | `tvscreener-mcp` | Stdio MCP. Needs `--features mcp` (wired) |
-
 ```bash
-make run ARGS='--help'
-make run ARGS='payload crypto --limit 2'
-make run ARGS='scan crypto --limit 5'
-make run ARGS='payload stock --preset stock_price --index SP500'
-make run-mcp
+cargo install --path .
+tvscreener --help
+tvscreener payload crypto --limit 2
+tvscreener scan crypto --limit 5
+tvscreener payload stock --preset stock_price --index SP500
+tvscreener-mcp
 ```
+
+Checkout without install: `cargo run -- …` / `cargo run --bin tvscreener-mcp`. Dev shortcuts: `make run` / `make run-mcp` (see `make help`).
 
 CLI checks: `tests/cli.rs` (included in `make test`).

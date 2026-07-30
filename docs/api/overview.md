@@ -21,11 +21,11 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
 | `logging` | `env_debug_enabled`; `init_logging`                      |
 | `error`   | Errors (`thiserror`)                                     |
-| `mcp`     | MCP tools + mcpkit stdio server (`feature = "mcp"` only) |
+| `mcp`     | MCP tools + mcpkit stdio server                          |
 
 ## Binaries
 
-| Binary           | Make target    | Role                                                                            |
-| ---------------- | -------------- | ------------------------------------------------------------------------------- |
-| `tvscreener`     | `make run`     | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
-| `tvscreener-mcp` | `make run-mcp` | Stdio MCP (`--features mcp`). See [MCP server](../../README.md#mcp-server-ai-assistants). |
+| Binary           | How to run                                   | Role                                                                            |
+| ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
+| `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP. See [MCP server](../../README.md#mcp-server-ai-assistants). |

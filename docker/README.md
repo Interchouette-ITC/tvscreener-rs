@@ -78,7 +78,6 @@ make version-show
 ## Entrypoint behavior
 
 The image runs `tvscreener-mcp` on stdio (`stdin_open` / `tty` in compose).
-Build with `--features mcp`.
 
 ## Notes
 

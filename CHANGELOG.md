@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
+
 ## [1.0.0] - 2026-07-30
 
 Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).

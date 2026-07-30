@@ -1,14 +1,28 @@
 # Installation
 
-## From source (this repository)
+Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
+
+## Install the CLI
+
+```bash
+# from this repository (installs `tvscreener` and `tvscreener-mcp`)
+cargo install --path .
+tvscreener --help
+tvscreener payload stock --limit 2
+tvscreener-mcp
+```
+
+From crates.io (when published): `cargo install tvscreener`.
+
+From a checkout without installing: `cargo run -- …`.
+
+## From source (develop this repository)
 
 ```bash
 cargo build
 cargo test
 make doc            # rustdoc → docs/api-rust/
 ```
-
-Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 
 ## As a path dependency
 
@@ -22,16 +36,12 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 | Feature     | Purpose                                  |
 | ----------- | ---------------------------------------- |
-| _(default)_ | Library + `tvscreener` CLI               |
+| _(default)_ | Library + both binaries                  |
 | `live`      | Live HTTP tests (`make test-live`)       |
-| `mcp`       | `tvscreener-mcp` stdio server (`mcpkit`) |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 ```bash
-make run ARGS='--help'
-make run ARGS='payload stock --limit 2'
 cargo test --features live          # still needs TVSCREENER_LIVE=1 for e2e
-make run-mcp                        # or: cargo run --features mcp --bin tvscreener-mcp
 ```
 
 ## Field catalog regen

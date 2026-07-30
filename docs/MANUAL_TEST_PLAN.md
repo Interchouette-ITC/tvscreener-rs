@@ -17,8 +17,8 @@ How to run the test suite and related examples.
 | Manual example      | `make example-manual` |
 | Live crypto         | `make example-crypto` |
 | Live e2e            | `make test-live`      |
-| CLI                 | `make run ARGS='…'`   |
-| MCP server          | `make run-mcp`        |
+| CLI                 | `tvscreener …`        |
+| MCP server          | `tvscreener-mcp`      |
 | Advisories          | `make audit`          |
 | Licenses            | `make deny`           |
 | Regen field catalog | `make regen-fields`   |
@@ -39,7 +39,7 @@ How to run the test suite and related examples.
 | CLI (no scanner)                                 | `tests/cli.rs`                                      |
 | CLI (live scanner: `scan`, preset, index, error) | `tests/e2e/cli_live.rs` (`--features live`)         |
 
-| MCP tools | `cargo test --features mcp` |
+| MCP tools | `cargo test` (includes `src/mcp`) |
 
 ## Checklist
 
@@ -48,8 +48,8 @@ How to run the test suite and related examples.
 - [ ] `cargo run --example manual_test`
 - [ ] `TVSCREENER_LIVE=1 cargo test --features live --test e2e_live -- --test-threads=1`
 - [ ] `TVSCREENER_LIVE=1 cargo test --features live --test cli_live -- --test-threads=1`
-- [ ] `make run ARGS='scan crypto --limit 3'`
-- [ ] `make run-mcp`
+- [ ] `tvscreener scan crypto --limit 3`
+- [ ] `tvscreener-mcp`
 
 ## Notes
 
