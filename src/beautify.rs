@@ -6,7 +6,7 @@
 //! Applies catalog `format` hints: percent coloring, rating labels, millify groups,
 //! recommendation arrows, and ADX / AO / Bollinger computed signals.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde_json::Value;
 
@@ -332,6 +332,145 @@ fn tone_from_letter(letter: &str) -> CellTone {
     }
 }
 
+/// Default max data columns in [`format_rows_table`] (plus the Symbol column).
+pub const DEFAULT_TABLE_MAX_COLUMNS: usize = 12;
+
+/// Options for aligned table rendering.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TableFormatOptions {
+    /// Max field columns (Symbol is always included).
+    pub max_columns: usize,
+    /// When true, apply truecolor ANSI from [`CellTone::rgb`].
+    pub color: bool,
+}
+
+impl Default for TableFormatOptions {
+    fn default() -> Self {
+        Self {
+            max_columns: DEFAULT_TABLE_MAX_COLUMNS,
+            color: false,
+        }
+    }
+}
+
+/// Renders rows as an aligned text table using field-aware [`format_cell_for_field`].
+///
+/// Columns follow `fields` order (skipping candlestick), preferring labels present in
+/// the rows, truncated to [`TableFormatOptions::max_columns`].
+#[must_use]
+pub fn format_rows_table(
+    rows: &[ScreenerRow],
+    fields: &[FieldDef],
+    opts: &TableFormatOptions,
+) -> String {
+    if rows.is_empty() {
+        return "(no rows)".into();
+    }
+    let selected = select_table_fields(rows, fields, opts.max_columns.max(1));
+    let columns = crate::util::get_columns_to_request(fields);
+
+    let mut headers: Vec<String> = Vec::with_capacity(selected.len() + 1);
+    headers.push("Symbol".into());
+    headers.extend(selected.iter().map(|f| f.label.clone()));
+
+    let mut plain_rows: Vec<Vec<String>> = Vec::with_capacity(rows.len());
+    let mut tones: Vec<Vec<CellTone>> = Vec::with_capacity(rows.len());
+
+    for row in rows {
+        let tech = RowTechMap::from_row(row, &columns);
+        let mut plain = Vec::with_capacity(selected.len() + 1);
+        let mut row_tones = Vec::with_capacity(selected.len() + 1);
+        plain.push(row.symbol.clone());
+        row_tones.push(CellTone::Neutral);
+        for field in &selected {
+            let value = row.data.get(&field.label).unwrap_or(&Value::Null);
+            let cell = format_cell_for_field(value, field, Some(&tech));
+            plain.push(cell.text);
+            row_tones.push(cell.tone);
+        }
+        plain_rows.push(plain);
+        tones.push(row_tones);
+    }
+
+    let widths = column_widths(&headers, &plain_rows);
+    let mut out = String::new();
+    out.push_str(&format_table_line(&headers, &widths, None, false));
+    out.push('\n');
+    for (plain, row_tones) in plain_rows.iter().zip(tones.iter()) {
+        out.push_str(&format_table_line(
+            plain,
+            &widths,
+            Some(row_tones),
+            opts.color,
+        ));
+        out.push('\n');
+    }
+    out
+}
+
+fn select_table_fields<'a>(
+    rows: &[ScreenerRow],
+    fields: &'a [FieldDef],
+    max_columns: usize,
+) -> Vec<&'a FieldDef> {
+    let present: HashSet<&str> = rows
+        .iter()
+        .flat_map(|r| r.data.keys().map(String::as_str))
+        .collect();
+
+    let mut selected: Vec<&FieldDef> = fields
+        .iter()
+        .filter(|f| !f.field_name.starts_with("candlestick"))
+        .filter(|f| present.contains(f.label.as_str()))
+        .take(max_columns)
+        .collect();
+
+    if selected.is_empty() {
+        selected = fields
+            .iter()
+            .filter(|f| !f.field_name.starts_with("candlestick"))
+            .take(max_columns)
+            .collect();
+    }
+    selected
+}
+
+fn column_widths(headers: &[String], rows: &[Vec<String>]) -> Vec<usize> {
+    let mut widths: Vec<usize> = headers.iter().map(String::len).collect();
+    for row in rows {
+        for (i, cell) in row.iter().enumerate() {
+            if let Some(w) = widths.get_mut(i) {
+                *w = (*w).max(cell.len());
+            }
+        }
+    }
+    widths
+}
+
+fn format_table_line(
+    cells: &[String],
+    widths: &[usize],
+    tones: Option<&[CellTone]>,
+    color: bool,
+) -> String {
+    let mut parts = Vec::with_capacity(cells.len());
+    for (i, cell) in cells.iter().enumerate() {
+        let width = widths.get(i).copied().unwrap_or(cell.len());
+        let padded = format!("{cell:<width$}");
+        let tone = tones.and_then(|t| t.get(i)).copied().unwrap_or_default();
+        parts.push(paint_cell(&padded, tone, color));
+    }
+    parts.join("  ")
+}
+
+fn paint_cell(text: &str, tone: CellTone, color: bool) -> String {
+    if !color || matches!(tone, CellTone::Neutral) {
+        return text.to_string();
+    }
+    let (r, g, b) = tone.rgb();
+    format!("\x1b[38;2;{r};{g};{b}m{text}\x1b[0m")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -470,6 +609,55 @@ mod tests {
         let map = RowTechMap::from_row(&row, &cols);
         assert_eq!(map.get("close"), Some(&json!(42.0)));
         assert_eq!(map.get("Rec.RSI"), Some(&json!(1.0)));
+    }
+
+    #[test]
+    fn format_rows_table_aligns_and_beautifies() {
+        let fields = vec![
+            FieldDef {
+                label: "Change %".into(),
+                field_name: "change".into(),
+                format: Some("percent".into()),
+                interval: true,
+                historical: false,
+            },
+            FieldDef {
+                label: "Volume".into(),
+                field_name: "volume".into(),
+                format: Some("number_group".into()),
+                interval: false,
+                historical: false,
+            },
+        ];
+        let mut data = serde_json::Map::new();
+        data.insert("Change %".into(), json!(-1.5));
+        data.insert("Volume".into(), json!(1_500_000.0));
+        let row = ScreenerRow {
+            symbol: "X".into(),
+            data,
+        };
+        let plain = format_rows_table(
+            std::slice::from_ref(&row),
+            &fields,
+            &TableFormatOptions {
+                max_columns: 12,
+                color: false,
+            },
+        );
+        assert!(plain.contains("Symbol"));
+        assert!(plain.contains("Change %"));
+        assert!(plain.contains("-1.50%"));
+        assert!(plain.contains("1.500M"));
+
+        let colored = format_rows_table(
+            &[row],
+            &fields,
+            &TableFormatOptions {
+                max_columns: 12,
+                color: true,
+            },
+        );
+        assert!(colored.contains("\x1b[38;2;255;23;62m"));
     }
 
     #[test]

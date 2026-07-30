@@ -11,6 +11,7 @@
 //! cargo run --features regen --bin tvscreener -- regen-fields --python-root ../tvscreener
 //! ```
 
+mod output;
 #[cfg(feature = "regen")]
 mod regen;
 
@@ -22,8 +23,9 @@ use tvscreener::field::{
     FieldDef,
 };
 use tvscreener::resolve::apply_stock_index_markets;
-use tvscreener::util::format_row;
 use tvscreener::ScreenerRow;
+
+use output::{print_scan_rows, ColorWhen, ScanFormat};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum AssetArg {
@@ -119,6 +121,15 @@ struct ScanArgs {
     /// Stock index CSV (const or wire), e.g. `SP500`.
     #[arg(long)]
     index: Option<String>,
+    /// Output shape for `scan` (ignored by `payload`).
+    #[arg(long, value_enum, default_value_t = ScanFormat::Table)]
+    format: ScanFormat,
+    /// Shorthand for `--format json` (scan only).
+    #[arg(long)]
+    json: bool,
+    /// ANSI colors for `--format table` cells.
+    #[arg(long, value_enum, default_value_t = ColorWhen::Auto)]
+    color: ColorWhen,
 }
 
 #[tokio::main]
@@ -128,13 +139,10 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Scan(args) => {
+            let fields = resolve_fields(args.asset, args.preset.as_deref())?;
             let rows = run_scan(&args, cli.debug).await?;
-            if rows.is_empty() {
-                println!("(no rows)");
-            } else {
-                for row in &rows {
-                    println!("{}", format_row(row, None));
-                }
+            print_scan_rows(&rows, &fields, args.format, args.color, args.json)?;
+            if !rows.is_empty() {
                 tracing::info!(count = rows.len(), "scan done");
             }
         }
