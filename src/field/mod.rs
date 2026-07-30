@@ -934,10 +934,14 @@ mod tests {
         );
         assert_eq!(all_sectors().len(), sector::ALL_CONST_NAMES.len());
         assert_eq!(country::UNITED_STATES, "United States");
+        assert_eq!(resolve_country("UNITED_STATES"), Some("United States"));
+        assert_eq!(resolve_country("United States"), Some("United States"));
         assert_eq!(all_countries().len(), country::ALL_CONST_NAMES.len());
         assert_eq!(industry::SEMICONDUCTORS, "Semiconductors");
+        assert_eq!(resolve_industry("SEMICONDUCTORS"), Some("Semiconductors"));
         assert_eq!(all_industries().len(), industry::ALL_CONST_NAMES.len());
         assert_eq!(exchange::NASDAQ, "NASDAQ");
+        assert_eq!(resolve_exchange("NASDAQ"), Some("NASDAQ"));
         assert_eq!(all_exchanges().len(), exchange::ALL_CONST_NAMES.len());
         assert_eq!(all_ratings().len(), rating::ALL_CONST_NAMES.len());
     }

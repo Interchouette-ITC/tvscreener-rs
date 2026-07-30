@@ -610,6 +610,88 @@ impl Screener {
     }
 }
 
+/// Configures a typed screener for `asset` and returns the result of `f`.
+///
+/// # Errors
+///
+/// Propagates errors from `f` or typed screener construction defaults.
+pub fn with_asset_screener<R, F>(asset: crate::field::Asset, f: F) -> Result<R>
+where
+    F: FnOnce(&mut Screener) -> Result<R>,
+{
+    use crate::field::Asset;
+    match asset {
+        Asset::Stock => {
+            let mut s = stock::StockScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Crypto => {
+            let mut s = crypto::CryptoScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Forex => {
+            let mut s = forex::ForexScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Bond => {
+            let mut s = bond::BondScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Futures => {
+            let mut s = futures::FuturesScreener::new();
+            f(s.inner_mut())
+        }
+        Asset::Coin => {
+            let mut s = coin::CoinScreener::new();
+            f(s.inner_mut())
+        }
+    }
+}
+
+/// Configures a typed screener for `asset`, then runs [`Screener::get`].
+///
+/// # Errors
+///
+/// Propagates configure or HTTP/scan failures.
+pub async fn get_for_asset<F>(asset: crate::field::Asset, configure: F) -> Result<Vec<ScreenerRow>>
+where
+    F: FnOnce(&mut Screener) -> Result<()>,
+{
+    use crate::field::Asset;
+    match asset {
+        Asset::Stock => {
+            let mut s = stock::StockScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+        Asset::Crypto => {
+            let mut s = crypto::CryptoScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+        Asset::Forex => {
+            let mut s = forex::ForexScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+        Asset::Bond => {
+            let mut s = bond::BondScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+        Asset::Futures => {
+            let mut s = futures::FuturesScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+        Asset::Coin => {
+            let mut s = coin::CoinScreener::new();
+            configure(s.inner_mut())?;
+            s.get().await
+        }
+    }
+}
+
 fn values_are_subset(candidate: &[Value], current: &[Value]) -> bool {
     candidate
         .iter()

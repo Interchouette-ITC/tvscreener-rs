@@ -3,11 +3,8 @@
 
 //! Screener query helpers for MCP tools.
 
-use crate::core::bond::BondScreener;
-use crate::core::coin::CoinScreener;
 use crate::core::crypto::CryptoScreener;
 use crate::core::forex::ForexScreener;
-use crate::core::futures::FuturesScreener;
 use crate::core::stock::StockScreener;
 use crate::core::Screener;
 use crate::error::{Result, TvscreenerError};
@@ -93,38 +90,7 @@ async fn run_on_screener<F>(asset: Asset, configure: F) -> Result<Vec<ScreenerRo
 where
     F: FnOnce(&mut Screener) -> Result<()>,
 {
-    match asset {
-        Asset::Stock => {
-            let mut s = StockScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Crypto => {
-            let mut s = CryptoScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Forex => {
-            let mut s = ForexScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Bond => {
-            let mut s = BondScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Futures => {
-            let mut s = FuturesScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Coin => {
-            let mut s = CoinScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-    }
+    crate::core::get_for_asset(asset, configure).await
 }
 
 /// Options for [`custom_query`].

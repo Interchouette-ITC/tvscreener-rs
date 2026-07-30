@@ -13,20 +13,14 @@
 
 mod regen;
 
-use anyhow::{bail, Context, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
-use tvscreener::core::bond::BondScreener;
-use tvscreener::core::coin::CoinScreener;
-use tvscreener::core::crypto::CryptoScreener;
-use tvscreener::core::forex::ForexScreener;
-use tvscreener::core::futures::FuturesScreener;
-use tvscreener::core::stock::StockScreener;
 use tvscreener::core::Screener;
 use tvscreener::field::{
-    all_index_symbols, all_markets, all_sectors, get_preset, index_symbol_value, list_presets,
-    market, search_fields, Asset, FieldDef,
+    all_markets, all_sectors, get_preset, list_presets, search_fields, Asset, FieldDef,
 };
+use tvscreener::resolve::{resolve_index_wires, resolve_market_wires};
 use tvscreener::util::format_row;
 use tvscreener::ScreenerRow;
 
@@ -183,9 +177,9 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn resolve_fields(asset: AssetArg, preset: Option<&str>) -> Result<Vec<FieldDef>> {
+fn resolve_fields(asset: AssetArg, preset: Option<&str>) -> tvscreener::Result<Vec<FieldDef>> {
     if let Some(name) = preset {
-        return get_preset(name).with_context(|| format!("preset `{name}`"));
+        return get_preset(name);
     }
     Ok(match asset {
         AssetArg::Stock => tvscreener::field::default_stock_fields(),
@@ -197,75 +191,23 @@ fn resolve_fields(asset: AssetArg, preset: Option<&str>) -> Result<Vec<FieldDef>
     })
 }
 
-fn parse_csv(raw: Option<&str>) -> Vec<String> {
-    raw.map(|s| {
-        s.split(',')
-            .map(str::trim)
-            .filter(|p| !p.is_empty())
-            .map(str::to_string)
-            .collect()
-    })
-    .unwrap_or_default()
-}
-
-fn resolve_markets_local(tokens: &[String]) -> Result<Vec<String>> {
-    let mut out = Vec::new();
-    for token in tokens {
-        let upper = token.to_ascii_uppercase().replace(' ', "_");
-        if let Some(m) = market(&upper) {
-            out.push(m.value);
-            continue;
-        }
-        if let Some(m) = all_markets()
-            .iter()
-            .find(|m| m.value.eq_ignore_ascii_case(token))
-        {
-            out.push(m.value.clone());
-            continue;
-        }
-        bail!("unknown market `{token}` (try `tvscreener markets`)");
-    }
-    Ok(out)
-}
-
-fn resolve_indices_local(tokens: &[String]) -> Result<Vec<String>> {
-    let mut out = Vec::new();
-    for token in tokens {
-        let catalog = token.strip_prefix("SYML:").unwrap_or(token.as_str());
-        let upper = catalog.to_ascii_uppercase().replace(' ', "_");
-        if let Some(wire) = index_symbol_value(&upper) {
-            out.push(wire.to_string());
-            continue;
-        }
-        if let Some(idx) = all_index_symbols()
-            .iter()
-            .find(|idx| idx.value.eq_ignore_ascii_case(catalog))
-        {
-            out.push(idx.value.clone());
-            continue;
-        }
-        bail!("unknown index `{token}` (e.g. SP500)");
-    }
-    Ok(out)
-}
-
 fn apply_stock_extras(
     screener: &mut Screener,
     markets: Option<&str>,
     index: Option<&str>,
-) -> Result<()> {
-    let market_tokens = parse_csv(markets);
-    if !market_tokens.is_empty() {
-        screener.set_markets(resolve_markets_local(&market_tokens)?);
+) -> tvscreener::Result<()> {
+    let market_wires = resolve_market_wires(markets)?;
+    if !market_wires.is_empty() {
+        screener.set_markets(market_wires);
     }
-    let index_tokens = parse_csv(index);
-    if !index_tokens.is_empty() {
-        screener.set_index(resolve_indices_local(&index_tokens)?);
+    let index_wires = resolve_index_wires(index)?;
+    if !index_wires.is_empty() {
+        screener.set_index(index_wires);
     }
     Ok(())
 }
 
-fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> Result<()> {
+fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> tvscreener::Result<()> {
     let fields = resolve_fields(args.asset, args.preset.as_deref())?;
     if debug || tvscreener::logging::env_debug_enabled() {
         inner.set_debug(true);
@@ -279,77 +221,28 @@ fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> Result
     if matches!(args.asset, AssetArg::Stock) {
         apply_stock_extras(inner, args.markets.as_deref(), args.index.as_deref())?;
     } else if args.markets.is_some() || args.index.is_some() {
-        bail!("--markets / --index only apply to stock");
+        return Err(tvscreener::TvscreenerError::InvalidRequest(
+            "--markets / --index only apply to stock".into(),
+        ));
     }
     Ok(())
 }
 
 fn build_payload_only(args: &ScanArgs, debug: bool) -> Result<serde_json::Value> {
-    match args.asset {
-        AssetArg::Stock => {
-            let mut s = StockScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-        AssetArg::Crypto => {
-            let mut s = CryptoScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-        AssetArg::Forex => {
-            let mut s = ForexScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-        AssetArg::Bond => {
-            let mut s = BondScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-        AssetArg::Futures => {
-            let mut s = FuturesScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-        AssetArg::Coin => {
-            let mut s = CoinScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.inner().build_payload()?)
-        }
-    }
+    Ok(tvscreener::core::with_asset_screener(
+        args.asset.asset(),
+        |inner| {
+            configure_inner(inner, args, debug)?;
+            inner.build_payload()
+        },
+    )?)
 }
 
 async fn run_scan(args: &ScanArgs, debug: bool) -> Result<Vec<ScreenerRow>> {
-    match args.asset {
-        AssetArg::Stock => {
-            let mut s = StockScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-        AssetArg::Crypto => {
-            let mut s = CryptoScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-        AssetArg::Forex => {
-            let mut s = ForexScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-        AssetArg::Bond => {
-            let mut s = BondScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-        AssetArg::Futures => {
-            let mut s = FuturesScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-        AssetArg::Coin => {
-            let mut s = CoinScreener::new();
-            configure_inner(s.inner_mut(), args, debug)?;
-            Ok(s.get().await?)
-        }
-    }
+    Ok(
+        tvscreener::core::get_for_asset(args.asset.asset(), |inner| {
+            configure_inner(inner, args, debug)
+        })
+        .await?,
+    )
 }

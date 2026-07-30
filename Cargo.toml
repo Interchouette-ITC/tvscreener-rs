@@ -4,13 +4,14 @@ version = "1.0.0"
 edition = "2021"
 rust-version = "1.85"
 license = "Apache-2.0"
-description = "Rust port of deepentropy/tvscreener - unofficial TradingView Screener API client"
+description = "Unofficial TradingView Screener HTTP client (Rust); inspired by deepentropy/tvscreener"
 readme = "README.md"
 keywords = ["tradingview", "screener", "finance", "crypto", "stocks"]
 categories = ["api-bindings", "finance"]
-repository = "https://github.com/deepentropy/tvscreener"
-documentation = "https://deepentropy.github.io/tvscreener/docs/"
-authors = ["tvscreener-rs contributors"]
+repository = "https://github.com/Interchouette-ITC/tvscreener-rs"
+homepage = "https://github.com/Interchouette-ITC/tvscreener-rs"
+documentation = "https://docs.rs/tvscreener"
+authors = ["Interchouette <contact@interchouette.net>"]
 
 [lib]
 name = "tvscreener"

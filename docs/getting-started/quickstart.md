@@ -37,15 +37,20 @@ async fn main() -> Result<()> {
 use tvscreener::core::crypto::CryptoScreener;
 use tvscreener::field::crypto_rsi_14;
 use tvscreener::filter::{FieldCondition, FilterOperator};
+use tvscreener::Result;
 use serde_json::json;
 
-let mut screener = CryptoScreener::new();
-screener.where_condition(FieldCondition::new(
-    crypto_rsi_14().field_name,
-    FilterOperator::Below,
-    json!(35),
-));
+fn apply_rsi_filter(screener: &mut CryptoScreener) -> Result<()> {
+    screener.where_condition(FieldCondition::new(
+        crypto_rsi_14().field_name,
+        FilterOperator::Below,
+        json!(35),
+    ))?;
+    Ok(())
+}
 ```
+
+`where_condition` returns `Result`; propagate with `?`.
 
 ## Select columns
 

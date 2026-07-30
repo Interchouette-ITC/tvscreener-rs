@@ -177,8 +177,9 @@ src/
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
   mcp/             tools + mcpkit stdio server (feature = "mcp" only)
-  bin/tvscreener.rs
+  bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
+  resolve.rs       Shared market/index/sector wire resolution
 examples/
 tests/
 docs/

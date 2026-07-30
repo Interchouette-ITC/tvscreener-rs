@@ -27,4 +27,4 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | Binary           | Make target    | Role                                                                            |
 | ---------------- | -------------- | ------------------------------------------------------------------------------- |
 | `tvscreener`     | `make run`     | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
-| `tvscreener-mcp` | `make run-mcp` | Stdio MCP (`--features mcp`). See [MCP binary](../README.md#mcp-binary-mcpkit). |
+| `tvscreener-mcp` | `make run-mcp` | Stdio MCP (`--features mcp`). See [MCP server](../../README.md#mcp-server-ai-assistants). |
