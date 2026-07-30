@@ -74,6 +74,11 @@ Run locally before releases (`make audit` / `make deny`).
 
 ```bash
 make docker-build-dev   # :dev tags (Hub + GHCR names)
+
+docker pull interchouette/tvscreener-rs:dev
+docker run -d -p 8787:8787 interchouette/tvscreener-rs:dev
+docker run -it -p 8787:8787 interchouette/tvscreener-rs:dev
+docker run --rm interchouette/tvscreener-rs:dev tvscreener --help
 ```
 
-See [docker/README.md](../../docker/README.md).
+Image ships CLI, TUI, and MCP (HTTP on **8787**). See [docker/README.md](../../docker/README.md).

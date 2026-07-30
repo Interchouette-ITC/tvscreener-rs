@@ -1,7 +1,12 @@
 services:
   tvscreener-rs:
     container_name: tvscreener-rs-test
-    image: gregoshop/tvscreener-rs:latest
+    image: interchouette/tvscreener-rs:latest
+    ports:
+      - "8787:8787"
+    environment:
+      ENABLE_MCP: "1"
+      TVSCREENER_MCP_ADDR: "0.0.0.0:8787"
     stdin_open: true
     tty: true
     restart: "no"

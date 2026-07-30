@@ -9,14 +9,18 @@
 //! cargo run --bin tvscreener -- payload stock --index SP500
 //! TVSCREENER_DEBUG=1 cargo run --bin tvscreener -- scan stock --limit 3
 //! cargo run --features regen --bin tvscreener -- regen-fields --python-root ../tvscreener
+//! # no subcommand: interactive prompt until quit / exit / EOF
+//! cargo run --bin tvscreener
 //! ```
 
 mod output;
 #[cfg(feature = "regen")]
 mod regen;
 
+use std::io::{self, Write};
+
 use anyhow::Result;
-use clap::{ArgAction, Parser, Subcommand, ValueEnum};
+use clap::{ArgAction, CommandFactory, Parser, Subcommand, ValueEnum};
 use tvscreener::core::Screener;
 use tvscreener::field::{
     all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
@@ -57,6 +61,9 @@ impl AssetArg {
 #[command(
     name = "tvscreener",
     about = "TradingView screener HTTP client (library + CLI)",
+    after_help = "With no subcommand, starts an interactive prompt (type quit or exit to leave).",
+    subcommand_required = false,
+    arg_required_else_help = false,
     version
 )]
 struct Cli {
@@ -65,7 +72,7 @@ struct Cli {
     debug: bool,
 
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -153,16 +160,75 @@ async fn main() -> Result<()> {
     tvscreener::logging::init_logging();
 
     match cli.command {
+        Some(command) => run_command(command, cli.debug).await,
+        None => run_interactive(cli.debug).await,
+    }
+}
+
+async fn run_interactive(debug: bool) -> Result<()> {
+    let mut stdout = io::stdout();
+    writeln!(
+        stdout,
+        "tvscreener interactive mode — enter a subcommand (scan, payload, …); quit or exit to leave"
+    )?;
+    stdout.flush()?;
+
+    loop {
+        write!(stdout, "tvscreener> ")?;
+        stdout.flush()?;
+        let mut line = String::new();
+        let n = io::stdin().read_line(&mut line)?;
+        if n == 0 {
+            writeln!(stdout)?;
+            break;
+        }
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if matches!(trimmed.to_ascii_lowercase().as_str(), "quit" | "exit" | "q") {
+            break;
+        }
+        if matches!(trimmed, "help" | "--help" | "-h") {
+            let _ = Cli::command().print_help();
+            writeln!(stdout)?;
+            continue;
+        }
+
+        let mut argv = vec!["tvscreener".to_string()];
+        argv.extend(trimmed.split_whitespace().map(str::to_string));
+        match Cli::try_parse_from(&argv) {
+            Ok(parsed) => match parsed.command {
+                Some(command) => {
+                    if let Err(err) = run_command(command, debug || parsed.debug).await {
+                        eprintln!("{err:#}");
+                    }
+                }
+                None => {
+                    eprintln!("enter a subcommand (e.g. scan crypto --limit 5), or quit");
+                }
+            },
+            Err(err) => {
+                // Clap already formats help / usage; print without exiting the prompt.
+                eprint!("{err}");
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn run_command(command: Commands, debug: bool) -> Result<()> {
+    match command {
         Commands::Scan(args) => {
             let fields = resolve_fields(args.asset, args.preset.as_deref())?;
-            let rows = run_scan(&args, cli.debug).await?;
+            let rows = run_scan(&args, debug).await?;
             print_scan_rows(&rows, &fields, args.format, args.color, args.json)?;
             if !rows.is_empty() {
                 tracing::info!(count = rows.len(), "scan done");
             }
         }
         Commands::Payload(args) => {
-            let payload = build_payload_only(&args, cli.debug)?;
+            let payload = build_payload_only(&args, debug)?;
             println!("{}", serde_json::to_string_pretty(&payload)?);
         }
         Commands::Presets => {
@@ -257,4 +323,31 @@ async fn run_scan(args: &ScanArgs, debug: bool) -> Result<Vec<ScreenerRow>> {
         })
         .await?,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_subcommand_still_required_shape() {
+        let cli = Cli::try_parse_from(["tvscreener", "presets"]).unwrap();
+        assert!(matches!(cli.command, Some(Commands::Presets)));
+    }
+
+    #[test]
+    fn parse_no_subcommand_is_interactive() {
+        let cli = Cli::try_parse_from(["tvscreener"]).unwrap();
+        assert!(cli.command.is_none());
+    }
+
+    #[test]
+    fn interactive_line_parses_scan() {
+        let argv = ["tvscreener", "scan", "crypto", "--limit", "2"];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        match cli.command {
+            Some(Commands::Scan(scan_args)) => assert_eq!(scan_args.limit, 2),
+            other => panic!("expected Scan, got {other:?}"),
+        }
+    }
 }

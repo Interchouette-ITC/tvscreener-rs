@@ -23,13 +23,13 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
 | `logging` | `env_debug_enabled`; `init_logging`                      |
 | `error`   | Errors (`thiserror`)                                     |
-| `mcp`     | MCP tools + mcpkit stdio server                          |
+| `mcp`     | MCP tools + mcpkit server (stdio / Streamable HTTP)      |
 | `tui`     | Ratatui pane (`tvscreener-tui` binary)                 |
 
 ## Binaries
 
 | Binary           | How to run                                   | Role                                                                            |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
-| `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …)                         |
-| `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
+| `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …); no subcommand → interactive prompt |
+| `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP by default; `--http` for Streamable HTTP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
 | `tvscreener-tui` | `cargo install --path .` then `tvscreener-tui …` | Ratatui results pane. See [TUI](../guide/tui.md).                               |

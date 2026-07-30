@@ -26,10 +26,19 @@ Not affiliated with TradingView.
 - Catalog commands: presets, fields, markets, sectors
 - Scan output: `--format table|row|json`, `--json`, `--color`
 - Query flags: `--filter`, `--filters`, `--sort-by`, `--ascending`, `--markets`, `--index`, `--search`
+- No subcommand: interactive prompt until `quit` / `exit` / EOF
 
 ### MCP (`tvscreener-mcp`)
 
 - Stdio MCP server with discover, custom query, search helpers, catalog tools, payload preview
+- Stdio transport by default (`make run-mcp`)
+- Optional Streamable HTTP (`--http`, default listen `0.0.0.0:8787`)
+
+### Docker
+
+- Image ships `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`
+- Default attached run: TUI + MCP HTTP on **8787**; `-d` for MCP only; CLI overrides
+- Release attaches all three Linux binaries
 
 ### TUI (`tvscreener-tui`)
 

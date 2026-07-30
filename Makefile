@@ -11,14 +11,16 @@ CARGO_FLAGS ?=
 NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
-HUB_IMAGE ?= gregoshop/tvscreener-rs
+HUB_IMAGE ?= interchouette/tvscreener-rs
+# Personal Hub mirror during migration away from gregoshop
+HUB_MIRROR_IMAGE ?= gregoshop/tvscreener-rs
 # personal GHCR mirror (GHCR_USERNAME / GHCR_PAT)
 GHCR_PERSONAL_IMAGE ?= ghcr.io/groussac/tvscreener-rs
 # Interchouette worker + org packages (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
 GHCR_WORKER_IMAGE ?= ghcr.io/interchouette/tvscreener-rs
 GHCR_ORG_IMAGE ?= ghcr.io/interchouette-itc/tvscreener-rs
 # Backward-compatible alias used by docker-build (Hub image).
-REGISTRY ?= gregoshop
+REGISTRY ?= interchouette
 TAG ?= latest
 APP_IMAGE = $(REGISTRY)/tvscreener-rs
 APP_VERSION ?= $(shell awk '/^version = /{gsub(/"/, "", $$3); print $$3; exit}' Cargo.toml)
@@ -42,6 +44,7 @@ CI ?= 0
 	docker-push-dev-hub docker-push-dev-ghcr-personal docker-push-dev-ghcr-itc \
 	docker-push-release docker-push-release-hub \
 	docker-push-release-ghcr-personal docker-push-release-ghcr-itc \
+	docker-hub-description \
 	docker-run docker-run-test docker-stop docker-inspect \
 	version-show version-bump-patch version-bump-minor version-bump-major version-set \
 	clean
@@ -73,8 +76,9 @@ help:
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
 	@echo "                       e.g. make regen-fields PYTHON_ROOT=../tvscreener"
 	@echo "  make docker-build    Build $(HUB_IMAGE):$(TAG) (+ :$(APP_VERSION))"
-	@echo "  make docker-build-dev  Build and tag :dev (Hub + 3 GHCR names)"
+	@echo "  make docker-build-dev  Build and tag :dev (Hub + Hub org + GHCR)"
 	@echo "  make docker-push-dev   Push :dev (local interactive logins)"
+	@echo "  make docker-hub-description  Sync Hub short + full description"
 	@echo "  make docker-push-release  Tag release images (CI uses split push targets)"
 	@echo "  make docker-push     Deprecated alias → prefer docker-push-dev / GitHub Release"
 	@echo "  make docker-run      Compose prod up -d"
@@ -87,7 +91,7 @@ help:
 	@echo "  make clean           cargo clean"
 	@echo ""
 	@echo "Overrides: CARGO_BIN=…  CARGO_FLAGS=…  TVSCREENER_LIVE=0|1  TVSCREENER_DEBUG=0|1"
-	@echo "           HUB_IMAGE=$(HUB_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
+	@echo "           HUB_IMAGE=$(HUB_IMAGE)  HUB_MIRROR_IMAGE=$(HUB_MIRROR_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
 
 all: verify
 
@@ -243,13 +247,14 @@ docker-build-no-cache:
 		-f $(DOCKERFILE) \
 		.
 
-## Build once and retag :dev on Hub + all GHCR names.
+## Build once and retag :dev on Hub + Hub mirror + all GHCR names.
 docker-build-dev:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
 		--network=host \
 		--build-arg APP_VERSION=$(APP_VERSION) \
 		-t tvscreener-rs:dev \
 		-t $(HUB_IMAGE):dev \
+		-t $(HUB_MIRROR_IMAGE):dev \
 		-t $(GHCR_PERSONAL_IMAGE):dev \
 		-t $(GHCR_WORKER_IMAGE):dev \
 		-t $(GHCR_ORG_IMAGE):dev \
@@ -258,6 +263,13 @@ docker-build-dev:
 
 docker-push-dev-hub:
 	docker push $(HUB_IMAGE):dev
+	docker push $(HUB_MIRROR_IMAGE):dev
+	$(MAKE) docker-hub-description
+
+## Sync short + full description on Docker Hub (interchouette + gregoshop mirror).
+## Uses `docker login` credentials or DOCKER_USERNAME / DOCKER_PASSWORD.
+docker-hub-description:
+	python3 docker/sync-hub-description.py
 
 docker-push-dev-ghcr-personal:
 	docker push $(GHCR_PERSONAL_IMAGE):dev
@@ -285,6 +297,11 @@ docker-push-dev:
 docker-push-release-hub:
 	docker push $(HUB_IMAGE):$(APP_VERSION)
 	docker push $(HUB_IMAGE):latest
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(HUB_MIRROR_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):latest $(HUB_MIRROR_IMAGE):latest
+	docker push $(HUB_MIRROR_IMAGE):$(APP_VERSION)
+	docker push $(HUB_MIRROR_IMAGE):latest
+	$(MAKE) docker-hub-description
 
 docker-push-release-ghcr-personal:
 	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_PERSONAL_IMAGE):$(APP_VERSION)
@@ -310,6 +327,10 @@ docker-push:
 	@echo "note: make docker-push is Hub-only; prefer make docker-push-dev or a GitHub Release"
 	docker push $(HUB_IMAGE):$(TAG)
 	docker push $(HUB_IMAGE):$(APP_VERSION)
+	docker tag $(HUB_IMAGE):$(TAG) $(HUB_MIRROR_IMAGE):$(TAG)
+	docker tag $(HUB_IMAGE):$(APP_VERSION) $(HUB_MIRROR_IMAGE):$(APP_VERSION)
+	docker push $(HUB_MIRROR_IMAGE):$(TAG)
+	docker push $(HUB_MIRROR_IMAGE):$(APP_VERSION)
 
 docker-run:
 	docker compose -f $(COMPOSE_PROD) up -d --force-recreate

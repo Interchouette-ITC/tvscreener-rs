@@ -6,7 +6,7 @@ This repository is a **Rust port and translation** of the Python library **[deep
 | ------------------------ | ---------------------------------------------------------------------------------------- |
 | **Upstream (Python)**    | [github.com/deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)           |
 | **Python documentation** | [deepentropy.github.io/tvscreener/docs/](https://deepentropy.github.io/tvscreener/docs/) |
-| **This crate (Rust)**    | **tvscreener-rs** - Rust port (Docker Hub: `gregoshop/tvscreener-rs`)                    |
+| **This crate (Rust)**    | **tvscreener-rs** - Rust port (Docker Hub: `interchouette/tvscreener-rs`) |
 
 ## License and attribution
 
@@ -100,7 +100,7 @@ Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: 
 
 Errors: library uses **`thiserror`** (`TvscreenerError`); binaries use **`anyhow`** at the process edge.
 
-This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is a separate stdio binary (`make run-mcp`).
+This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is `tvscreener-mcp` (stdio locally; Streamable HTTP with `--http` or via Docker on port **8787**).
 
 ## Results
 
@@ -132,14 +132,14 @@ cargo doc --no-deps --open
 
 ## Docker (Hub + GHCR)
 
-Public pulls: Docker Hub `gregoshop/tvscreener-rs`, `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`.
+Public pulls: Docker Hub `interchouette/tvscreener-rs` (legacy `gregoshop/tvscreener-rs`), `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`.
 
 ```bash
 make docker-build-dev && make docker-push-dev   # :dev on demand
 make version-show                               # suggested GitHub Release tag vX.Y.Z
 ```
 
-Entrypoint is `tvscreener-mcp` (stdio MCP). Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
+Entrypoint starts TUI + MCP HTTP on **8787** when attached with a TTY; `-d` serves MCP only. CLI one-shot / interactive overrides are supported. Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
 
 Details: [`docker/README.md`](../docker/README.md).
 
@@ -184,7 +184,7 @@ src/
   logging.rs       env_debug_enabled; init_logging
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
-  mcp/             tools + mcpkit stdio server
+  mcp/             tools + mcpkit server (stdio / HTTP)
   tui/             Ratatui pane (`tvscreener-tui`)
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
@@ -201,9 +201,11 @@ docker/
 ```bash
 cargo install --path .
 tvscreener --help
+tvscreener                 # interactive prompt
 tvscreener scan crypto --limit 5
 tvscreener scan stock --preset stock_price --index SP500 --limit 10
-tvscreener-mcp
+tvscreener-mcp             # stdio
+tvscreener-mcp --http      # Streamable HTTP on :8787
 ```
 
 Checkout without install: `cargo run -- …` / `cargo run --bin tvscreener-mcp`. Dev shortcuts: `make run` / `make run-mcp` (see `make help`).
