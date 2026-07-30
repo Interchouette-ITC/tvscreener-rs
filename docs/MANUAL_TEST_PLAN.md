@@ -56,4 +56,4 @@ How to run the test suite and related examples.
 - Bond/futures/coin Python `DEFAULT_*_FIELDS` lists are empty upstream; this crate uses curated defaults / presets.
 - `select_all` selects curated catalog defaults, not the full Python enum.
 - Terminal `format_*` / `format_cell` helpers are covered; HTML table export is out of scope.
-- Optional TUI: `cargo test --features tui --lib tui::`; live smoke via `make run-tui ARGS='crypto --limit 3'`.
+- Optional TUI: covered by `make test` (`--features tui`); live smoke via `make run-tui ARGS='crypto --limit 3'`.

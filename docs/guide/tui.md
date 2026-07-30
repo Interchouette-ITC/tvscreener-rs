@@ -18,7 +18,7 @@ cargo install --path . --features tui
 tvscreener-tui crypto --preset crypto_price --limit 10
 ```
 
-`make lint` / clippy also run with `--features tui`.
+`make lint`, `make check`, and `make test` also run with `--features tui`.
 
 Asset class is chosen at launch (`stock`, `crypto`, `forex`, `bond`, `futures`, `coin`).
 

@@ -156,7 +156,7 @@ cargo run --example example_crypto    # POST to scanner.tradingview.com
 
 | Kind        | Command                                                          |
 | ----------- | ---------------------------------------------------------------- |
-| **Default** | `make test` / `cargo test`                                       |
+| **Default** | `make test` / `cargo test` (+ `--features tui`)              |
 | **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`)        |
 | **Verify**  | `make verify` (fmt + clippy + tests)                             |
 

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
+- CI / `make check` / `make test` also exercise `--features tui`; release artifacts include `tvscreener-tui`
 
 ## [1.0.0] - 2026-07-30
 
