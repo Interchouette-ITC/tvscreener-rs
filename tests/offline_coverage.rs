@@ -368,20 +368,23 @@ fn errors_display_variants() {
 
 #[tokio::test]
 async fn errors_unreachable_url_is_network_or_timeout() {
+    use std::error::Error;
+
     let mut s = Screener::new("crypto");
     s.select([FieldDef::new("Name", "name")])
         .set_url("http://127.0.0.1:1/")
         .set_range(0, 1);
-    let err = s.get().await.unwrap_err();
-    assert!(
-        matches!(
-            err,
-            TvscreenerError::Network(_)
-                | TvscreenerError::Timeout
-                | TvscreenerError::HttpStatus { .. }
-        ),
-        "unexpected error: {err:?}"
-    );
+    let err = s.get().await.expect_err("connection to :1 should fail");
+    match &err {
+        TvscreenerError::Network(_) => {
+            assert!(
+                err.source().is_some(),
+                "Network must expose reqwest::Error via Error::source"
+            );
+        }
+        TvscreenerError::Timeout => {}
+        other => panic!("unexpected error: {other:?}"),
+    }
 }
 
 // --- MCP tools (offline smoke; detailed cases live in `src/mcp/tools` tests) ------

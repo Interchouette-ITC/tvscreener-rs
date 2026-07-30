@@ -139,3 +139,18 @@ fn cli_payload_stock_index_sp500_symbolset() {
         "expected SYML:SP;SPX in {symbolset:?}"
     );
 }
+
+#[test]
+fn cli_payload_stock_markets_america() {
+    let out = tvscreener()
+        .args(["payload", "stock", "--markets", "AMERICA", "--limit", "2"])
+        .output()
+        .expect("run tvscreener payload stock --markets");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    assert_eq!(v["markets"], serde_json::json!(["america"]));
+}

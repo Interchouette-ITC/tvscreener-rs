@@ -17,10 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `regen-fields` gated behind `--features regen` (optional `regex` dep)
 - `TvscreenerError::Network` preserves `reqwest::Error` source chain
 - Crate-root re-exports `resolve_field` / `catalog_len`; filter op aliases live in `FilterOperator::from_wire`
+- Shared `resolve_token_csv` helper for market/index/named wire lists
 
 ### Fixed
 
 - Docs: install via git until crates.io publish; API overview lists `resolve`
+- Docs: filtering guide no longer references nonexistent `Filter::from`
 ## [1.0.0] - 2026-07-29
 
 Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).

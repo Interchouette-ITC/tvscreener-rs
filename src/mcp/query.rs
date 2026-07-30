@@ -14,7 +14,7 @@ use crate::ScreenerRow;
 use serde_json::{json, Value};
 
 use super::format::format_rows_markdown;
-use super::resolve::{apply_stock_index_markets, parse_asset, parse_field_list, parse_filter_op};
+use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens, parse_filter_op};
 
 fn require_resolved(asset: Asset, name: &str) -> Result<FieldDef> {
     resolve_field(asset, name)
@@ -118,7 +118,7 @@ pub struct CustomQueryOpts<'a> {
 pub async fn custom_query(opts: &CustomQueryOpts<'_>) -> Result<String> {
     let asset = parse_asset(opts.asset_type)?;
     let limit = opts.limit.clamp(1, 100);
-    let field_list = parse_field_list(opts.fields);
+    let field_list = parse_csv_tokens(opts.fields);
     let filter_list = parse_filters_arg(opts.filters)?;
     let sort_by = opts.sort_by.map(str::trim).filter(|s| !s.is_empty());
 
@@ -369,7 +369,7 @@ pub struct PayloadPreviewOpts<'a> {
 pub fn custom_query_payload_preview(opts: &PayloadPreviewOpts<'_>) -> Result<Value> {
     let asset = parse_asset(opts.asset_type)?;
     let limit = opts.limit.clamp(1, 100);
-    let field_list = parse_field_list(opts.fields);
+    let field_list = parse_csv_tokens(opts.fields);
     let filter_list = parse_filters_arg(opts.filters)?;
     let sort_by = opts.sort_by.map(str::trim).filter(|s| !s.is_empty());
 
@@ -445,7 +445,7 @@ pub async fn search_by_index(
 ) -> Result<String> {
     let limit = limit.clamp(1, 100);
     let mut ss = StockScreener::new();
-    let field_list = parse_field_list(fields);
+    let field_list = parse_csv_tokens(fields);
     if field_list.is_empty() {
         ss.select([
             require_resolved(Asset::Stock, "NAME")?,

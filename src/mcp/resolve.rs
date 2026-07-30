@@ -6,17 +6,11 @@
 use crate::error::{Result, TvscreenerError};
 use crate::field::Asset;
 use crate::filter::FilterOperator;
-use crate::resolve::parse_csv_tokens;
 
 pub use crate::resolve::{
-    apply_stock_index_markets, resolve_country_wires, resolve_exchange_wires, resolve_index_wires,
-    resolve_industry_wires, resolve_market_wires, resolve_sector_wires,
+    apply_stock_index_markets, parse_csv_tokens, resolve_country_wires, resolve_exchange_wires,
+    resolve_index_wires, resolve_industry_wires, resolve_market_wires, resolve_sector_wires,
 };
-
-/// Parses a comma-separated field name list into a `Vec<String>`.
-pub(crate) fn parse_field_list(fields: Option<&str>) -> Vec<String> {
-    parse_csv_tokens(fields)
-}
 
 /// Parses an optional `"min,max"` range string into `(min, max)` floats.
 ///
@@ -40,7 +34,7 @@ pub fn parse_f64_range(raw: Option<&str>) -> (Option<f64>, Option<f64>) {
     (min, max)
 }
 
-/// Maps operator strings to [`FilterOperator`] variants.
+/// Maps operator strings to [`FilterOperator`] (alias of [`FilterOperator::from_wire`]).
 #[must_use]
 pub fn parse_filter_op(op: &str) -> Option<FilterOperator> {
     FilterOperator::from_wire(op)

@@ -8,7 +8,7 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | ---------------------------- | ---------------------------------------------------------------- |
 | `ScreenerRow`                | One scan row (`symbol` + label-keyed `data`)                     |
 | `Result` / `TvscreenerError` | Error type                                                       |
-| Re-exports                   | `FieldDef`, `FilterOperator`, `FieldCondition`, presets, markets |
+| Re-exports                   | `FieldDef`, `FilterOperator`, `FieldCondition`, `resolve_field`, `catalog_len`, presets, markets |
 
 ## Modules
 

@@ -28,26 +28,17 @@ pub fn parse_csv_tokens(raw: Option<&str>) -> Vec<String> {
 ///
 /// Returns [`TvscreenerError::InvalidRequest`] for unknown tokens.
 pub fn resolve_index_wires(indices: Option<&str>) -> Result<Vec<String>> {
-    let mut out = Vec::new();
-    for token in parse_csv_tokens(indices) {
-        let catalog = token.strip_prefix("SYML:").unwrap_or(token.as_str());
+    resolve_token_csv(indices, "index", |token| {
+        let catalog = token.strip_prefix("SYML:").unwrap_or(token);
         let upper = catalog.to_ascii_uppercase().replace(' ', "_");
         if let Some(wire) = index_symbol_value(&upper) {
-            out.push(wire.to_string());
-            continue;
+            return Some(wire.to_string());
         }
-        if let Some(idx) = all_index_symbols()
+        all_index_symbols()
             .iter()
             .find(|idx| idx.value.eq_ignore_ascii_case(catalog))
-        {
-            out.push(idx.value.clone());
-            continue;
-        }
-        return Err(TvscreenerError::InvalidRequest(format!(
-            "unknown index `{token}`"
-        )));
-    }
-    Ok(out)
+            .map(|idx| idx.value.clone())
+    })
 }
 
 /// Resolves market CSV tokens (const name or wire) to market wire values.
@@ -56,25 +47,16 @@ pub fn resolve_index_wires(indices: Option<&str>) -> Result<Vec<String>> {
 ///
 /// Returns [`TvscreenerError::InvalidRequest`] for unknown tokens.
 pub fn resolve_market_wires(markets: Option<&str>) -> Result<Vec<String>> {
-    let mut out = Vec::new();
-    for token in parse_csv_tokens(markets) {
+    resolve_token_csv(markets, "market", |token| {
         let upper = token.to_ascii_uppercase().replace(' ', "_");
         if let Some(m) = market(&upper) {
-            out.push(m.value);
-            continue;
+            return Some(m.value);
         }
-        if let Some(m) = all_markets()
+        all_markets()
             .iter()
-            .find(|m| m.value.eq_ignore_ascii_case(&token))
-        {
-            out.push(m.value.clone());
-            continue;
-        }
-        return Err(TvscreenerError::InvalidRequest(format!(
-            "unknown market `{token}`"
-        )));
-    }
-    Ok(out)
+            .find(|m| m.value.eq_ignore_ascii_case(token))
+            .map(|m| m.value.clone())
+    })
 }
 
 /// Resolves sector CSV tokens (const name or wire) to sector wire values.
@@ -134,21 +116,29 @@ pub fn apply_stock_index_markets(
     Ok(())
 }
 
+fn resolve_token_csv(
+    raw: Option<&str>,
+    kind: &str,
+    resolve_one: impl Fn(&str) -> Option<String>,
+) -> Result<Vec<String>> {
+    let mut out = Vec::new();
+    for token in parse_csv_tokens(raw) {
+        let Some(wire) = resolve_one(&token) else {
+            return Err(TvscreenerError::InvalidRequest(format!(
+                "unknown {kind} `{token}`"
+            )));
+        };
+        out.push(wire);
+    }
+    Ok(out)
+}
+
 fn resolve_named_csv(
     raw: Option<&str>,
     resolve: fn(&str) -> Option<&'static str>,
     kind: &str,
 ) -> Result<Vec<String>> {
-    let mut out = Vec::new();
-    for token in parse_csv_tokens(raw) {
-        let Some(wire) = resolve(&token) else {
-            return Err(TvscreenerError::InvalidRequest(format!(
-                "unknown {kind} `{token}`"
-            )));
-        };
-        out.push(wire.to_string());
-    }
-    Ok(out)
+    resolve_token_csv(raw, kind, |token| resolve(token).map(str::to_string))
 }
 
 #[cfg(test)]
