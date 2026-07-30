@@ -17,6 +17,14 @@ use serde_json::{json, Value};
 use super::format::format_rows_markdown;
 use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens};
 
+fn where_gte(field: impl Into<String>, value: Value) -> FieldCondition {
+    FieldCondition::new(field, FilterOperator::AboveOrEqual, value)
+}
+
+fn where_lte(field: impl Into<String>, value: Value) -> FieldCondition {
+    FieldCondition::new(field, FilterOperator::BelowOrEqual, value)
+}
+
 fn apply_select(screener: &mut Screener, asset: Asset, fields: &[String]) -> Result<()> {
     let mut selected = Vec::new();
     for name in fields {
@@ -121,32 +129,16 @@ pub async fn search_stocks(opts: &SearchStocksOpts<'_>) -> Result<String> {
     let sector = require_resolved(Asset::Stock, "SECTOR")?;
 
     if let Some(min) = opts.min_price {
-        ss.where_condition(FieldCondition::new(
-            &price.field_name,
-            FilterOperator::AboveOrEqual,
-            json!(min),
-        ))?;
+        ss.where_condition(where_gte(&price.field_name, json!(min)))?;
     }
     if let Some(max) = opts.max_price {
-        ss.where_condition(FieldCondition::new(
-            &price.field_name,
-            FilterOperator::BelowOrEqual,
-            json!(max),
-        ))?;
+        ss.where_condition(where_lte(&price.field_name, json!(max)))?;
     }
     if let Some(min_b) = opts.min_market_cap_billions {
-        ss.where_condition(FieldCondition::new(
-            &mcap.field_name,
-            FilterOperator::AboveOrEqual,
-            json!(min_b * 1e9),
-        ))?;
+        ss.where_condition(where_gte(&mcap.field_name, json!(min_b * 1e9)))?;
     }
     if let Some(max_b) = opts.max_market_cap_billions {
-        ss.where_condition(FieldCondition::new(
-            &mcap.field_name,
-            FilterOperator::BelowOrEqual,
-            json!(max_b * 1e9),
-        ))?;
+        ss.where_condition(where_lte(&mcap.field_name, json!(max_b * 1e9)))?;
     }
     if let Some(sectors) = opts.sectors {
         for wire in crate::mcp::resolve::resolve_sector_wires(Some(sectors))? {
@@ -192,19 +184,11 @@ pub async fn search_crypto(
     ]);
     if let Some(min_m) = min_volume_millions {
         let vol = require_resolved(Asset::Crypto, "VOLUME_24H_IN_USD")?;
-        cs.where_condition(FieldCondition::new(
-            vol.field_name,
-            FilterOperator::AboveOrEqual,
-            json!(min_m * 1e6),
-        ))?;
+        cs.where_condition(where_gte(vol.field_name, json!(min_m * 1e6)))?;
     }
     if let Some(min_b) = min_market_cap_billions {
         let mcap = require_resolved(Asset::Crypto, "MARKET_CAPITALIZATION")?;
-        cs.where_condition(FieldCondition::new(
-            mcap.field_name,
-            FilterOperator::AboveOrEqual,
-            json!(min_b * 1e9),
-        ))?;
+        cs.where_condition(where_gte(mcap.field_name, json!(min_b * 1e9)))?;
     }
     cs.set_range(0, limit);
     let rows = cs.get().await?;
@@ -227,11 +211,7 @@ pub async fn search_forex(min_volume_millions: Option<f64>, limit: u32) -> Resul
     ]);
     if let Some(min_m) = min_volume_millions {
         let vol = require_resolved(Asset::Forex, "VOLUME")?;
-        fs.where_condition(FieldCondition::new(
-            vol.field_name,
-            FilterOperator::AboveOrEqual,
-            json!(min_m * 1e6),
-        ))?;
+        fs.where_condition(where_gte(vol.field_name, json!(min_m * 1e6)))?;
     }
     fs.set_range(0, limit);
     let rows = fs.get().await?;

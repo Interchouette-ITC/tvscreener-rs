@@ -169,7 +169,7 @@ async fn run_interactive(debug: bool) -> Result<()> {
     let mut stdout = io::stdout();
     writeln!(
         stdout,
-        "tvscreener interactive mode — enter a subcommand (scan, payload, …); quit or exit to leave"
+        "tvscreener interactive mode - enter a subcommand (scan, payload, ...); quit or exit to leave"
     )?;
     stdout.flush()?;
 

@@ -12,14 +12,14 @@ NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
 HUB_IMAGE ?= interchouette/tvscreener-rs
-# Personal Hub mirror during migration away from gregoshop
+# Legacy Docker Hub mirror
 HUB_MIRROR_IMAGE ?= gregoshop/tvscreener-rs
-# personal GHCR mirror (GHCR_USERNAME / GHCR_PAT)
+# Extra personal GHCR mirror (GHCR_USERNAME / GHCR_PAT)
 GHCR_PERSONAL_IMAGE ?= ghcr.io/groussac/tvscreener-rs
-# Interchouette worker + org packages (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
+# Interchouette account + org GHCR (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
 GHCR_WORKER_IMAGE ?= ghcr.io/interchouette/tvscreener-rs
 GHCR_ORG_IMAGE ?= ghcr.io/interchouette-itc/tvscreener-rs
-# Backward-compatible alias used by docker-build (Hub image).
+# Alias used by docker-build (Hub image).
 REGISTRY ?= interchouette
 TAG ?= latest
 APP_IMAGE = $(REGISTRY)/tvscreener-rs
@@ -125,6 +125,7 @@ test-offline:
 ## Live HTTP e2e (`--features live`, serial).
 test-live:
 	TVSCREENER_LIVE=$(TVSCREENER_LIVE) $(CARGO) test $(CARGO_FLAGS) --features live --test e2e_live -- --test-threads=1 --nocapture
+	TVSCREENER_LIVE=$(TVSCREENER_LIVE) $(CARGO) test $(CARGO_FLAGS) --features live --test cli_live -- --test-threads=1 --nocapture
 
 test-all: test-offline test-live
 
@@ -349,7 +350,7 @@ docker-inspect:
 		|| echo "Image not found - run make docker-build or make docker-build-dev"
 
 # ---------------------------------------------------------------------------
-# Version (Cargo.toml) — verq-style helpers; release images via GitHub Release
+# Version (Cargo.toml) helpers; release images via GitHub Release
 # ---------------------------------------------------------------------------
 
 version-show:
