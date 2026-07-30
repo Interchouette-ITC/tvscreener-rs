@@ -14,7 +14,7 @@ use crate::ScreenerRow;
 use serde_json::{json, Value};
 
 use super::format::format_rows_markdown;
-use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens, parse_filter_op};
+use super::resolve::{apply_stock_index_markets, parse_asset, parse_csv_tokens};
 
 fn require_resolved(asset: Asset, name: &str) -> Result<FieldDef> {
     resolve_field(asset, name)
@@ -49,7 +49,7 @@ fn apply_filters(screener: &mut Screener, asset: Asset, filters: &[Value]) -> Re
             .and_then(Value::as_str)
             .ok_or_else(|| TvscreenerError::InvalidRequest("filter missing field".into()))?;
         let op_str = entry.get("op").and_then(Value::as_str).unwrap_or(">=");
-        let op = parse_filter_op(op_str).ok_or_else(|| {
+        let op = FilterOperator::from_wire(op_str).ok_or_else(|| {
             TvscreenerError::InvalidRequest(format!("unknown filter op `{op_str}`"))
         })?;
         let value = entry

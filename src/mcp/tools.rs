@@ -15,8 +15,7 @@ pub use super::query::{
     PayloadPreviewOpts, SearchStocksOpts,
 };
 pub use super::resolve::{
-    parse_asset, parse_f64_range, parse_filter_op, resolve_index_wires, resolve_market_wires,
-    resolve_sector_wires,
+    parse_asset, parse_f64_range, resolve_index_wires, resolve_market_wires, resolve_sector_wires,
 };
 
 #[cfg(test)]
@@ -27,8 +26,14 @@ mod tests {
 
     #[test]
     fn parse_ops_and_asset() {
-        assert_eq!(parse_filter_op(">="), Some(FilterOperator::AboveOrEqual));
-        assert_eq!(parse_filter_op("in_range"), Some(FilterOperator::InRange));
+        assert_eq!(
+            FilterOperator::from_wire(">="),
+            Some(FilterOperator::AboveOrEqual)
+        );
+        assert_eq!(
+            FilterOperator::from_wire("in_range"),
+            Some(FilterOperator::InRange)
+        );
         assert_eq!(parse_asset("crypto").unwrap(), Asset::Crypto);
         assert!(parse_asset("nope").is_err());
     }

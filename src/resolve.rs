@@ -176,5 +176,24 @@ mod tests {
             resolve_exchange_wires(Some("NASDAQ")).unwrap(),
             vec!["NASDAQ".to_string()]
         );
+        assert!(resolve_sector_wires(Some("nope")).is_err());
+        assert!(resolve_country_wires(Some("nope")).is_err());
+    }
+
+    #[test]
+    fn parse_csv_and_apply_stock_wires() {
+        assert_eq!(
+            parse_csv_tokens(Some(" AMERICA , EUROPE ")),
+            vec!["AMERICA".to_string(), "EUROPE".to_string()]
+        );
+        let mut s = crate::core::Screener::new("global");
+        s.select([crate::field::FieldDef::new("Name", "name")]);
+        apply_stock_index_markets(&mut s, Some("SP500"), Some("AMERICA")).unwrap();
+        let payload = s.build_payload().unwrap();
+        assert_eq!(
+            payload["symbols"]["symbolset"],
+            serde_json::json!(["SYML:SP;SPX"])
+        );
+        assert_eq!(payload["markets"], serde_json::json!(["america"]));
     }
 }

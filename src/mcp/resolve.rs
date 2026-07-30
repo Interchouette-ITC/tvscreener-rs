@@ -5,7 +5,6 @@
 
 use crate::error::{Result, TvscreenerError};
 use crate::field::Asset;
-use crate::filter::FilterOperator;
 
 pub use crate::resolve::{
     apply_stock_index_markets, parse_csv_tokens, resolve_country_wires, resolve_exchange_wires,
@@ -32,12 +31,6 @@ pub fn parse_f64_range(raw: Option<&str>) -> (Option<f64>, Option<f64>) {
         .filter(|s| !s.is_empty())
         .and_then(|s| s.parse().ok());
     (min, max)
-}
-
-/// Maps operator strings to [`FilterOperator`] (alias of [`FilterOperator::from_wire`]).
-#[must_use]
-pub fn parse_filter_op(op: &str) -> Option<FilterOperator> {
-    FilterOperator::from_wire(op)
 }
 
 /// Parses an asset type string into [`Asset`].

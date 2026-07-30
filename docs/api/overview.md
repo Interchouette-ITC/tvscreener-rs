@@ -14,8 +14,8 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 
 | Module    | Role                                                     |
 | --------- | -------------------------------------------------------- |
-| `core`    | `Screener` builder + six typed screeners                 |
-| `field`   | `FieldDef`, defaults, presets, markets                   |
+| `core`    | `Screener` builder + six typed screeners; `with_asset_screener` / `get_for_asset` |
+| `field`   | `FieldDef`, defaults (`default_fields`), presets, markets                   |
 | `filter`  | Operators, `Filter`, `FieldCondition`, `ExtraFilter`     |
 | `util`    | URL, headers, millify, `format_value` / `format_row`     |
 | `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
