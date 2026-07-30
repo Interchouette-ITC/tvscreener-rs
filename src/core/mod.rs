@@ -657,39 +657,11 @@ pub async fn get_for_asset<F>(asset: crate::field::Asset, configure: F) -> Resul
 where
     F: FnOnce(&mut Screener) -> Result<()>,
 {
-    use crate::field::Asset;
-    match asset {
-        Asset::Stock => {
-            let mut s = stock::StockScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Crypto => {
-            let mut s = crypto::CryptoScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Forex => {
-            let mut s = forex::ForexScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Bond => {
-            let mut s = bond::BondScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Futures => {
-            let mut s = futures::FuturesScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-        Asset::Coin => {
-            let mut s = coin::CoinScreener::new();
-            configure(s.inner_mut())?;
-            s.get().await
-        }
-    }
+    let screener = with_asset_screener(asset, |inner| {
+        configure(inner)?;
+        Ok(inner.clone())
+    })?;
+    screener.get().await
 }
 
 fn values_are_subset(candidate: &[Value], current: &[Value]) -> bool {

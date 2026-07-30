@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Shared `crate::resolve` for market / index / sector (and related) wire helpers; CLI and MCP use one owner
+- `Cargo.toml` repository / homepage / authors point at Interchouette-ITC
+- Typed screener dispatch via `core::with_asset_screener` / `get_for_asset`
+- MCP payload preview uses typed screener defaults
+
 ## [1.0.0] - 2026-07-29
 
 Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).

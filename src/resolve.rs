@@ -113,6 +113,27 @@ pub fn resolve_exchange_wires(exchanges: Option<&str>) -> Result<Vec<String>> {
     resolve_named_csv(exchanges, resolve_exchange, "exchange")
 }
 
+/// Applies resolved index symbolsets and market filters to a stock screener.
+///
+/// # Errors
+///
+/// Returns errors from [`resolve_index_wires`] or [`resolve_market_wires`].
+pub fn apply_stock_index_markets(
+    screener: &mut crate::core::Screener,
+    indices: Option<&str>,
+    markets: Option<&str>,
+) -> Result<()> {
+    let wires = resolve_index_wires(indices)?;
+    if !wires.is_empty() {
+        screener.set_index(wires);
+    }
+    let market_wires = resolve_market_wires(markets)?;
+    if !market_wires.is_empty() {
+        screener.set_markets(market_wires);
+    }
+    Ok(())
+}
+
 fn resolve_named_csv(
     raw: Option<&str>,
     resolve: fn(&str) -> Option<&'static str>,

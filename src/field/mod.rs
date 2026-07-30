@@ -740,6 +740,19 @@ pub fn default_coin_fields() -> Vec<FieldDef> {
     catalog().defaults_for(Asset::Coin)
 }
 
+/// Default columns for `asset` (same as the typed screener constructors).
+#[must_use]
+pub fn default_fields(asset: Asset) -> Vec<FieldDef> {
+    match asset {
+        Asset::Stock => default_stock_fields(),
+        Asset::Crypto => default_crypto_fields(),
+        Asset::Forex => default_forex_fields(),
+        Asset::Bond => default_bond_fields(),
+        Asset::Futures => default_futures_fields(),
+        Asset::Coin => default_coin_fields(),
+    }
+}
+
 /// Crypto sort field: 24h volume in USD.
 ///
 /// # Panics

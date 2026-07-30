@@ -18,6 +18,7 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `field`   | `FieldDef`, defaults, presets, markets                   |
 | `filter`  | Operators, `Filter`, `FieldCondition`, `ExtraFilter`     |
 | `util`    | URL, headers, millify, `format_value` / `format_row`     |
+| `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
 | `logging` | `env_debug_enabled`; `init_logging`                      |
 | `error`   | Errors (`thiserror`)                                     |
 | `mcp`     | MCP tools + mcpkit stdio server (`feature = "mcp"` only) |

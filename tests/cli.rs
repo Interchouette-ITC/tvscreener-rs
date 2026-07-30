@@ -117,3 +117,25 @@ fn cli_payload_rejects_markets_on_crypto() {
         "unexpected stderr:\n{err}"
     );
 }
+
+#[test]
+fn cli_payload_stock_index_sp500_symbolset() {
+    let out = tvscreener()
+        .args(["payload", "stock", "--index", "SP500", "--limit", "2"])
+        .output()
+        .expect("run tvscreener payload stock --index");
+    assert!(
+        out.status.success(),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_str(&stdout_utf8(&out)).expect("payload JSON");
+    let symbolset = v
+        .pointer("/symbols/symbolset")
+        .and_then(|s| s.as_array())
+        .expect("symbols.symbolset");
+    assert!(
+        symbolset.iter().any(|s| s.as_str() == Some("SYML:SP;SPX")),
+        "expected SYML:SP;SPX in {symbolset:?}"
+    );
+}

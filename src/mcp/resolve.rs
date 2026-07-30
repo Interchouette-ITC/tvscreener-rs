@@ -3,15 +3,14 @@
 
 //! Token parsing and wire-value resolution for screener parameters.
 
-use crate::core::Screener;
 use crate::error::{Result, TvscreenerError};
 use crate::field::Asset;
 use crate::filter::FilterOperator;
 use crate::resolve::parse_csv_tokens;
 
 pub use crate::resolve::{
-    resolve_country_wires, resolve_exchange_wires, resolve_index_wires, resolve_industry_wires,
-    resolve_market_wires, resolve_sector_wires,
+    apply_stock_index_markets, resolve_country_wires, resolve_exchange_wires, resolve_index_wires,
+    resolve_industry_wires, resolve_market_wires, resolve_sector_wires,
 };
 
 /// Parses a comma-separated field name list into a `Vec<String>`.
@@ -74,23 +73,18 @@ pub fn parse_asset(asset_type: &str) -> Result<Asset> {
     })
 }
 
-/// Applies resolved index symbolsets and market filters to a stock screener.
-///
-/// # Errors
-///
-/// Returns errors from [`resolve_index_wires`] or [`resolve_market_wires`].
-pub(crate) fn apply_stock_index_markets(
-    screener: &mut Screener,
-    indices: Option<&str>,
-    markets: Option<&str>,
-) -> Result<()> {
-    let wires = resolve_index_wires(indices)?;
-    if !wires.is_empty() {
-        screener.set_index(wires);
+#[cfg(test)]
+mod tests {
+    use super::parse_f64_range;
+
+    #[test]
+    fn parse_f64_range_sides() {
+        assert_eq!(parse_f64_range(None), (None, None));
+        assert_eq!(parse_f64_range(Some("")), (None, None));
+        assert_eq!(parse_f64_range(Some("10,20")), (Some(10.0), Some(20.0)));
+        assert_eq!(parse_f64_range(Some("10,")), (Some(10.0), None));
+        assert_eq!(parse_f64_range(Some(",20")), (None, Some(20.0)));
+        assert_eq!(parse_f64_range(Some("x,20")), (None, Some(20.0)));
+        assert_eq!(parse_f64_range(Some("10,y")), (Some(10.0), None));
     }
-    let market_wires = resolve_market_wires(markets)?;
-    if !market_wires.is_empty() {
-        screener.set_markets(market_wires);
-    }
-    Ok(())
 }

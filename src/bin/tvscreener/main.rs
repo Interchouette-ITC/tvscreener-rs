@@ -18,9 +18,10 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use tvscreener::core::Screener;
 use tvscreener::field::{
-    all_markets, all_sectors, get_preset, list_presets, search_fields, Asset, FieldDef,
+    all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
+    FieldDef,
 };
-use tvscreener::resolve::{resolve_index_wires, resolve_market_wires};
+use tvscreener::resolve::apply_stock_index_markets;
 use tvscreener::util::format_row;
 use tvscreener::ScreenerRow;
 
@@ -181,30 +182,7 @@ fn resolve_fields(asset: AssetArg, preset: Option<&str>) -> tvscreener::Result<V
     if let Some(name) = preset {
         return get_preset(name);
     }
-    Ok(match asset {
-        AssetArg::Stock => tvscreener::field::default_stock_fields(),
-        AssetArg::Crypto => tvscreener::field::default_crypto_fields(),
-        AssetArg::Forex => tvscreener::field::default_forex_fields(),
-        AssetArg::Bond => tvscreener::field::default_bond_fields(),
-        AssetArg::Futures => tvscreener::field::default_futures_fields(),
-        AssetArg::Coin => tvscreener::field::default_coin_fields(),
-    })
-}
-
-fn apply_stock_extras(
-    screener: &mut Screener,
-    markets: Option<&str>,
-    index: Option<&str>,
-) -> tvscreener::Result<()> {
-    let market_wires = resolve_market_wires(markets)?;
-    if !market_wires.is_empty() {
-        screener.set_markets(market_wires);
-    }
-    let index_wires = resolve_index_wires(index)?;
-    if !index_wires.is_empty() {
-        screener.set_index(index_wires);
-    }
-    Ok(())
+    Ok(default_fields(asset.asset()))
 }
 
 fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> tvscreener::Result<()> {
@@ -219,7 +197,7 @@ fn configure_inner(inner: &mut Screener, args: &ScanArgs, debug: bool) -> tvscre
         inner.search(q)?;
     }
     if matches!(args.asset, AssetArg::Stock) {
-        apply_stock_extras(inner, args.markets.as_deref(), args.index.as_deref())?;
+        apply_stock_index_markets(inner, args.index.as_deref(), args.markets.as_deref())?;
     } else if args.markets.is_some() || args.index.is_some() {
         return Err(tvscreener::TvscreenerError::InvalidRequest(
             "--markets / --index only apply to stock".into(),
