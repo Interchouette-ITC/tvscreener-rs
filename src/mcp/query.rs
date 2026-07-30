@@ -180,28 +180,28 @@ pub async fn search_stocks(opts: &SearchStocksOpts<'_>) -> Result<String> {
 
     if let Some(min) = opts.min_price {
         ss.where_condition(FieldCondition::new(
-            price.field_name.clone(),
+            &price.field_name,
             FilterOperator::AboveOrEqual,
             json!(min),
         ))?;
     }
     if let Some(max) = opts.max_price {
         ss.where_condition(FieldCondition::new(
-            price.field_name.clone(),
+            &price.field_name,
             FilterOperator::BelowOrEqual,
             json!(max),
         ))?;
     }
     if let Some(min_b) = opts.min_market_cap_billions {
         ss.where_condition(FieldCondition::new(
-            mcap.field_name.clone(),
+            &mcap.field_name,
             FilterOperator::AboveOrEqual,
             json!(min_b * 1e9),
         ))?;
     }
     if let Some(max_b) = opts.max_market_cap_billions {
         ss.where_condition(FieldCondition::new(
-            mcap.field_name.clone(),
+            &mcap.field_name,
             FilterOperator::BelowOrEqual,
             json!(max_b * 1e9),
         ))?;
@@ -209,7 +209,7 @@ pub async fn search_stocks(opts: &SearchStocksOpts<'_>) -> Result<String> {
     if let Some(sectors) = opts.sectors {
         for wire in crate::mcp::resolve::resolve_sector_wires(Some(sectors))? {
             ss.where_condition(FieldCondition::new(
-                sector.field_name.clone(),
+                &sector.field_name,
                 FilterOperator::Match,
                 json!(wire),
             ))?;

@@ -8,14 +8,14 @@
 //! cargo run --bin tvscreener -- scan crypto --limit 5
 //! cargo run --bin tvscreener -- payload stock --index SP500
 //! TVSCREENER_DEBUG=1 cargo run --bin tvscreener -- scan stock --limit 3
-//! cargo run --bin tvscreener -- regen-fields --python-root ../tvscreener
+//! cargo run --features regen --bin tvscreener -- regen-fields --python-root ../tvscreener
 //! ```
 
+#[cfg(feature = "regen")]
 mod regen;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
-use std::path::PathBuf;
 use tvscreener::core::Screener;
 use tvscreener::field::{
     all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
@@ -84,16 +84,17 @@ enum Commands {
     /// List sectors (const → wire).
     Sectors,
     /// Regenerate `data/fields.json` + `src/field/generated/` from a Python tvscreener clone.
+    #[cfg(feature = "regen")]
     RegenFields {
         /// Path to a deepentropy/tvscreener checkout (also: `TVSCREENER_PYTHON_ROOT`).
         #[arg(long, env = "TVSCREENER_PYTHON_ROOT")]
-        python_root: PathBuf,
+        python_root: std::path::PathBuf,
         /// Crate root containing `data/` and `src/field/generated/` (default: cwd).
         #[arg(long, default_value = ".")]
-        crate_root: PathBuf,
+        crate_root: std::path::PathBuf,
         /// Output JSON path (default: `<crate-root>/data/fields.json`).
         #[arg(long)]
-        out: Option<PathBuf>,
+        out: Option<std::path::PathBuf>,
     },
 }
 
@@ -166,6 +167,7 @@ async fn main() -> Result<()> {
                 println!("{}  {}", s.const_name, s.value);
             }
         }
+        #[cfg(feature = "regen")]
         Commands::RegenFields {
             python_root,
             crate_root,

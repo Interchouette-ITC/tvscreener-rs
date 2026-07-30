@@ -40,9 +40,10 @@ curated defaults/presets. Regenerate from a local [deepentropy/tvscreener](https
 
 ```bash
 make regen-fields PYTHON_ROOT=/path/to/tvscreener
-# or: cargo run --bin tvscreener -- regen-fields --python-root /path/to/tvscreener
+# or: cargo run --features regen --bin tvscreener -- regen-fields --python-root /path/to/tvscreener
 ```
 
+Requires `--features regen` (optional maintainer tooling; not in the default CLI).
 Use `search_fields` / `list_fields` / `catalog_len` for MCP-oriented discovery;
 typed screeners still select **defaults** only unless you `select` more.
 

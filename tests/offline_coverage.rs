@@ -355,9 +355,6 @@ fn errors_display_variants() {
     };
     assert!(http.to_string().contains("400"));
     assert!(TvscreenerError::Timeout.to_string().contains("timed out"));
-    assert!(TvscreenerError::Network("x".into())
-        .to_string()
-        .contains("network"));
     assert!(TvscreenerError::Json("x".into())
         .to_string()
         .contains("JSON"));

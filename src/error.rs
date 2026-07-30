@@ -10,8 +10,7 @@ pub type Result<T> = std::result::Result<T, TvscreenerError>;
 
 /// Errors produced by payload building, HTTP, or response parsing.
 ///
-/// Wraps network / JSON
-/// failures from `reqwest` / `serde_json`.
+/// Wraps network / JSON failures from `reqwest` / `serde_json`.
 #[derive(Debug, Error)]
 pub enum TvscreenerError {
     /// `TradingView` (or proxy) returned a non-success HTTP status.
@@ -29,7 +28,7 @@ pub enum TvscreenerError {
 
     /// Underlying network / transport failure.
     #[error("network error: {0}")]
-    Network(String),
+    Network(#[source] reqwest::Error),
 
     /// Response body was not valid JSON or did not match the expected shape.
     #[error("JSON error: {0}")]
@@ -49,7 +48,7 @@ impl From<reqwest::Error> for TvscreenerError {
         if err.is_timeout() {
             Self::Timeout
         } else {
-            Self::Network(err.to_string())
+            Self::Network(err)
         }
     }
 }

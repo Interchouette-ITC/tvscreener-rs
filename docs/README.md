@@ -80,6 +80,7 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 | _(default)_ | Library + `tvscreener` CLI + tests       |
 | `mcp`       | `tvscreener-mcp` stdio server (`mcpkit`) |
 | `live`      | Live HTTP tests (`make test-live`)       |
+| `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime. Enabling `mcp` only pulls MCP server deps; it does not change that.
 

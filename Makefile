@@ -139,6 +139,7 @@ clippy:
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features live -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features mcp -- $(CLIPPY_FLAGS)
+	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features regen -- $(CLIPPY_FLAGS)
 
 lint: format-check clippy
 
@@ -206,7 +207,7 @@ deny:
 ## Example: `make regen-fields PYTHON_ROOT=../tvscreener`
 regen-fields:
 	@test -n "$(PYTHON_ROOT)" || (echo "set PYTHON_ROOT=/path/to/tvscreener"; exit 1)
-	$(CARGO) run $(CARGO_FLAGS) --bin tvscreener -- regen-fields --python-root "$(PYTHON_ROOT)"
+	$(CARGO) run $(CARGO_FLAGS) --features regen --bin tvscreener -- regen-fields --python-root "$(PYTHON_ROOT)"
 
 # ---------------------------------------------------------------------------
 # Docker

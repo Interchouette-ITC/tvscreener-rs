@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed screener dispatch via `core::with_asset_screener` / `get_for_asset`
 - MCP payload preview uses typed screener defaults
 - CI: `dtolnay/rust-toolchain`, `make deny`; drop redundant `tests/unit/basic`
+- `regen-fields` gated behind `--features regen` (optional `regex` dep)
+- `TvscreenerError::Network` preserves `reqwest::Error` source chain
 
 ### Fixed
 
