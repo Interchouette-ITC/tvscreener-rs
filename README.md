@@ -191,7 +191,7 @@ Rust **1.85+**.
 make test          # default suite (offline)
 make lint
 make verify        # format-check + clippy + tests
-make test-live
+make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # API HTML under docs/api-rust/
 make help
 ```

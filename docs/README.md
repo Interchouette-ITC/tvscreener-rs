@@ -112,7 +112,7 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 make test          # default test suite
 make lint          # fmt --check + clippy -D warnings
 make verify        # format-check + clippy + tests
-make test-live
+make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # rustdoc → docs/api-rust/
 make help          # all targets
 ```
