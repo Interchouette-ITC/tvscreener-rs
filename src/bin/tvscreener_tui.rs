@@ -6,6 +6,7 @@
 //! ```bash
 //! cargo run --features tui --bin tvscreener-tui -- crypto --limit 10
 //! make run-tui ARGS='crypto --preset crypto_price --limit 5'
+//! make run-tui ARGS='crypto --watch --interval 30'
 //! ```
 
 use std::io::{self, stdout};
@@ -22,7 +23,8 @@ use tvscreener::field::Asset;
 use tvscreener::resolve::apply_stock_index_markets;
 use tvscreener::tui::{
     draw, hard_reset_tty, inside_gnu_screen, install_panic_hook, install_signal_handlers,
-    is_quit_key, AppModel, ScanConfig, TerminalGuard, STOP,
+    is_quit_key, AppModel, ScanConfig, TerminalGuard, DEFAULT_WATCH_INTERVAL_SECS,
+    MIN_TUI_REFRESH_SECS, STOP,
 };
 use tvscreener::ScreenerRow;
 
@@ -76,6 +78,12 @@ struct Cli {
     /// Stock index CSV (const or wire), e.g. `SP500`.
     #[arg(long)]
     index: Option<String>,
+    /// Start with auto-refresh enabled (still floored to 10s).
+    #[arg(long)]
+    watch: bool,
+    /// Watch interval in seconds (default 30; minimum 10).
+    #[arg(long, default_value_t = DEFAULT_WATCH_INTERVAL_SECS)]
+    interval: f64,
     /// Force screener debug logs (also: `TVSCREENER_DEBUG=1`).
     #[arg(long)]
     debug: bool,
@@ -96,6 +104,8 @@ async fn main() -> Result<()> {
         index: cli.index.clone(),
     };
 
+    let interval = cli.interval.max(MIN_TUI_REFRESH_SECS);
+
     // Scan before taking the tty so HTTP noise never paints into the UI.
     let fields = config.resolve_fields().context("resolve fields")?;
     let (fields, rows) = match run_scan(&config, cli.debug).await {
@@ -106,7 +116,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    let mut model = AppModel::new(config, fields, rows);
+    let mut model = AppModel::new(config, fields, rows, cli.watch, interval);
     if model.rows.is_empty() && model.error.is_none() {
         model.status = format!("{}  (no rows)", model.status);
     }
@@ -137,6 +147,10 @@ async fn run_loop(
             break;
         }
 
+        if model.watch_due() {
+            refresh(model, debug).await;
+        }
+
         terminal.draw(|frame| draw(frame, model))?;
 
         if !event::poll(Duration::from_millis(200))? {
@@ -155,7 +169,15 @@ async fn run_loop(
 
         match key.code {
             KeyCode::Char('h') => model.toggle_help(),
-            KeyCode::Char('r') => refresh(model, debug).await,
+            KeyCode::Char('a') => model.toggle_watch(),
+            KeyCode::Char('r') => {
+                if model.can_refresh() {
+                    refresh(model, debug).await;
+                } else {
+                    let wait = model.cooldown_secs_remaining();
+                    model.status = format!("cooldown {wait}s (min {MIN_TUI_REFRESH_SECS}s)");
+                }
+            }
             KeyCode::Up => model.scroll_by(-1),
             KeyCode::Down => model.scroll_by(1),
             KeyCode::PageUp => model.scroll_by(-10),

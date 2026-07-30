@@ -3,9 +3,20 @@
 
 //! TUI application model and scan configuration.
 
+use std::time::{Duration, Instant};
+
 use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
 use crate::field::{default_fields, get_preset, Asset, FieldDef};
 use crate::ScreenerRow;
+
+/// Default auto-refresh interval when watch mode is on (seconds).
+pub const DEFAULT_WATCH_INTERVAL_SECS: f64 = 30.0;
+
+/// Minimum gap between TUI scans (manual `r` or watch).
+///
+/// Stricter than library [`crate::util::MIN_STREAM_INTERVAL_SECS`] (1s), which is only an
+/// API floor for `stream()`, not a UI default.
+pub const MIN_TUI_REFRESH_SECS: f64 = 10.0;
 
 /// Which pane the TUI is showing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -71,17 +82,30 @@ pub struct AppModel {
     pub ticks: u64,
     /// Max data columns in the results table.
     pub max_columns: usize,
+    /// When true, auto-refresh on [`Self::watch_interval`].
+    pub watch: bool,
+    /// Auto-refresh period (already floored to [`MIN_TUI_REFRESH_SECS`]).
+    pub watch_interval: Duration,
+    /// Instant of the last completed scan attempt (success or failure).
+    pub last_scan_at: Instant,
 }
 
 impl AppModel {
     /// Builds a model after an initial scan (or empty rows on failure).
     #[must_use]
-    pub fn new(config: ScanConfig, fields: Vec<FieldDef>, rows: Vec<ScreenerRow>) -> Self {
+    pub fn new(
+        config: ScanConfig,
+        fields: Vec<FieldDef>,
+        rows: Vec<ScreenerRow>,
+        watch: bool,
+        watch_interval_secs: f64,
+    ) -> Self {
+        let watch_interval = Duration::from_secs_f64(watch_interval_secs.max(MIN_TUI_REFRESH_SECS));
         let status = format!(
-            "{}  rows={}  cols<={}",
+            "{}  rows={}  {}",
             config.asset.as_str(),
             rows.len(),
-            DEFAULT_TABLE_MAX_COLUMNS
+            refresh_mode_label(watch, watch_interval),
         );
         Self {
             config,
@@ -93,6 +117,9 @@ impl AppModel {
             scroll: 0,
             ticks: 0,
             max_columns: DEFAULT_TABLE_MAX_COLUMNS,
+            watch,
+            watch_interval,
+            last_scan_at: Instant::now(),
         }
     }
 
@@ -103,11 +130,13 @@ impl AppModel {
         self.error = None;
         self.scroll = 0;
         self.ticks = self.ticks.saturating_add(1);
+        self.last_scan_at = Instant::now();
         self.status = format!(
-            "{}  rows={}  tick={}",
+            "{}  rows={}  tick={}  {}",
             self.config.asset.as_str(),
             self.rows.len(),
-            self.ticks
+            self.ticks,
+            refresh_mode_label(self.watch, self.watch_interval),
         );
     }
 
@@ -115,6 +144,7 @@ impl AppModel {
     pub fn set_error(&mut self, message: impl Into<String>) {
         self.error = Some(message.into());
         self.ticks = self.ticks.saturating_add(1);
+        self.last_scan_at = Instant::now();
     }
 
     /// Toggles Results ↔ Help.
@@ -123,6 +153,37 @@ impl AppModel {
             ViewMode::Results => ViewMode::Help,
             ViewMode::Help => ViewMode::Results,
         };
+    }
+
+    /// Toggles opt-in auto-refresh (off by default).
+    pub fn toggle_watch(&mut self) {
+        self.watch = !self.watch;
+        self.status = format!(
+            "{}  rows={}  {}",
+            self.config.asset.as_str(),
+            self.rows.len(),
+            refresh_mode_label(self.watch, self.watch_interval),
+        );
+    }
+
+    /// Seconds remaining before another scan is allowed (`0` when ready).
+    #[must_use]
+    pub fn cooldown_secs_remaining(&self) -> u64 {
+        let min_gap = Duration::from_secs_f64(MIN_TUI_REFRESH_SECS);
+        let elapsed = self.last_scan_at.elapsed();
+        min_gap.saturating_sub(elapsed).as_secs()
+    }
+
+    /// Returns true when a manual or watch refresh may run (honors TUI floor).
+    #[must_use]
+    pub fn can_refresh(&self) -> bool {
+        self.cooldown_secs_remaining() == 0
+    }
+
+    /// Returns true when watch mode is on and the watch interval has elapsed.
+    #[must_use]
+    pub fn watch_due(&self) -> bool {
+        self.watch && self.last_scan_at.elapsed() >= self.watch_interval
     }
 
     /// Scrolls the results table by `delta` rows.
@@ -144,5 +205,59 @@ impl AppModel {
             let step = usize::try_from(delta.wrapping_neg()).unwrap_or(0);
             self.scroll = self.scroll.saturating_sub(step);
         }
+    }
+}
+
+fn refresh_mode_label(watch: bool, interval: Duration) -> String {
+    if watch {
+        format!("watch {}s", interval.as_secs().max(1))
+    } else {
+        "manual".into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn empty_model(watch: bool, interval: f64) -> AppModel {
+        AppModel::new(
+            ScanConfig {
+                asset: Asset::Crypto,
+                preset: None,
+                from: 0,
+                limit: 5,
+                search: None,
+                markets: None,
+                index: None,
+            },
+            Vec::new(),
+            Vec::new(),
+            watch,
+            interval,
+        )
+    }
+
+    #[test]
+    fn watch_off_by_default_and_interval_floored() {
+        let model = empty_model(false, 1.0);
+        assert!(!model.watch);
+        assert!(!model.watch_due());
+        assert_eq!(
+            model.watch_interval,
+            Duration::from_secs_f64(MIN_TUI_REFRESH_SECS)
+        );
+        assert!(!model.can_refresh());
+    }
+
+    #[test]
+    fn toggle_watch_updates_label() {
+        let mut model = empty_model(false, DEFAULT_WATCH_INTERVAL_SECS);
+        model.toggle_watch();
+        assert!(model.watch);
+        assert!(model.status.contains("watch"));
+        model.toggle_watch();
+        assert!(!model.watch);
+        assert!(model.status.contains("manual"));
     }
 }

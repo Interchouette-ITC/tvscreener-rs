@@ -62,7 +62,10 @@ fn draw_footer(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
     let line = Paragraph::new(Line::from(vec![
         Span::styled(status, style),
         Span::raw("  "),
-        Span::styled("keys: q quit · r refresh · h help · ↑↓ scroll", LABEL),
+        Span::styled(
+            "keys: q quit · r refresh · a watch · h help · ↑↓ scroll",
+            LABEL,
+        ),
     ]));
     frame.render_widget(line, area);
 }
@@ -71,16 +74,24 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
     let lines = vec![
         Line::from(Span::styled("Keys", ACCENT.add_modifier(Modifier::BOLD))),
         Line::from("  q / Esc / Ctrl-C   quit"),
-        Line::from("  r                 refresh scan"),
+        Line::from("  r                 refresh scan (min 10s between scans)"),
+        Line::from("  a                 toggle watch (auto-refresh, default 30s)"),
         Line::from("  h                 toggle this help"),
         Line::from("  ↑ / ↓ / PgUp/Dn   scroll results"),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Refresh policy",
+            ACCENT.add_modifier(Modifier::BOLD),
+        )),
+        Line::from("  Default is manual (one scan at start). Watch is opt-in."),
+        Line::from("  TUI floor is 10s (library stream() floor is 1s; do not use that here)."),
         Line::from(""),
         Line::from(Span::styled(
             "Scaffold note",
             ACCENT.add_modifier(Modifier::BOLD),
         )),
         Line::from("  Builder + Payload JSON panes land in a follow-up PR."),
-        Line::from("  Configure via CLI flags: asset, --preset, --limit, …"),
+        Line::from("  Configure via CLI flags: asset, --preset, --limit, --watch, …"),
     ];
     let body = Paragraph::new(lines).block(Block::default().borders(Borders::ALL).title(" Help "));
     frame.render_widget(body, area);
@@ -156,7 +167,7 @@ fn select_table_fields<'a>(
 mod tests {
     use super::*;
     use crate::field::Asset;
-    use crate::tui::model::ScanConfig;
+    use crate::tui::model::{ScanConfig, DEFAULT_WATCH_INTERVAL_SECS};
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
     use serde_json::json;
@@ -184,7 +195,13 @@ mod tests {
             symbol: "BINANCE:BTCUSDT".into(),
             data,
         };
-        AppModel::new(config, fields, vec![row])
+        AppModel::new(
+            config,
+            fields,
+            vec![row],
+            false,
+            DEFAULT_WATCH_INTERVAL_SECS,
+        )
     }
 
     fn buffer_text(terminal: &Terminal<TestBackend>) -> String {
@@ -221,6 +238,7 @@ mod tests {
         terminal.draw(|f| draw(f, &model)).expect("draw");
         let text = buffer_text(&terminal);
         assert!(text.contains("refresh"), "{text}");
+        assert!(text.contains("watch"), "{text}");
         assert!(text.contains("quit"), "{text}");
     }
 }

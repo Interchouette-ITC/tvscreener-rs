@@ -11,7 +11,9 @@ mod style;
 mod terminal;
 
 pub use draw::draw;
-pub use model::{AppModel, ScanConfig, ViewMode};
+pub use model::{
+    AppModel, ScanConfig, ViewMode, DEFAULT_WATCH_INTERVAL_SECS, MIN_TUI_REFRESH_SECS,
+};
 pub use terminal::{
     hard_reset_tty, inside_gnu_screen, install_panic_hook, install_signal_handlers, is_quit_key,
     TerminalGuard, STOP,
