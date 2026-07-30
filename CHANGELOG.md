@@ -7,32 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Shared `crate::resolve` for market / index / sector (and related) wire helpers; CLI and MCP use one owner
-- `Cargo.toml` repository / homepage / authors point at Interchouette-ITC
-- Typed screener dispatch via `core::with_asset_screener` / `get_for_asset`
-- MCP payload preview uses typed screener defaults
-- CI: `dtolnay/rust-toolchain`, `make deny`; drop redundant `tests/unit/basic`
-- `regen-fields` gated behind `--features regen` (optional `regex` dep)
-- `TvscreenerError::Network` preserves `reqwest::Error` source chain
-- Crate-root re-exports `resolve_field` / `catalog_len`; filter op aliases live in `FilterOperator::from_wire`
-- Shared `resolve_token_csv` helper for market/index/named wire lists
-- Drop `parse_filter_op` shim; trim duplicate offline util/MCP integration cases
-- `format_rating` private; stock `set_symbol_types` / ExtraFilter / `require_field` offline coverage
-- `field()` is `pub(crate)`; offline tests for `get_for_asset`, bare `select_all`, `Asset::parse`, CLI `sectors`
-
-### Fixed
-
-- Docs: install via git until crates.io publish; API overview lists `resolve`
-- Docs: filtering guide no longer references nonexistent `Filter::from`
-
-## [1.0.0] - 2026-07-29
+## [1.0.0] - 2026-07-30
 
 Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).
+
+### Added
 
 - Library: six typed screeners, filters, field catalog/presets, stream, display helpers
 - CLI: `tvscreener` (`scan`, `payload`, catalog commands)
 - Optional MCP: `tvscreener-mcp` (`--features mcp`)
+- Shared `crate::resolve` wire helpers (markets, indices, sectors, …); CLI and MCP one owner
+- `core::with_asset_screener` / `get_for_asset` typed screener dispatch
+- Crate-root re-exports: `resolve_field`, `catalog_len`
+- CI: `dtolnay/rust-toolchain`, `make deny` (incl. `CDLA-Permissive-2.0`)
+- Feature `regen` for maintainer `regen-fields` (optional `regex`)
+
+### Changed
+
+- `Cargo.toml` repository / homepage / authors → Interchouette-ITC
+- MCP payload preview uses typed screener defaults
+- `FilterOperator::from_wire` owns friendly op aliases; `TvscreenerError::Network` keeps `reqwest` source
+- `format_rating` private; `field()` is `pub(crate)`
+
+### Fixed
+
+- Docs: git install path until crates.io; filtering guide; API overview; MANUAL_TEST_PLAN coverage map
+
+### Notes
+
 - `get()` returns `Vec<ScreenerRow>` (not a DataFrame)
 - MSRV 1.85
