@@ -15,6 +15,7 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
 - **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
 - **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
+- **Optional TUI** `tvscreener-tui` results pane (`--features tui`)
 - **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
@@ -51,9 +52,11 @@ tvscreener scan crypto --limit 5        # live HTTP (table)
 tvscreener scan crypto --limit 5 --json
 tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
 tvscreener-mcp
+# TUI (needs --features tui):
+#   cargo run --features tui --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 ```
 
-From a checkout without installing: `cargo run -- …` / `cargo run --bin tvscreener-mcp`.
+From a checkout without installing: `cargo run -- …` / `cargo run --bin tvscreener-mcp` / `make run-tui ARGS='…'`.
 
 ### All six screeners
 

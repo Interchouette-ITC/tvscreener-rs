@@ -35,7 +35,7 @@ CI ?= 0
 	lint format format-check clippy \
 	doc doc-open doc-clean \
 	example-crypto example-manual \
-	run run-mcp \
+	run run-mcp run-tui \
 	audit deny regen-fields \
 	docker-build docker-build-no-cache docker-push \
 	docker-build-dev docker-push-dev \
@@ -66,6 +66,8 @@ help:
 	@echo "  make run             CLI (bin tvscreener). ARGS='…' (default: --help)"
 	@echo "                       e.g. make run ARGS='scan crypto --limit 5'"
 	@echo "  make run-mcp         MCP server (bin tvscreener-mcp)"
+	@echo "  make run-tui         Ratatui TUI (bin tvscreener-tui, --features tui)"
+	@echo "                       e.g. make run-tui ARGS='crypto --limit 10'"
 	@echo "  make audit           cargo audit"
 	@echo "  make deny            cargo deny check"
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
@@ -138,6 +140,7 @@ clippy:
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features live -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features regen -- $(CLIPPY_FLAGS)
+	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features tui -- $(CLIPPY_FLAGS)
 
 lint: format-check clippy
 
@@ -188,6 +191,10 @@ run:
 ## MCP stdio binary (`tvscreener-mcp`).
 run-mcp:
 	$(CARGO) run $(CARGO_FLAGS) --bin tvscreener-mcp
+
+## Ratatui TUI (`tvscreener-tui`). Pass args with `ARGS=…`; empty ARGS → `--help`.
+run-tui:
+	$(CARGO) run $(CARGO_FLAGS) --features tui --bin tvscreener-tui -- $(if $(strip $(ARGS)),$(ARGS),--help)
 
 # ---------------------------------------------------------------------------
 # Supply chain / catalog
