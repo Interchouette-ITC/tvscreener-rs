@@ -6,6 +6,7 @@ rust-version = "1.85"
 license = "Apache-2.0"
 description = "Unofficial TradingView Screener HTTP client (Rust); inspired by deepentropy/tvscreener"
 readme = "README.md"
+default-run = "tvscreener"
 keywords = ["tradingview", "screener", "finance", "crypto", "stocks"]
 categories = ["api-bindings", "finance"]
 repository = "https://github.com/Interchouette-ITC/tvscreener-rs"
@@ -24,11 +25,11 @@ path = "src/bin/tvscreener/main.rs"
 [[bin]]
 name = "tvscreener-mcp"
 path = "src/bin/tvscreener_mcp.rs"
-required-features = ["mcp"]
 
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive", "env"] }
+mcpkit = "0.7"
 reqwest = { version = "0.12", default-features = false, features = [
     "json",
     "rustls-tls",
@@ -48,14 +49,8 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 default = []
 # Enables `tests/e2e/live.rs` (POST to scanner.tradingview.com).
 live = []
-# Builds `tvscreener-mcp` (`mcpkit`).
-mcp = ["dep:mcpkit"]
 # Maintainer: `tvscreener regen-fields` (Python field catalog import).
 regen = ["dep:regex"]
-
-[dependencies.mcpkit]
-version = "0.7"
-optional = true
 
 [[example]]
 name = "example_crypto"

@@ -65,7 +65,7 @@ help:
 	@echo "  make example-crypto  Example: live crypto scan"
 	@echo "  make run             CLI (bin tvscreener). ARGS='…' (default: --help)"
 	@echo "                       e.g. make run ARGS='payload crypto --limit 2'"
-	@echo "  make run-mcp         MCP server (bin tvscreener-mcp, --features mcp)"
+	@echo "  make run-mcp         MCP server (bin tvscreener-mcp)"
 	@echo "  make audit           cargo audit"
 	@echo "  make deny            cargo deny check"
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
@@ -107,7 +107,7 @@ check:
 # Test
 # ---------------------------------------------------------------------------
 
-## Default suite (`cargo test`, then again with `--features mcp`).
+## Default suite (`cargo test`).
 test: test-offline
 
 test-lib:
@@ -115,7 +115,6 @@ test-lib:
 
 test-offline:
 	$(CARGO) test $(CARGO_FLAGS) -- --nocapture
-	$(CARGO) test $(CARGO_FLAGS) --features mcp -- --nocapture
 
 ## Live HTTP e2e (`--features live`, serial).
 test-live:
@@ -138,7 +137,6 @@ format-check:
 clippy:
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features live -- $(CLIPPY_FLAGS)
-	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features mcp -- $(CLIPPY_FLAGS)
 	$(CARGO) clippy $(CARGO_FLAGS) --all-targets --features regen -- $(CLIPPY_FLAGS)
 
 lint: format-check clippy
@@ -189,7 +187,7 @@ run:
 
 ## MCP stdio binary (`tvscreener-mcp`).
 run-mcp:
-	$(CARGO) run $(CARGO_FLAGS) --features mcp --bin tvscreener-mcp
+	$(CARGO) run $(CARGO_FLAGS) --bin tvscreener-mcp
 
 # ---------------------------------------------------------------------------
 # Supply chain / catalog

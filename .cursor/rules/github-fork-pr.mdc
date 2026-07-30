@@ -29,19 +29,39 @@ Do **not** recreate `main` as the integration branch once org remotes exist.
 - Never commit as Greg's personal identity on this worker repo.
 - Subject grammar: see `github-public-quality.mdc`.
 
+## When to open a PR (locked)
+
+Global rule: `~/.cursor/rules/github-pr-draft-until-ready.mdc` (all repos).
+
+- **Do not** open a review PR on the first commit while overnight/multi-tick work is still landing more commits on the same concern.
+- Finish the commits you want in that PR (or a coherent first slice you are ready to land alone), push the branch, **then** open the PR.
+- Prefer **`--draft`** until the branch is ready for review:
+
+```bash
+gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat> --draft
+# when ready:
+gh pr ready <n> --repo Interchouette-ITC/tvscreener-rs
+gh pr edit <n> --repo Interchouette-ITC/tvscreener-rs --add-reviewer gRoussac
+```
+
+- Request **`--reviewer gRoussac` only when marking ready** (or on create if the PR is complete and not draft).
+- Extra follow-up commits on an already-ready PR are for review fixes only, not “still building the feature.”
+
 ## Merge style (fork rebase + squash)
 
 | Step | Who / where | Action |
 | --- | --- | --- |
 | Keep PR current | **Fork** | `git fetch interchouette && git rebase interchouette/dev` on the feature branch, then push to `interchouette` (SSH-signed). |
-| Reviewer | Every PR | Always `--reviewer gRoussac` |
+| Reviewer | Ready PRs | Always `--reviewer gRoussac` (not while still draft-building). |
 | Merge gate | **gRoussac Approve** | Comments = babysit only. Never merge without Approve. |
 | Land on org | After Approve | `gh pr merge --squash` with conventional PR title as the squash subject. |
 | Forbidden default | Agent | `gh pr merge --rebase` onto org (GitHub rewrites commits and drops Verified). |
 
 ```bash
+# Ready (non-draft) create:
 gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat> --reviewer gRoussac
-# or on an existing PR:
+# or promote draft:
+gh pr ready <n> --repo Interchouette-ITC/tvscreener-rs
 gh pr edit <n> --repo Interchouette-ITC/tvscreener-rs --add-reviewer gRoussac
 ```
 
@@ -51,9 +71,10 @@ CODEOWNERS: `* @gRoussac` in repo-root `CODEOWNERS`. Creds: `.github_credentials
 
 ```text
 fork: create feat/… from interchouette/dev
- → signed conventional commits + push interchouette feat/…
+ → signed conventional commits + push interchouette feat/… (finish the concern first)
  → rebase onto interchouette/dev on the fork if behind (signed)
- → gh pr create --repo Interchouette-ITC/tvscreener-rs --base dev --head Interchouette:<feat> --reviewer gRoussac
+ → gh pr create … --draft   (or create ready only if the slice is complete)
+ → when ready: gh pr ready + --reviewer gRoussac
  → confirm PR head Verified
  → wait gRoussac Approve, then --squash
  → sync fork: git fetch upstream && git checkout dev && git merge --ff-only upstream/dev && git push interchouette dev
@@ -74,5 +95,6 @@ Day-to-day work uses the workflow above. Do **not** invent a second integration 
 ## Do not
 
 - Merge without **gRoussac** Approve.
-- Open a PR without requesting **gRoussac**.
+- Open a **ready** PR before the commits for that concern are done (use **draft**, or wait).
+- Open a PR without requesting **gRoussac** once it is ready for review.
 - Rely on Cursor chat alone for Approve (use GitHub review + `--reviewer gRoussac`).

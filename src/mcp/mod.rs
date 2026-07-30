@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! MCP tool helpers and mcpkit stdio server (`feature = "mcp"`).
+//! MCP tool helpers and mcpkit stdio server.
 //!
 //! Tools:
 //!

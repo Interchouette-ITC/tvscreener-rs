@@ -15,7 +15,7 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
 - **Terminal formatting**: `format_value` / `format_row` (K/M/B, recommendations)
 - **CLI** `tvscreener` (`scan`, `payload`, catalog commands)
-- **Optional MCP** `tvscreener-mcp` for AI assistants (`--features mcp`)
+- **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
 
@@ -26,8 +26,6 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 tvscreener = "1.0"
 # or from GitHub:
 # tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
-# optional MCP binary deps:
-# tvscreener = { version = "1.0", features = ["mcp"] }
 ```
 
 ```rust
@@ -45,12 +43,16 @@ async fn main() -> Result<()> {
 ### CLI
 
 ```bash
-make run ARGS='--help'
-make run ARGS='payload crypto --limit 2'
-make run ARGS='scan crypto --limit 5'          # live HTTP
-make run ARGS='scan stock --preset stock_price --limit 10'
-make run-mcp                                   # stdio MCP (--features mcp)
+cargo install --path .                  # installs `tvscreener` and `tvscreener-mcp`
+
+tvscreener --help
+tvscreener payload crypto --limit 2
+tvscreener scan crypto --limit 5        # live HTTP
+tvscreener scan stock --preset stock_price --limit 10
+tvscreener-mcp
 ```
+
+From a checkout without installing: `cargo run -- …` / `cargo run --bin tvscreener-mcp`.
 
 ### All six screeners
 
@@ -145,10 +147,9 @@ async fn main() -> Result<()> {
 ## MCP server (AI assistants)
 
 ```bash
-# build / run with MCP support
-cargo run --features mcp --bin tvscreener-mcp
-# or
-make run-mcp
+cargo install --path .
+tvscreener-mcp
+# checkout: cargo run --bin tvscreener-mcp
 ```
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).

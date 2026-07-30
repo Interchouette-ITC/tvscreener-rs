@@ -54,7 +54,6 @@ pub mod error;
 pub mod field;
 pub mod filter;
 pub mod logging;
-#[cfg(feature = "mcp")]
 pub mod mcp;
 pub mod resolve;
 pub mod util;
