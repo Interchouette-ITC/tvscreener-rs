@@ -1,6 +1,6 @@
 # TUI (`tvscreener-tui`)
 
-Optional Ratatui results pane (feature `tui`). Not a browser UI; configure the scan with CLI flags, then browse / refresh / copy in the terminal.
+Optional Ratatui results pane (Cargo feature `tui`). Configure the scan with CLI flags, then browse, refresh, and copy rows in the terminal.
 
 ## Build and run
 

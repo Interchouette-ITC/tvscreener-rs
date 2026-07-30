@@ -204,21 +204,9 @@ make doc           # API HTML under docs/api-rust/
 make help
 ```
 
-## Compared to the Python library
+## Origin
 
-| Capability | Python `tvscreener` | This crate |
-| ---------- | ------------------- | ---------- |
-| Six screener types | Yes | Yes |
-| ~13k fields + presets | Yes | Yes |
-| Filters / markets / range | Yes | Yes |
-| Streaming polls | Yes | Yes (async) |
-| MCP server | Yes | Yes (+ extra catalog tools) |
-| CLI | Limited | First-class `tvscreener` |
-| Result type | Pandas `DataFrame` | `Vec<ScreenerRow>` |
-| Filter sugar | `StockField.PRICE > 50` | `FieldCondition` + `FilterOperator` |
-| Interval helper | `.with_interval("60")` | Pre-expanded catalog fields |
-| Jupyter / styled HTML | `beautify` | Field-aware `format_cell` / `format_rows_table` (+ TUI table) |
-| Visual code generator | Web UI | Ratatui TUI (`tvscreener-tui`, `--features tui`) |
+Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, optional MCP server, and optional Ratatui TUI. See [License](#license).
 
 ## License
 

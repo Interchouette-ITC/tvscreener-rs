@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Field-aware `format_cell` / `format_rows_table` (Python `beautify` parity without Jupyter HTML)
+- Field-aware `format_cell` / `format_rows_table` for terminal display
 - CLI `scan --format table|row|json`, `--json`, `--color`
 - Optional TUI `tvscreener-tui` (`--features tui`): Results table, opt-in watch, OSC 52 copy
 - Docs: [TUI guide](docs/guide/tui.md)
