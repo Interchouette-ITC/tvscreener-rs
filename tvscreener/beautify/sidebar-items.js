@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CellTone"],"fn":["format_cell","format_cell_for_field"],"struct":["FormattedCell","RowTechMap"]};

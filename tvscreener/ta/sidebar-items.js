@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Signal"],"fn":["adx","ao","bb_lower","bb_upper","crosses_up"]};
