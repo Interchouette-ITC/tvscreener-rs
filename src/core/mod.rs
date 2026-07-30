@@ -45,7 +45,8 @@ fn build_http_client(timeout: Duration) -> reqwest::Client {
 
 const HTTP_ERROR_BODY_MAX: usize = 4096;
 
-fn truncate_http_body(body: String) -> String {
+/// Truncates an HTTP error body for [`TvscreenerError::HttpStatus`] display.
+pub(crate) fn truncate_http_body(body: String) -> String {
     if body.len() <= HTTP_ERROR_BODY_MAX {
         body
     } else {
@@ -806,5 +807,15 @@ mod tests {
             payload["symbols"]["symbolset"],
             json!(["SYML:SP;SPX", "SYML:NASDAQ;NDX"])
         );
+    }
+
+    #[test]
+    fn truncate_http_body_caps_at_4kib() {
+        let short = truncate_http_body("ok".into());
+        assert_eq!(short, "ok");
+        let long = "x".repeat(HTTP_ERROR_BODY_MAX + 10);
+        let truncated = truncate_http_body(long);
+        assert_eq!(truncated.len(), HTTP_ERROR_BODY_MAX + '…'.len_utf8());
+        assert!(truncated.ends_with('…'));
     }
 }

@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Cargo.toml` repository / homepage / authors point at Interchouette-ITC
 - Typed screener dispatch via `core::with_asset_screener` / `get_for_asset`
 - MCP payload preview uses typed screener defaults
+- CI: `dtolnay/rust-toolchain`, `make deny`; drop redundant `tests/unit/basic`
 
+### Fixed
+
+- Docs: install via git until crates.io publish; API overview lists `resolve`
 ## [1.0.0] - 2026-07-29
 
 Initial release: Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).

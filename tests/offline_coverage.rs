@@ -387,35 +387,7 @@ async fn errors_unreachable_url_is_network_or_timeout() {
     );
 }
 
-// --- MCP tools (offline) ----------------------------------------------------------
-
-#[cfg(feature = "mcp")]
-#[test]
-fn mcp_tools_discover_and_presets() {
-    use tvscreener::field::Asset;
-    use tvscreener::mcp::tools::{
-        custom_query_payload_preview, format_discover_fields, format_get_preset,
-        format_list_presets, parse_asset, PayloadPreviewOpts,
-    };
-
-    assert_eq!(parse_asset("stock").unwrap(), Asset::Stock);
-    let text = format_discover_fields(Asset::Crypto, "volume", 8);
-    assert!(text.contains("volume") || text.contains("VOLUME") || text.contains("fields"));
-    assert!(format_list_presets().contains("crypto_price"));
-    assert!(format_get_preset("crypto_price").unwrap().contains("Name"));
-    let payload = custom_query_payload_preview(&PayloadPreviewOpts {
-        asset_type: "crypto",
-        fields: Some("NAME,PRICE"),
-        filters: Some(r#"[{"field":"PRICE","op":">","value":1}]"#),
-        sort_by: None,
-        ascending: false,
-        limit: 5,
-        indices: None,
-        markets: None,
-    })
-    .unwrap();
-    assert_eq!(payload["range"], json!([0, 5]));
-}
+// --- MCP tools (offline smoke; detailed cases live in `src/mcp/tools` tests) ------
 
 #[cfg(feature = "mcp")]
 #[test]

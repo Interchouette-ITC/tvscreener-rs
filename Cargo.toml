@@ -75,10 +75,6 @@ all-features = false
 rustdoc-args = ["--cfg", "docsrs"]
 
 [[test]]
-name = "unit_basic"
-path = "tests/unit/basic.rs"
-
-[[test]]
 name = "e2e_live"
 path = "tests/e2e/live.rs"
 required-features = ["live"]

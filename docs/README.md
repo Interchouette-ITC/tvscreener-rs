@@ -65,11 +65,12 @@ Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded fiel
 
 ## Depending on this crate
 
-Package name on crates.io / in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`).
+Package name in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`). Prefer a path or git dependency until the crate is published on crates.io:
 
 ```toml
-tvscreener = { path = "../tvscreener-rs" }
-# later: tvscreener = "1.0"
+tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
+# or: tvscreener = { path = "../tvscreener-rs" }
+# after crates.io publish: tvscreener = "1.0"
 ```
 
 **This crate’s Cargo features:**
