@@ -52,7 +52,7 @@ help:
 	@echo "  make build           Debug build (lib + bins + examples)"
 	@echo "  make build-release   Release build"
 	@echo "  make check           cargo check --all-targets"
-	@echo "  make test            Default test suite"
+	@echo "  make test            Default suite + --features tui"
 	@echo "  make test-live       Live e2e (TVSCREENER_LIVE=1)"
 	@echo "  make test-all        Default suite + live"
 	@echo "  make lint            fmt check + clippy"
@@ -104,12 +104,13 @@ build-release:
 check:
 	$(CARGO) check $(CARGO_FLAGS) --all-targets
 	$(CARGO) check $(CARGO_FLAGS) --bins --examples
+	$(CARGO) check $(CARGO_FLAGS) --all-targets --features tui
 
 # ---------------------------------------------------------------------------
 # Test
 # ---------------------------------------------------------------------------
 
-## Default suite (`cargo test`).
+## Default suite (`cargo test` + `--features tui`).
 test: test-offline
 
 test-lib:
@@ -117,6 +118,7 @@ test-lib:
 
 test-offline:
 	$(CARGO) test $(CARGO_FLAGS) -- --nocapture
+	$(CARGO) test $(CARGO_FLAGS) --features tui -- --nocapture
 
 ## Live HTTP e2e (`--features live`, serial).
 test-live:
