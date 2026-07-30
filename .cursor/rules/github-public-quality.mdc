@@ -48,7 +48,7 @@ PR title = same grammar. Body: Summary + Test plan only. Do **not** append "Made
 2. On the **fork**: `git fetch interchouette && git rebase interchouette/dev`, resolve, push to `interchouette` (signed).
 3. PR up to date with org `dev`; always `--reviewer gRoussac`.
 4. Confirm PR head Verified.
-5. Wait for **gRoussac** Approve, then `gh pr merge --squash` (never `gh pr merge --rebase` onto org).
+5. Wait for **gRoussac** Approve (org `dev` requires **1** approving review + code owner), then `gh pr merge --squash` (never `gh pr merge --rebase` onto org). Never merge when `reviews` lacks `APPROVED` from **gRoussac**.
 6. Sync fork `dev` from `upstream/dev`.
 
 See `github-fork-pr.mdc`.
