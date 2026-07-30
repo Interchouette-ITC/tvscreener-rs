@@ -33,10 +33,10 @@ path = "src/bin/tvscreener_tui.rs"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive", "env"] }
-crossterm = "0.28"
+crossterm = "0.29"
 ctrlc = "3"
 mcpkit = "0.7"
-ratatui = "0.29"
+ratatui = "0.30"
 reqwest = { version = "0.12", default-features = false, features = [
     "json",
     "rustls-tls",

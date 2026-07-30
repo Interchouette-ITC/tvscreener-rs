@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `tvscreener-mcp` always builds (no `--features mcp`); `mcpkit` is a normal dependency
 - TUI deps always on: `cargo run --bin tvscreener-tui` works without `--features tui` (feature removed)
+- Bump `ratatui` to 0.30 / `crossterm` to 0.29 (drops unmaintained `paste`, clears `make deny`)
 - CI release artifacts include `tvscreener-tui`
 
 ## [1.0.0] - 2026-07-30
