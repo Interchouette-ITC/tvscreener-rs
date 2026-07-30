@@ -49,6 +49,7 @@
 #![deny(missing_docs)]
 #![warn(rust_2018_idioms)]
 
+pub mod beautify;
 pub mod core;
 pub mod error;
 pub mod field;
@@ -56,8 +57,10 @@ pub mod filter;
 pub mod logging;
 pub mod mcp;
 pub mod resolve;
+pub mod ta;
 pub mod util;
 
+pub use beautify::{format_cell, format_cell_for_field, CellTone, FormattedCell, RowTechMap};
 pub use error::{Result, TvscreenerError};
 pub use field::{
     catalog_len, get_preset, list_fields, list_presets, resolve_field, search_fields, Asset,
