@@ -22,9 +22,9 @@ use tvscreener::core::Screener;
 use tvscreener::field::Asset;
 use tvscreener::resolve::apply_stock_index_markets;
 use tvscreener::tui::{
-    draw, hard_reset_tty, inside_gnu_screen, install_panic_hook, install_signal_handlers,
-    is_quit_key, AppModel, ScanConfig, TerminalGuard, DEFAULT_WATCH_INTERVAL_SECS,
-    MIN_TUI_REFRESH_SECS, STOP,
+    copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen, install_panic_hook,
+    install_signal_handlers, is_quit_key, AppModel, ScanConfig, TerminalGuard,
+    DEFAULT_WATCH_INTERVAL_SECS, MIN_TUI_REFRESH_SECS, STOP,
 };
 use tvscreener::ScreenerRow;
 
@@ -170,6 +170,7 @@ async fn run_loop(
         match key.code {
             KeyCode::Char('h') => model.toggle_help(),
             KeyCode::Char('a') => model.toggle_watch(),
+            KeyCode::Char('c') => copy_rows(model),
             KeyCode::Char('r') => {
                 if model.can_refresh() {
                     refresh(model, debug).await;
@@ -197,6 +198,18 @@ async fn refresh(model: &mut AppModel, debug: bool) {
             Err(err) => model.set_error(err.to_string()),
         },
         Err(err) => model.set_error(err.to_string()),
+    }
+}
+
+fn copy_rows(model: &mut AppModel) {
+    match serde_json::to_string_pretty(&model.rows) {
+        Ok(json) => match copy_via_osc52(&json) {
+            Ok(()) => {
+                model.status = format!("copied {} rows (OSC 52)", model.rows.len());
+            }
+            Err(err) => model.set_error(format!("clipboard write failed: {err}")),
+        },
+        Err(err) => model.set_error(format!("json encode failed: {err}")),
     }
 }
 

@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Terminal raw-mode / alternate-screen lifecycle (itcy-tui pattern).
+//! Terminal raw-mode / alternate-screen lifecycle.
 
 use std::env;
 use std::io::{self, stdout, Write};

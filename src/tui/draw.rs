@@ -63,7 +63,7 @@ fn draw_footer(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
         Span::styled(status, style),
         Span::raw("  "),
         Span::styled(
-            "keys: q quit · r refresh · a watch · h help · ↑↓ scroll",
+            "keys: q quit · r refresh · a watch · c copy · h help · ↑↓ scroll",
             LABEL,
         ),
     ]));
@@ -76,6 +76,7 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         Line::from("  q / Esc / Ctrl-C   quit"),
         Line::from("  r                 refresh scan (min 10s between scans)"),
         Line::from("  a                 toggle watch (auto-refresh, default 30s)"),
+        Line::from("  c                 copy rows as JSON (OSC 52 clipboard)"),
         Line::from("  h                 toggle this help"),
         Line::from("  ↑ / ↓ / PgUp/Dn   scroll results"),
         Line::from(""),
@@ -85,6 +86,13 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         )),
         Line::from("  Default is manual (one scan at start). Watch is opt-in."),
         Line::from("  TUI floor is 10s (library stream() floor is 1s; do not use that here)."),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Clipboard",
+            ACCENT.add_modifier(Modifier::BOLD),
+        )),
+        Line::from("  Uses OSC 52 (terminal clipboard). No xclip/wl-clipboard required."),
+        Line::from("  Works in Kitty/WezTerm/Alacritty/foot; tmux may need passthrough."),
         Line::from(""),
         Line::from(Span::styled(
             "Scaffold note",
