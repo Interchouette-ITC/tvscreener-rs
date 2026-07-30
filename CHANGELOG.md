@@ -36,9 +36,11 @@ Not affiliated with TradingView.
 
 ### Docker
 
-- Image ships `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`
+- Image ships `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`, and `tvscreener-entrypoint`
+- Runtime: distroless `cc-debian13` (Debian 13); builder `rust:slim-trixie` (no bookworm, no Alpine)
+- Entrypoint is a Rust binary (no shell) so Hub Scout is not flooded by perl/tar OS packages
 - Default attached run: TUI + MCP HTTP on **8787**; `-d` for MCP only; CLI overrides
-- Release attaches all three Linux binaries
+- Release attaches the three user-facing Linux binaries
 
 ### TUI (`tvscreener-tui`)
 

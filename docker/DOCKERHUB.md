@@ -14,7 +14,7 @@ Source: [Interchouette-ITC/tvscreener-rs](https://github.com/Interchouette-ITC/t
 | `tvscreener-tui` | Ratatui TUI (Results, Builder, Payload, Codegen) |
 | `tvscreener-mcp` | MCP server (Streamable HTTP in Docker; stdio when run locally) |
 
-Size-optimized multi-stage build → `debian:bookworm-slim` (ca-certificates, non-root). TLS via rustls (no OpenSSL package).
+Size-optimized multi-stage build → distroless `cc-debian13` (Debian 13, non-root; no apt/perl/shell). TLS via rustls (no OpenSSL package).
 
 ## Quick start
 
