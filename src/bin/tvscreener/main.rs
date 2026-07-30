@@ -65,9 +65,9 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// Live scan (POST to scanner.tradingview.com).
+    /// POST to scanner.tradingview.com and print rows.
     Scan(ScanArgs),
-    /// Print scan JSON payload without HTTP.
+    /// Print request JSON only (no network).
     Payload(ScanArgs),
     /// List preset names.
     Presets,

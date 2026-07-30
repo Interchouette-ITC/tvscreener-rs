@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
 
 ## What this crate provides
 
-Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, and MCP **`tvscreener-mcp`**.
+Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional network e2e), CLI **`tvscreener`**, and MCP **`tvscreener-mcp`**.
 
 ## Depending on this crate
 
@@ -78,7 +78,7 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 | Feature     | What it enables                          |
 | ----------- | ---------------------------------------- |
 | _(default)_ | Library + both binaries + tests          |
-| `live`      | Live HTTP tests (`make test-live`)       |
+| `live`      | Network e2e tests (`make test-live`)     |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan`) at runtime.
@@ -112,7 +112,7 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 make test          # default test suite
 make lint          # fmt --check + clippy -D warnings
 make verify        # format-check + clippy + tests
-make test-live     # live HTTP (network)
+make test-live     # e2e against scanner.tradingview.com
 make doc           # rustdoc → docs/api-rust/
 make help          # all targets
 ```
@@ -193,8 +193,8 @@ docker/
 ```bash
 cargo install --path .
 tvscreener --help
-tvscreener payload crypto --limit 2
 tvscreener scan crypto --limit 5
+tvscreener payload crypto --limit 2
 tvscreener payload stock --preset stock_price --index SP500
 tvscreener-mcp
 ```

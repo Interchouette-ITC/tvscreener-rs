@@ -53,8 +53,8 @@ help:
 	@echo "  make build-release   Release build"
 	@echo "  make check           cargo check --all-targets"
 	@echo "  make test            Default test suite"
-	@echo "  make test-live       Live e2e (TVSCREENER_LIVE=1)"
-	@echo "  make test-all        Default suite + live"
+	@echo "  make test-live       Network e2e (TVSCREENER_LIVE=1)"
+	@echo "  make test-all        Default suite + network e2e"
 	@echo "  make lint            fmt check + clippy"
 	@echo "  make format          cargo fmt"
 	@echo "  make verify          format-check + clippy + tests"
@@ -62,7 +62,7 @@ help:
 	@echo "  make doc-open        rustdoc + open in browser"
 	@echo "  make doc-clean       remove docs/api-rust generated HTML"
 	@echo "  make example-manual  Example: util / presets / display"
-	@echo "  make example-crypto  Example: live crypto scan"
+	@echo "  make example-crypto  Example: crypto scan (network)"
 	@echo "  make run             CLI (bin tvscreener). ARGS='…' (default: --help)"
 	@echo "                       e.g. make run ARGS='payload crypto --limit 2'"
 	@echo "  make run-mcp         MCP server (bin tvscreener-mcp)"
@@ -116,7 +116,7 @@ test-lib:
 test-offline:
 	$(CARGO) test $(CARGO_FLAGS) -- --nocapture
 
-## Live HTTP e2e (`--features live`, serial).
+## Network e2e against scanner.tradingview.com (`--features live`, serial).
 test-live:
 	TVSCREENER_LIVE=$(TVSCREENER_LIVE) $(CARGO) test $(CARGO_FLAGS) --features live --test e2e_live -- --test-threads=1 --nocapture
 

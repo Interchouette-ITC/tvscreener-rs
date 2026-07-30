@@ -16,7 +16,7 @@ How to run the test suite and related examples.
 | Verify              | `make verify`         |
 | Manual example      | `make example-manual` |
 | Live crypto         | `make example-crypto` |
-| Live e2e            | `make test-live`      |
+| Network e2e         | `make test-live`      |
 | CLI                 | `tvscreener …`        |
 | MCP server          | `tvscreener-mcp`      |
 | Advisories          | `make audit`          |

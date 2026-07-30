@@ -8,7 +8,8 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
 # from this repository (installs `tvscreener` and `tvscreener-mcp`)
 cargo install --path .
 tvscreener --help
-tvscreener payload stock --limit 2
+tvscreener scan crypto --limit 5
+tvscreener payload stock --limit 2     # print request JSON only
 tvscreener-mcp
 ```
 
@@ -37,7 +38,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 | Feature     | Purpose                                  |
 | ----------- | ---------------------------------------- |
 | _(default)_ | Library + both binaries                  |
-| `live`      | Live HTTP tests (`make test-live`)       |
+| `live`      | Network e2e tests (`make test-live`)     |
 | `regen`     | `tvscreener regen-fields` maintainer cmd |
 
 ```bash
