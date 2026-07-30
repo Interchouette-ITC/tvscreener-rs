@@ -47,7 +47,8 @@ cargo install --path .                  # installs `tvscreener` and `tvscreener-
 
 tvscreener --help
 tvscreener scan crypto --limit 5
-tvscreener scan stock --preset stock_price --limit 10
+tvscreener scan stock --preset stock_price --index SP500 --limit 10
+tvscreener payload crypto --limit 2     # print request JSON only
 tvscreener-mcp
 ```
 
