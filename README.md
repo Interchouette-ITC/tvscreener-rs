@@ -13,8 +13,8 @@ Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **N
 - **Field presets**: curated groups (`stock_valuation`, `crypto_price`, …)
 - **Async HTTP**: `get()` / `stream()` via `reqwest` + rustls
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
-- **Terminal formatting**: `format_value` / `format_row` (K/M/B, recommendations)
-- **CLI** `tvscreener` (`scan`, `payload`, catalog commands)
+- **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
+- **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
 - **MCP** `tvscreener-mcp` for AI assistants
 
 ## Quick start
@@ -46,9 +46,10 @@ async fn main() -> Result<()> {
 cargo install --path .                  # installs `tvscreener` and `tvscreener-mcp`
 
 tvscreener --help
-tvscreener scan crypto --limit 5
-tvscreener scan stock --preset stock_price --index SP500 --limit 10
 tvscreener payload crypto --limit 2     # print request JSON only
+tvscreener scan crypto --limit 5        # live HTTP (table)
+tvscreener scan crypto --limit 5 --json
+tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
 tvscreener-mcp
 ```
 
@@ -209,7 +210,7 @@ make help
 | Result type | Pandas `DataFrame` | `Vec<ScreenerRow>` |
 | Filter sugar | `StockField.PRICE > 50` | `FieldCondition` + `FilterOperator` |
 | Interval helper | `.with_interval("60")` | Pre-expanded catalog fields |
-| Jupyter / styled HTML | `beautify` | Terminal `format_row` / `format_value` |
+| Jupyter / styled HTML | `beautify` | Field-aware `format_cell` / `format_rows_table` |
 | Visual code generator | Web UI | No (CLI `payload` + docs) |
 
 ## License

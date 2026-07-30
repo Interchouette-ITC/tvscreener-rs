@@ -60,7 +60,10 @@ pub mod resolve;
 pub mod ta;
 pub mod util;
 
-pub use beautify::{format_cell, format_cell_for_field, CellTone, FormattedCell, RowTechMap};
+pub use beautify::{
+    format_cell, format_cell_for_field, format_rows_table, CellTone, FormattedCell, RowTechMap,
+    TableFormatOptions, DEFAULT_TABLE_MAX_COLUMNS,
+};
 pub use error::{Result, TvscreenerError};
 pub use field::{
     catalog_len, get_preset, list_fields, list_presets, resolve_field, search_fields, Asset,
