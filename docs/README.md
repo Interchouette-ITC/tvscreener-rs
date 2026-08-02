@@ -77,11 +77,17 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 
 **This crate’s Cargo features:**
 
-| Feature     | What it enables                          |
-| ----------- | ---------------------------------------- |
-| _(default)_ | Library + CLI + MCP + TUI binaries       |
-| `live`      | Live HTTP tests (`make test-live`)       |
-| `regen`     | `tvscreener regen-fields` maintainer cmd |
+| Feature     | What it enables                                      |
+| ----------- | ---------------------------------------------------- |
+| _(default)_ | Lean library only (no mcpkit / Ratatui / clap)       |
+| `cli`       | `tvscreener` CLI binary + `init_logging`             |
+| `mcp`       | `tvscreener-mcp` + `tvscreener::mcp` (includes `cli`) |
+| `tui`       | `tvscreener-tui` + `tvscreener::tui` (includes `cli`) |
+| `apps`      | Meta: `cli` + `mcp` + `tui` (Make / Docker / install) |
+| `live`      | Live HTTP tests (`make test-live`)                   |
+| `regen`     | `tvscreener regen-fields` maintainer cmd (includes `cli`) |
+
+Path/git consumers (e.g. OT) get the lean default. Repo tooling uses `--features apps` via Make.
 
 Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan` / `tvscreener-tui`) at runtime.
 
@@ -108,12 +114,13 @@ Terminal helpers: `format_cell` / `format_rows_table` (field-aware), plus `util:
 
 ## Build and verify
 
-Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
+Rust **1.85+** (`rust-version` in `Cargo.toml`; required when building with `mcp` / `apps`).
 
 ```bash
-make test          # default test suite
-make lint          # fmt --check + clippy -D warnings
-make verify        # format-check + clippy + tests
+make test          # default test suite (--features apps)
+make check-lib     # lean lib only (empty features; no mcpkit/Ratatui)
+make lint          # fmt --check + clippy
+make verify        # format-check + clippy + check-lib + tests
 make test-live     # against TradingView (TVSCREENER_LIVE=1)
 make doc           # rustdoc → docs/api-rust/
 make help          # all targets
@@ -163,8 +170,8 @@ Default suite does not call the scanner. Live tests need the `live` feature and 
 ## MCP binary (`mcpkit`)
 
 ```bash
-cargo run --bin tvscreener-mcp
-# or: make run-mcp / tvscreener-mcp after cargo install --path .
+cargo run --features apps --bin tvscreener-mcp
+# or: make run-mcp / tvscreener-mcp after cargo install --path . --features apps
 ```
 
 Tools: `discover_fields`, `list_field_types`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets`, `get_preset`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_markets`, `list_index_symbols`, `build_payload`, `search_by_index`.
@@ -179,11 +186,11 @@ src/
   util.rs          get_url, headers, millify, format_value / format_row
   beautify.rs      format_cell / format_rows_table (field-aware tones)
   ta.rs            ADX / AO / Bollinger helpers for computed recommendations
-  logging.rs       env_debug_enabled; init_logging
+  logging.rs       env_debug_enabled; init_logging (feature `cli`)
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
-  mcp/             tools + mcpkit server (stdio / HTTP)
-  tui/             Ratatui pane (`tvscreener-tui`)
+  mcp/             tools + mcpkit server (feature `mcp`)
+  tui/             Ratatui pane (feature `tui`; `tvscreener-tui`)
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs
   bin/tvscreener_tui.rs
@@ -197,7 +204,7 @@ docker/
 ## CLI (`tvscreener`) / MCP (`tvscreener-mcp`)
 
 ```bash
-cargo install --path .
+cargo install --path . --features apps
 tvscreener --help
 tvscreener                 # interactive prompt
 tvscreener scan crypto --limit 5
@@ -206,6 +213,5 @@ tvscreener-mcp             # stdio
 tvscreener-mcp --http      # Streamable HTTP on :8787
 ```
 
-Checkout without install: `cargo run -- …` / `cargo run --bin tvscreener-mcp`. Dev shortcuts: `make run` / `make run-mcp` (see `make help`).
-
+Checkout without install: `make run` / `make run-mcp`, or `cargo run --features apps --bin …`.
 CLI checks: `tests/cli.rs` (included in `make test`).

@@ -5,7 +5,7 @@ Get a first screener response in a few minutes.
 ## CLI (no code)
 
 ```bash
-cargo install --path .
+cargo install --path . --features apps
 tvscreener --help
 tvscreener scan crypto --limit 5
 tvscreener-mcp

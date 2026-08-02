@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-02
+
+### Packaging
+
+- Default features are **lean**: path/git library consumers no longer pull `mcpkit`, `ratatui`, `crossterm`, `ctrlc`, `clap`, `anyhow`, or `tracing-subscriber`
+- New features: `cli`, `mcp`, `tui`, and meta-feature `apps` (`cli` + `mcp` + `tui`)
+- Binaries require their features (`tvscreener` → `cli`, `tvscreener-mcp` → `mcp`, `tvscreener-tui` → `tui`)
+- Make defaults to `--features apps`; `make check-lib` verifies the lean graph
+- Docker / CI / release builds pass `--features apps`
+- Install apps: `cargo install --path . --features apps` (plain `cargo install --path .` no longer builds MCP/TUI bins)
+
 ## [1.0.0] - 2026-07-31
 
 Unofficial Rust [TradingView](https://www.tradingview.com) Screener HTTP client

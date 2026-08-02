@@ -1,6 +1,6 @@
 [package]
 name = "tvscreener"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 rust-version = "1.85"
 license = "Apache-2.0"
@@ -20,26 +20,30 @@ path = "src/lib.rs"
 [[bin]]
 name = "tvscreener"
 path = "src/bin/tvscreener/main.rs"
+required-features = ["cli"]
 
 [[bin]]
 name = "tvscreener-mcp"
 path = "src/bin/tvscreener_mcp.rs"
+required-features = ["mcp"]
 
 [[bin]]
 name = "tvscreener-tui"
 path = "src/bin/tvscreener_tui.rs"
+required-features = ["tui"]
 
 [[bin]]
 name = "tvscreener-entrypoint"
 path = "src/bin/tvscreener_entrypoint.rs"
 
 [dependencies]
-anyhow = "1"
-clap = { version = "4", features = ["derive", "env"] }
-crossterm = "0.29"
-ctrlc = "3"
-mcpkit = "0.7"
-ratatui = "0.30"
+anyhow = { version = "1", optional = true }
+clap = { version = "4", features = ["derive", "env"], optional = true }
+crossterm = { version = "0.29", optional = true }
+ctrlc = { version = "3", optional = true }
+mcpkit = { version = "0.7", optional = true }
+mcpkit-axum = { version = "0.7", optional = true }
+ratatui = { version = "0.30", optional = true }
 reqwest = { version = "0.12", default-features = false, features = [
     "json",
     "rustls-tls",
@@ -49,19 +53,26 @@ serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 regex = { version = "1", optional = true }
-mcpkit-axum = "0.7"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 
 [features]
 default = []
+# Process binaries: CLI (`tvscreener`), plus shared clap/anyhow/subscriber.
+cli = ["dep:clap", "dep:anyhow", "dep:tracing-subscriber"]
+# MCP server binary + `tvscreener::mcp` (pulls mcpkit).
+mcp = ["cli", "dep:mcpkit", "dep:mcpkit-axum"]
+# Ratatui TUI binary + `tvscreener::tui`.
+tui = ["cli", "dep:ratatui", "dep:crossterm", "dep:ctrlc"]
+# Meta: all app surfaces (Make / Docker / `cargo install --features apps`).
+apps = ["cli", "mcp", "tui"]
 # Enables `tests/e2e/live.rs` (POST to scanner.tradingview.com).
 live = []
 # Maintainer: `tvscreener regen-fields` (Python field catalog import).
-regen = ["dep:regex"]
+regen = ["cli", "dep:regex"]
 
 [[example]]
 name = "example_crypto"

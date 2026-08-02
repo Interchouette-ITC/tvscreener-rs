@@ -4,7 +4,7 @@
 //! `tvscreener-tui` - Ratatui screener TUI.
 //!
 //! ```bash
-//! cargo run --bin tvscreener-tui -- crypto --limit 10
+//! cargo run --features apps --bin tvscreener-tui -- crypto --limit 10
 //! make run-tui ARGS='crypto --preset crypto_price --limit 5'
 //! make run-tui ARGS='crypto --watch --interval 30'
 //! ```

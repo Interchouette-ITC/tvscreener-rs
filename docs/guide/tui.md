@@ -5,8 +5,8 @@ Ratatui TUI for browsing screener results, editing a query in the terminal, and 
 ## Build and run
 
 ```bash
-cargo run --bin tvscreener-tui -- --help
-cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+cargo run --features apps --bin tvscreener-tui -- --help
+cargo run --features apps --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 make run-tui ARGS='crypto --preset crypto_price --limit 10'
 make run-tui ARGS='stock --preset stock_price --index SP500 --watch'
 ```
@@ -14,7 +14,7 @@ make run-tui ARGS='stock --preset stock_price --index SP500 --watch'
 Install (ships all three binaries):
 
 ```bash
-cargo install --path .
+cargo install --path . --features apps
 tvscreener-tui crypto --preset crypto_price --limit 10
 ```
 

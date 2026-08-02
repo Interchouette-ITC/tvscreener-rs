@@ -43,10 +43,10 @@ async fn main() -> Result<()> {
 ### Install binaries
 
 ```bash
-cargo install --path .   # installs tvscreener, tvscreener-mcp, tvscreener-tui
+cargo install --path . --features apps   # installs tvscreener, tvscreener-mcp, tvscreener-tui
 ```
 
-From a checkout without installing, use `cargo run --bin …` or the Make shortcuts below.
+From a checkout without installing, use `make run` / `make run-mcp` / `make run-tui` (default `--features apps`) or `cargo run --features apps --bin …`.
 
 ### CLI
 
@@ -63,7 +63,7 @@ tvscreener payload stock --filters '[{"field":"close","op":">","value":100}]'
 # checkout shortcuts:
 make run                                # --help
 make run ARGS='scan crypto --limit 5'
-cargo run --bin tvscreener -- scan crypto --limit 5
+cargo run --features apps --bin tvscreener -- scan crypto --limit 5
 ```
 
 ### TUI
@@ -77,7 +77,7 @@ tvscreener-tui crypto --preset crypto_price --limit 10
 # checkout shortcuts:
 make run-tui
 make run-tui ARGS='crypto --preset crypto_price --limit 10'
-cargo run --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+cargo run --features apps --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
 ```
 
 Keys (short): `Tab` / `1`–`4` switch views · `←`/`→` asset/preset · `r` refresh · `a` watch · `c` copy · `h` help · `q` quit.
@@ -184,7 +184,7 @@ tvscreener-mcp --http --listen 127.0.0.1:8787
 
 # checkout shortcuts:
 make run-mcp
-cargo run --bin tvscreener-mcp
+cargo run --features apps --bin tvscreener-mcp
 ```
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
