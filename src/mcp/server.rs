@@ -15,7 +15,7 @@ pub struct TvscreenerMcp;
 
 // mcpkit requires a string literal here; keep in sync with Cargo.toml `version`
 // (enforced by `mcp_server_version_matches_crate` below).
-#[mcp_server(name = "tvscreener-rs", version = "1.0.0")]
+#[mcp_server(name = "tvscreener-rs", version = "1.1.0")]
 impl TvscreenerMcp {
     /// Search field catalog by keyword.
     #[tool(
@@ -341,7 +341,7 @@ mod tests {
     fn mcp_server_version_matches_crate() {
         assert_eq!(
             env!("CARGO_PKG_VERSION"),
-            "1.0.0",
+            "1.1.0",
             "bump #[mcp_server(version = …)] when changing Cargo.toml version"
         );
     }

@@ -4,13 +4,13 @@
 //! `tvscreener` - command-line client for the library.
 //!
 //! ```bash
-//! cargo run --bin tvscreener -- --help
-//! cargo run --bin tvscreener -- scan crypto --limit 5
-//! cargo run --bin tvscreener -- payload stock --index SP500
-//! TVSCREENER_DEBUG=1 cargo run --bin tvscreener -- scan stock --limit 3
-//! cargo run --features regen --bin tvscreener -- regen-fields --python-root ../tvscreener
+//! cargo run --features apps --bin tvscreener -- --help
+//! cargo run --features apps --bin tvscreener -- scan crypto --limit 5
+//! cargo run --features apps --bin tvscreener -- payload stock --index SP500
+//! TVSCREENER_DEBUG=1 cargo run --features apps --bin tvscreener -- scan stock --limit 3
+//! cargo run --features apps,regen --bin tvscreener -- regen-fields --python-root ../tvscreener
 //! # no subcommand: interactive prompt until quit / exit / EOF
-//! cargo run --bin tvscreener
+//! cargo run --features apps --bin tvscreener
 //! ```
 
 mod output;

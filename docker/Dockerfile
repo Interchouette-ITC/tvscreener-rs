@@ -40,7 +40,7 @@ RUN mkdir -p src/bin/tvscreener data \
   && printf 'fn main() {}\n' > src/bin/tvscreener_entrypoint.rs \
   && printf '// docker dep cache\n' > src/lib.rs \
   && printf '{}\n' > data/fields.json \
-  && cargo build --release --locked \
+  && cargo build --release --locked --features apps \
        --bin tvscreener --bin tvscreener-mcp --bin tvscreener-tui \
        --bin tvscreener-entrypoint \
   && rm -rf src data target/release/deps/tvscreener* \
@@ -62,7 +62,7 @@ RUN touch src/lib.rs \
       src/bin/tvscreener_mcp.rs \
       src/bin/tvscreener_tui.rs \
       src/bin/tvscreener_entrypoint.rs \
-  && cargo build --release --locked \
+  && cargo build --release --locked --features apps \
        --bin tvscreener --bin tvscreener-mcp --bin tvscreener-tui \
        --bin tvscreener-entrypoint \
   && strip -s target/release/tvscreener \
@@ -79,7 +79,7 @@ RUN touch src/lib.rs \
 # ---------------------------------------------------------------------------
 FROM ${RUNTIME_IMAGE} AS runtime
 
-ARG APP_VERSION=1.0.0
+ARG APP_VERSION=1.1.0
 
 WORKDIR /app
 

@@ -128,7 +128,7 @@ fn draw_help(frame: &mut Frame<'_>, area: Rect) {
         Line::from("  Uses OSC 52 (terminal clipboard)."),
         Line::from(""),
         Line::from(Span::styled("Launch", ACCENT.add_modifier(Modifier::BOLD))),
-        Line::from("  cargo run --bin tvscreener-tui -- crypto --limit 10"),
+        Line::from("  cargo run --features apps --bin tvscreener-tui -- crypto --limit 10"),
         Line::from(
             "  Edit asset, preset, limit, search, sort, markets, index, filters in Builder.",
         ),

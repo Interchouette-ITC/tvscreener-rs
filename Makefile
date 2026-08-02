@@ -7,7 +7,8 @@ unexport PLAYWRIGHT_BROWSERS_PATH
 CARGO_BIN ?= cargo
 # Strip inherited target/browser paths even if a parent re-exports them.
 CARGO = env -u CARGO_TARGET_DIR -u PLAYWRIGHT_BROWSERS_PATH $(CARGO_BIN)
-CARGO_FLAGS ?=
+# App surfaces (CLI/MCP/TUI). Lean lib check: `make check-lib` (no features).
+CARGO_FLAGS ?= --features apps
 NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
@@ -32,7 +33,7 @@ CI ?= 0
 .DEFAULT_GOAL := help
 
 .PHONY: help all verify \
-	build build-release check \
+	build build-release check check-lib \
 	test test-lib test-offline test-live test-all \
 	lint format format-check clippy \
 	doc doc-open doc-clean \
@@ -52,9 +53,10 @@ CI ?= 0
 help:
 	@echo "tvscreener-rs targets"
 	@echo ""
-	@echo "  make build           Debug build (lib + bins + examples)"
+	@echo "  make build           Debug build (lib + bins + examples; --features apps)"
 	@echo "  make build-release   Release build"
-	@echo "  make check           cargo check --all-targets"
+	@echo "  make check           cargo check --all-targets (--features apps)"
+	@echo "  make check-lib       Lean lib only (no mcpkit/Ratatui; empty features)"
 	@echo "  make test            Default test suite"
 	@echo "  make test-live       Live e2e (TVSCREENER_LIVE=1)"
 	@echo "  make test-all        Default suite + live"
@@ -90,7 +92,7 @@ help:
 	@echo "  make version-set VERSION=x.y.z"
 	@echo "  make clean           cargo clean"
 	@echo ""
-	@echo "Overrides: CARGO_BIN=…  CARGO_FLAGS=…  TVSCREENER_LIVE=0|1  TVSCREENER_DEBUG=0|1"
+	@echo "Overrides: CARGO_BIN=…  CARGO_FLAGS=… (default --features apps)  TVSCREENER_LIVE=0|1  TVSCREENER_DEBUG=0|1"
 	@echo "           HUB_IMAGE=$(HUB_IMAGE)  HUB_MIRROR_IMAGE=$(HUB_MIRROR_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
 
 all: verify
@@ -108,6 +110,10 @@ build-release:
 check:
 	$(CARGO) check $(CARGO_FLAGS) --all-targets
 	$(CARGO) check $(CARGO_FLAGS) --bins --examples
+
+## Lean library graph (OT / path-git consumers): no cli/mcp/tui features.
+check-lib:
+	$(CARGO) check --lib
 
 # ---------------------------------------------------------------------------
 # Test
@@ -392,8 +398,8 @@ version-set:
 # Verify / clean
 # ---------------------------------------------------------------------------
 
-## format-check + clippy + default test suite.
-verify: format-check clippy test-offline
+## format-check + clippy + lean lib check + default test suite.
+verify: format-check clippy check-lib test-offline
 	@echo "verify OK"
 
 clean:

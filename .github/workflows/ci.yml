@@ -43,6 +43,9 @@ jobs:
       - name: Check
         run: make check
 
+      - name: Check lean lib
+        run: make check-lib
+
       - name: Lint
         run: make lint
 
@@ -51,9 +54,9 @@ jobs:
 
       - name: Build release
         run: |
-          cargo build --release --bin tvscreener
-          cargo build --release --bin tvscreener-mcp
-          cargo build --release --bin tvscreener-tui
+          cargo build --release --features apps --bin tvscreener
+          cargo build --release --features apps --bin tvscreener-mcp
+          cargo build --release --features apps --bin tvscreener-tui
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

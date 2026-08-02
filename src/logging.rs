@@ -23,9 +23,12 @@ pub fn env_debug_enabled() -> bool {
 ///
 /// Logs go to **stderr** so CLI/MCP stdout stays for data / protocol.
 ///
+/// Requires the `cli` Cargo feature (pulled in by `mcp`, `tui`, and `apps`).
+///
 /// # Panics
 ///
 /// Panics if a global subscriber was already set (call once at process start).
+#[cfg(feature = "cli")]
 pub fn init_logging() {
     use tracing_subscriber::EnvFilter;
 

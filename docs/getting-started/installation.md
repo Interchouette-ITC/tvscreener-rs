@@ -1,29 +1,32 @@
 # Installation
 
-Rust **1.85+** (`rust-version` in `Cargo.toml`; required by `mcpkit`).
+Rust **1.85+** (`rust-version` in `Cargo.toml`; required when building with `mcp` / `apps`).
 
 ## Install the CLI
 
 ```bash
 # from this repository (installs `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`)
-cargo install --path .
+cargo install --path . --features apps
 tvscreener --help
 tvscreener scan crypto --limit 5
 tvscreener-mcp
 tvscreener-tui crypto --limit 5
 ```
 
-From a checkout without installing: `cargo run -- …`.
+From a checkout without installing: `make run` / `make run-mcp` / `make run-tui` (default `--features apps`).
 
 ## From source (develop this repository)
 
 ```bash
-cargo build
-cargo test
+make build          # --features apps
+make test
+make check-lib      # lean lib only (empty features)
 make doc            # rustdoc → docs/api-rust/
 ```
 
 ## As a path dependency
+
+Default features are **lean** (no mcpkit / Ratatui / clap). Suitable for embedding the scanner client (e.g. OT):
 
 ```toml
 [dependencies]
@@ -33,15 +36,20 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 ## Features
 
-| Feature     | Purpose                                  |
-| ----------- | ---------------------------------------- |
-| _(default)_ | Library + CLI + MCP + TUI binaries       |
-| `live`      | Live HTTP tests (`make test-live`)       |
-| `regen`     | `tvscreener regen-fields` maintainer cmd |
+| Feature     | Purpose                                              |
+| ----------- | ---------------------------------------------------- |
+| _(default)_ | Lean library only                                    |
+| `cli`       | `tvscreener` CLI + `init_logging`                    |
+| `mcp`       | MCP binary + `tvscreener::mcp` (includes `cli`)      |
+| `tui`       | TUI binary + `tvscreener::tui` (includes `cli`)      |
+| `apps`      | Meta: `cli` + `mcp` + `tui`                          |
+| `live`      | Live HTTP tests (`make test-live`)                   |
+| `regen`     | `tvscreener regen-fields` (includes `cli`)           |
 
 ```bash
-cargo test --features live          # still needs TVSCREENER_LIVE=1 for e2e
-cargo run --bin tvscreener-tui -- crypto --limit 5
+cargo test --features apps,live   # still needs TVSCREENER_LIVE=1 for e2e
+cargo run --features apps --bin tvscreener-tui -- crypto --limit 5
+# or: make run-tui ARGS='crypto --limit 5'
 ```
 
 ## Field catalog regen
@@ -51,7 +59,7 @@ curated defaults/presets. Regenerate from a local [deepentropy/tvscreener](https
 
 ```bash
 make regen-fields PYTHON_ROOT=/path/to/tvscreener
-# or: cargo run --features regen --bin tvscreener -- regen-fields --python-root /path/to/tvscreener
+# or: cargo run --features apps,regen --bin tvscreener -- regen-fields --python-root /path/to/tvscreener
 ```
 
 Requires `--features regen` (optional maintainer tooling; not in the default CLI).

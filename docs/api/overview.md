@@ -21,15 +21,18 @@ Authoritative reference is **rustdoc** (`make doc` → [api-rust/tvscreener](../
 | `beautify`| Field-aware `format_cell` / `format_rows_table`, `CellTone` |
 | `ta`      | ADX / AO / Bollinger helpers for computed recommendations |
 | `resolve` | CSV token parse + `resolve_*_wires` (markets, indices, sectors, …) |
-| `logging` | `env_debug_enabled`; `init_logging`                      |
+| `logging` | `env_debug_enabled`; `init_logging` (feature `cli`)      |
 | `error`   | Errors (`thiserror`)                                     |
-| `mcp`     | MCP tools + mcpkit server (stdio / Streamable HTTP)      |
-| `tui`     | Ratatui pane (`tvscreener-tui` binary)                 |
+| `mcp`     | MCP tools + mcpkit server (feature `mcp`)                |
+| `tui`     | Ratatui pane (feature `tui`; `tvscreener-tui` binary)    |
+| `query_config` | Shared filter/sort parse for CLI / TUI / MCP        |
+
+Default features compile the lean library only. Enable `mcp` / `tui` / `apps` for app modules.
 
 ## Binaries
 
-| Binary           | How to run                                   | Role                                                                            |
-| ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
-| `tvscreener`     | `cargo install --path .` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …); no subcommand → interactive prompt |
-| `tvscreener-mcp` | same install, then `tvscreener-mcp`          | Stdio MCP by default; `--http` for Streamable HTTP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
-| `tvscreener-tui` | `cargo install --path .` then `tvscreener-tui …` | Ratatui results pane. See [TUI](../guide/tui.md).                               |
+| Binary           | How to run                                              | Role                                                                            |
+| ---------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tvscreener`     | `cargo install --path . --features apps` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …); no subcommand → interactive prompt |
+| `tvscreener-mcp` | same install, then `tvscreener-mcp`                     | Stdio MCP by default; `--http` for Streamable HTTP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
+| `tvscreener-tui` | same install, then `tvscreener-tui …`                   | Ratatui results pane. See [TUI](../guide/tui.md).                               |

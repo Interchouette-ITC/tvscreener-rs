@@ -18,7 +18,7 @@ tvscreener-mcp --http                   # 0.0.0.0:8787
 tvscreener-mcp --http --listen 127.0.0.1:8787
 
 make run-mcp
-cargo run --bin tvscreener-mcp
+cargo run --features apps --bin tvscreener-mcp
 ```
 
 HTTP listen address also accepts `TVSCREENER_MCP_ADDR`.
