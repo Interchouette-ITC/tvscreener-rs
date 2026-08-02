@@ -176,6 +176,8 @@ doc:
 		'<body><p><a href="tvscreener/index.html">tvscreener API documentation</a></p></body>' \
 		'</html>' \
 		> docs/api-rust/index.html
+	@# Prevent Jekyll from rewriting rustdoc assets on GitHub Pages.
+	@touch docs/api-rust/.nojekyll
 	@printf '%s\n' \
 		'# Rust API documentation (rustdoc)' \
 		'' \
