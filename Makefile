@@ -161,17 +161,34 @@ doc:
 	@rm -rf docs/api-rust
 	@mkdir -p docs/api-rust
 	@cp -a "$(DOC_OUT)/." docs/api-rust/
+	@# cargo doc (Rust 1.97+) omits a root index.html; GitHub Pages would
+	@# otherwise render README.md as the site landing page.
+	@printf '%s\n' \
+		'<!DOCTYPE html>' \
+		'<html lang="en">' \
+		'<head>' \
+		'<meta charset="utf-8">' \
+		'<meta http-equiv="refresh" content="0; url=tvscreener/index.html">' \
+		'<title>tvscreener — Rust API docs</title>' \
+		'<link rel="canonical" href="tvscreener/index.html">' \
+		'<script>location.replace("tvscreener/index.html");</script>' \
+		'</head>' \
+		'<body><p><a href="tvscreener/index.html">tvscreener API documentation</a></p></body>' \
+		'</html>' \
+		> docs/api-rust/index.html
+	@# Prevent Jekyll from rewriting rustdoc assets on GitHub Pages.
+	@touch docs/api-rust/.nojekyll
 	@printf '%s\n' \
 		'# Rust API documentation (rustdoc)' \
 		'' \
-		'Open [`tvscreener/index.html`](tvscreener/index.html).' \
+		'Open [`tvscreener/index.html`](tvscreener/index.html) (root [`index.html`](index.html) redirects there).' \
 		> docs/api-rust/README.md
-	@echo "docs/api-rust/ updated - open docs/api-rust/tvscreener/index.html"
+	@echo "docs/api-rust/ updated - open docs/api-rust/index.html"
 
 doc-open: doc
-	@xdg-open docs/api-rust/tvscreener/index.html 2>/dev/null \
-		|| open docs/api-rust/tvscreener/index.html 2>/dev/null \
-		|| echo "Open docs/api-rust/tvscreener/index.html in a browser"
+	@xdg-open docs/api-rust/index.html 2>/dev/null \
+		|| open docs/api-rust/index.html 2>/dev/null \
+		|| echo "Open docs/api-rust/index.html in a browser"
 
 doc-clean:
 	rm -rf docs/api-rust
@@ -179,7 +196,7 @@ doc-clean:
 	@printf '%s\n' \
 		'# Rust API documentation (rustdoc)' \
 		'' \
-		'Open [`tvscreener/index.html`](tvscreener/index.html) after `make doc`.' \
+		'Run `make doc`, then open [`index.html`](index.html) (redirects to the crate docs).' \
 		> docs/api-rust/README.md
 
 example-manual:
