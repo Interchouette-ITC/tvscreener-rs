@@ -206,7 +206,7 @@ async fn run_interactive_readline(debug: bool) -> Result<()> {
                     break;
                 }
             }
-            Err(ReadlineError::Interrupted) => continue,
+            Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {
                 println!();
                 break;
