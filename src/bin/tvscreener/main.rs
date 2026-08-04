@@ -17,10 +17,13 @@ mod output;
 #[cfg(feature = "regen")]
 mod regen;
 
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
+use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{ArgAction, CommandFactory, Parser, Subcommand, ValueEnum};
+use rustyline::error::ReadlineError;
+use rustyline::DefaultEditor;
 use tvscreener::core::Screener;
 use tvscreener::field::{
     all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
@@ -165,6 +168,10 @@ async fn main() -> Result<()> {
     }
 }
 
+fn history_path() -> Option<PathBuf> {
+    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".tvscreener_history"))
+}
+
 async fn run_interactive(debug: bool) -> Result<()> {
     let mut stdout = io::stdout();
     writeln!(
@@ -173,6 +180,49 @@ async fn run_interactive(debug: bool) -> Result<()> {
     )?;
     stdout.flush()?;
 
+    if io::stdin().is_terminal() {
+        run_interactive_readline(debug).await
+    } else {
+        run_interactive_plain(debug).await
+    }
+}
+
+async fn run_interactive_readline(debug: bool) -> Result<()> {
+    let mut rl = DefaultEditor::new()?;
+    let hist = history_path();
+    if let Some(path) = hist.as_ref() {
+        let _ = rl.load_history(path);
+    }
+
+    loop {
+        match rl.readline("tvscreener> ") {
+            Ok(line) => {
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                let _ = rl.add_history_entry(trimmed);
+                if handle_interactive_line(trimmed, debug).await? {
+                    break;
+                }
+            }
+            Err(ReadlineError::Interrupted) => continue,
+            Err(ReadlineError::Eof) => {
+                println!();
+                break;
+            }
+            Err(err) => return Err(err.into()),
+        }
+    }
+
+    if let Some(path) = hist.as_ref() {
+        let _ = rl.save_history(path);
+    }
+    Ok(())
+}
+
+async fn run_interactive_plain(debug: bool) -> Result<()> {
+    let mut stdout = io::stdout();
     loop {
         write!(stdout, "tvscreener> ")?;
         stdout.flush()?;
@@ -186,35 +236,43 @@ async fn run_interactive(debug: bool) -> Result<()> {
         if trimmed.is_empty() {
             continue;
         }
-        if matches!(trimmed.to_ascii_lowercase().as_str(), "quit" | "exit" | "q") {
+        if handle_interactive_line(trimmed, debug).await? {
             break;
-        }
-        if matches!(trimmed, "help" | "--help" | "-h") {
-            let _ = Cli::command().print_help();
-            writeln!(stdout)?;
-            continue;
-        }
-
-        let mut argv = vec!["tvscreener".to_string()];
-        argv.extend(trimmed.split_whitespace().map(str::to_string));
-        match Cli::try_parse_from(&argv) {
-            Ok(parsed) => match parsed.command {
-                Some(command) => {
-                    if let Err(err) = run_command(command, debug || parsed.debug).await {
-                        eprintln!("{err:#}");
-                    }
-                }
-                None => {
-                    eprintln!("enter a subcommand (e.g. scan crypto --limit 5), or quit");
-                }
-            },
-            Err(err) => {
-                // Clap already formats help / usage; print without exiting the prompt.
-                eprint!("{err}");
-            }
         }
     }
     Ok(())
+}
+
+/// Returns `true` when the interactive session should end.
+async fn handle_interactive_line(trimmed: &str, debug: bool) -> Result<bool> {
+    if matches!(trimmed.to_ascii_lowercase().as_str(), "quit" | "exit" | "q") {
+        return Ok(true);
+    }
+    if matches!(trimmed, "help" | "--help" | "-h") {
+        let _ = Cli::command().print_help();
+        println!();
+        return Ok(false);
+    }
+
+    let mut argv = vec!["tvscreener".to_string()];
+    argv.extend(trimmed.split_whitespace().map(str::to_string));
+    match Cli::try_parse_from(&argv) {
+        Ok(parsed) => match parsed.command {
+            Some(command) => {
+                if let Err(err) = run_command(command, debug || parsed.debug).await {
+                    eprintln!("{err:#}");
+                }
+            }
+            None => {
+                eprintln!("enter a subcommand (e.g. scan crypto --limit 5), or quit");
+            }
+        },
+        Err(err) => {
+            // Clap already formats help / usage; print without exiting the prompt.
+            eprint!("{err}");
+        }
+    }
+    Ok(false)
 }
 
 async fn run_command(command: Commands, debug: bool) -> Result<()> {

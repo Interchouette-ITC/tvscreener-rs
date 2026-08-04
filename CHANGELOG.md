@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CLI
+
+- Interactive prompt: ↑/↓ recall prior commands (via rustyline); history persisted in `~/.tvscreener_history`
+
 ## [1.1.0] - 2026-08-02
 
 ### Packaging
