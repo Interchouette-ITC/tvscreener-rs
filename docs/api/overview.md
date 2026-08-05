@@ -34,5 +34,5 @@ Default features compile the lean library only. Enable `mcp` / `tui` / `apps` fo
 | Binary           | How to run                                              | Role                                                                            |
 | ---------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `tvscreener`     | `cargo install --path . --features apps` then `tvscreener …` | Default CLI (`scan`, `payload`, `presets`, `fields`, …); no subcommand → interactive prompt |
-| `tvscreener-mcp` | same install, then `tvscreener-mcp`                     | Stdio MCP by default; `--http` for Streamable HTTP. See [MCP server](../../README.md#mcp-server-ai-assistants). |
+| `tvscreener-mcp` | same install, then `tvscreener-mcp`                     | Stdio MCP by default; `--http` for Streamable HTTP. See [MCP server](../README.md#mcp-server-ai-assistants). |
 | `tvscreener-tui` | same install, then `tvscreener-tui …`                   | Ratatui results pane. See [TUI](../guide/tui.md).                               |

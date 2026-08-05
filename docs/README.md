@@ -1,217 +1,253 @@
 # tvscreener-rs
 
-This repository is a **Rust port and translation** of the Python library **[deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)** by [deepentropy](https://github.com/deepentropy). It is **not** a TradingView product and **is not affiliated with TradingView**. It uses the same unofficial scanner HTTP endpoints and JSON payload ideas as the Python client. Your use of TradingView data remains subject to [TradingView’s terms](https://www.tradingview.com/policies/).
+Unofficial **Rust** TradingView Screener HTTP client: Stock, Crypto, Forex, Bond, Futures, and Coin.
 
-| What                     | Where                                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| **Upstream (Python)**    | [github.com/deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)           |
-| **Python documentation** | [deepentropy.github.io/tvscreener/docs/](https://deepentropy.github.io/tvscreener/docs/) |
-| **This crate (Rust)**    | **tvscreener-rs** - Rust port (Docker Hub: `interchouette/tvscreener-rs`) |
-
-## License and attribution
-
-- **License:** [Apache-2.0](../LICENSE).
-- Upstream’s `pyproject.toml` may list MIT; for **this port**, treat **Apache-2.0** as authoritative.
-- API shape, field names, and scanner behavior are derived from **deepentropy/tvscreener**; please cite that project when referring to the original design.
+Port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). **Not affiliated with TradingView.** Use is subject to [TradingView’s terms](https://www.tradingview.com/policies/).
 
 ## Features
 
-- **6 screener types**: Stock, Crypto, Forex, Bond, Futures, and Coin
-- **Filter builders**: `FieldCondition` + `FilterOperator` (same wire ops as the Python client)
-- **Fields & presets**: `FieldDef`, `get_preset` / `list_presets`, curated defaults
-- **Async HTTP**: `get()` / `stream()` over `reqwest` + rustls
-- **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (and `format_value` / `format_row`)
+- Query **Stock**, **Crypto**, **Forex**, **Bond**, **Futures**, and **Coin** screeners
+- **13,000+ fields** embedded in the catalog (all time intervals included)
+- **Fluent builders**: `select()`, `where_condition()`, `set_range()`, `search()`
+- **Field discovery**: `search_fields`, `list_fields`, `resolve_field`
+- **Field presets**: curated groups (`stock_valuation`, `crypto_price`, …)
+- **Async HTTP**: `get()` / `stream()` via `reqwest` + rustls
 - **Results**: `Vec<ScreenerRow>` (`symbol` + label-keyed `data` map)
-- **TUI**: `tvscreener-tui` Ratatui results pane
+- **Terminal formatting**: field-aware `format_cell` / `format_rows_table` (K/M/B, %, ratings)
+- **CLI** `tvscreener` (`scan` table/json/row, `payload`, catalog commands)
+- **TUI** `tvscreener-tui`: results, builder, payload JSON, codegen
+- **MCP** `tvscreener-mcp` for AI assistants
 
-## Quick example
+## Quick start
+
+### Library
+
+```toml
+# Cargo.toml (path or git)
+tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
+# or: tvscreener = { path = "../tvscreener-rs" }
+```
 
 ```rust
 use tvscreener::core::crypto::CryptoScreener;
-use tvscreener::field::get_preset;
 use tvscreener::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut screener = CryptoScreener::new();
-    screener.select(get_preset("crypto_price")?).set_range(0, 5);
-    let rows = screener.get().await?;
-    for row in rows {
+    let rows = CryptoScreener::new().get().await?;
+    println!("{} rows", rows.len());
+    Ok(())
+}
+```
+
+### Install binaries
+
+```bash
+cargo install --path . --features apps   # installs tvscreener, tvscreener-mcp, tvscreener-tui
+```
+
+From a checkout without installing, use `make run` / `make run-mcp` / `make run-tui` (default `--features apps`) or `cargo run --features apps --bin …`.
+
+### CLI
+
+```bash
+tvscreener --help
+tvscreener                              # interactive prompt (quit / exit to leave)
+tvscreener payload crypto --limit 2     # print request JSON only
+tvscreener scan crypto --limit 5        # live HTTP (table)
+tvscreener scan crypto --limit 5 --json
+tvscreener scan stock --preset stock_price --index SP500 --limit 10 --color always
+tvscreener scan stock --filter close:greater:100 --sort-by volume
+tvscreener payload stock --filters '[{"field":"close","op":">","value":100}]'
+
+# checkout shortcuts:
+make run                                # --help
+make run ARGS='scan crypto --limit 5'
+cargo run --features apps --bin tvscreener -- scan crypto --limit 5
+```
+
+### TUI
+
+Interactive Ratatui pane: Results table, Builder (asset / preset / limit / search / sort / markets / index / filters), Payload JSON, and Codegen (Rust + CLI).
+
+```bash
+tvscreener-tui --help
+tvscreener-tui crypto --preset crypto_price --limit 10
+
+# checkout shortcuts:
+make run-tui
+make run-tui ARGS='crypto --preset crypto_price --limit 10'
+cargo run --features apps --bin tvscreener-tui -- crypto --preset crypto_price --limit 10
+```
+
+Keys (short): `Tab` / `1`–`4` switch views · `←`/`→` asset/preset · `r` refresh · `a` watch · `c` copy · `h` help · `q` quit.
+
+Full key map and Builder details: [`guide/tui.md`](guide/tui.md).
+
+### All six screeners
+
+```rust
+use tvscreener::core::bond::BondScreener;
+use tvscreener::core::coin::CoinScreener;
+use tvscreener::core::crypto::CryptoScreener;
+use tvscreener::core::forex::ForexScreener;
+use tvscreener::core::futures::FuturesScreener;
+use tvscreener::core::stock::StockScreener;
+
+let stocks = StockScreener::new().get().await?;
+let crypto = CryptoScreener::new().get().await?;
+let forex = ForexScreener::new().get().await?;
+let bonds = BondScreener::new().get().await?;
+let futures = FuturesScreener::new().get().await?;
+let coins = CoinScreener::new().get().await?;
+```
+
+## Fluent API
+
+```rust
+use serde_json::json;
+use tvscreener::core::stock::StockScreener;
+use tvscreener::field::get_preset;
+use tvscreener::filter::{FieldCondition, FilterOperator};
+use tvscreener::Result;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut ss = StockScreener::new();
+    ss.select(get_preset("stock_price")?)
+        .where_condition(FieldCondition::new(
+            "market_cap_basic",
+            FilterOperator::Above,
+            json!(1e9),
+        ))?
+        .where_condition(FieldCondition::new(
+            "change", // Change %
+            FilterOperator::Above,
+            json!(5.0),
+        ))?
+        .set_range(0, 50);
+
+    let rows = ss.get().await?;
+    for row in &rows {
         println!("{} {:?}", row.symbol, row.data.get("Price"));
     }
     Ok(())
 }
 ```
 
-## Documentation map
+## Field discovery and presets
 
-| Section                                              | Description                                    |
-| ---------------------------------------------------- | ---------------------------------------------- |
-| [Installation](getting-started/installation.md)      | Add the crate / build from source              |
-| [Quick start](getting-started/quickstart.md)         | First scan in a few minutes                    |
-| [Filtering](guide/filtering.md)                      | Operators, conditions, merge rules             |
-| [Selecting fields](guide/selecting-fields.md)        | Columns, presets, `select_all`                 |
-| [Sorting & range](guide/sorting-pagination.md)       | `sort_by`, `set_range`                         |
-| [Streaming](guide/streaming.md)                      | Periodic `stream` polls                        |
-| [TUI](guide/tui.md)                                  | `tvscreener-tui` views, builder, payload       |
-| [MCP](guide/mcp.md)                                  | `tvscreener-mcp` stdio and Streamable HTTP     |
-| [Screeners](guide/screeners.md)                      | Stock / crypto / forex / bond / futures / coin |
-| [Examples](examples/crypto.md)                       | Walkthrough of `example_crypto`                |
-| [Manual test plan](MANUAL_TEST_PLAN.md)              | How to run tests                               |
-| [API overview](api/overview.md)                      | Modules and main types                         |
-| [Rust API (rustdoc)](api-rust/tvscreener/index.html) | Generated with `make doc`                      |
-| [Changelog](changelog.md)                            | Version history                                |
+```rust
+use tvscreener::field::{get_preset, list_presets, search_fields, Asset};
 
-## What this crate provides
+let rsi = search_fields(Asset::Stock, "rsi");
+println!("{} RSI-related fields", rsi.len());
 
-Typed scanner clients (`StockScreener`, `CryptoScreener`, …), an embedded field catalog, tests (default and optional live HTTP), CLI **`tvscreener`**, TUI **`tvscreener-tui`**, and MCP **`tvscreener-mcp`**.
-
-## Depending on this crate
-
-Package name in `Cargo.toml` is **`tvscreener`** (repo folder may be `tvscreener-rs`). Use a path or git dependency:
-
-```toml
-tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branch = "dev" }
-# or: tvscreener = { path = "../tvscreener-rs" }
+println!("{:?}", list_presets());
+let fields = get_preset("stock_valuation")?;
 ```
 
-**This crate’s Cargo features:**
+| Category | Presets |
+| -------- | ------- |
+| Stock | `stock_price`, `stock_volume`, `stock_valuation`, `stock_dividend`, `stock_profitability`, `stock_performance`, `stock_oscillators`, `stock_moving_averages`, `stock_earnings` |
+| Crypto | `crypto_price`, `crypto_volume`, `crypto_performance`, `crypto_technical` |
+| Forex | `forex_price`, `forex_performance`, `forex_technical` |
+| Bond | `bond_basic`, `bond_yield`, `bond_maturity` |
+| Futures | `futures_price`, `futures_technical` |
+| Coin | `coin_price`, `coin_market` |
 
-| Feature     | What it enables                                      |
-| ----------- | ---------------------------------------------------- |
-| _(default)_ | Lean library only (no mcpkit / Ratatui / clap)       |
-| `cli`       | `tvscreener` CLI binary + `init_logging`             |
-| `mcp`       | `tvscreener-mcp` + `tvscreener::mcp` (includes `cli`) |
-| `tui`       | `tvscreener-tui` + `tvscreener::tui` (includes `cli`) |
-| `apps`      | Meta: `cli` + `mcp` + `tui` (Make / Docker / install) |
-| `live`      | Live HTTP tests (`make test-live`)                   |
-| `regen`     | `tvscreener regen-fields` maintainer cmd (includes `cli`) |
+Time-interval variants (1m, 5, 15, 30, 60, 120, 240, 1W, 1M, …) are separate catalog entries. Search for them (e.g. `search_fields(Asset::Stock, "RSI|60")`) or pick them from `list_fields`.
 
-Path/git consumers (e.g. OT) get the lean default. Repo tooling uses `--features apps` via Make.
+## Streaming
 
-Scanner POSTs happen when you call `get()` / `stream()` (or `tvscreener scan` / `tvscreener-tui`) at runtime.
+```rust
+use tvscreener::core::crypto::CryptoScreener;
+use tvscreener::Result;
 
-### Logging / debug
+#[tokio::main]
+async fn main() -> Result<()> {
+    let screener = CryptoScreener::new();
+    // interval seconds, optional max iterations
+    let snapshots = screener.inner().stream(10.0, Some(5)).await;
+    println!("{} polls", snapshots.len());
+    Ok(())
+}
+```
 
-Library emits [`tracing`](https://docs.rs/tracing) events. All three binaries call `init_logging()`:
+## MCP server (AI assistants)
 
 ```bash
-TVSCREENER_DEBUG=1 tvscreener scan crypto --limit 3
-RUST_LOG=tvscreener=debug,info tvscreener-mcp
+tvscreener-mcp --help
+tvscreener-mcp                          # stdio (default; Cursor / local clients)
+tvscreener-mcp --http                   # Streamable HTTP on 0.0.0.0:6790
+tvscreener-mcp --http --listen 127.0.0.1:6790
+
+# checkout shortcuts:
+make run-mcp
+cargo run --features apps --bin tvscreener-mcp
 ```
 
-Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: `set_print_request(true)`).
+**Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
 
-Errors: library uses **`thiserror`** (`TvscreenerError`); binaries use **`anyhow`** at the process edge.
+Docker image (CLI + TUI + MCP HTTP on **6790**), public pulls:
 
-This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is `tvscreener-mcp` (stdio locally; Streamable HTTP with `--http` or via Docker on port **6790**).
+- Docker Hub: [`interchouette/tvscreener-rs`](https://hub.docker.com/r/interchouette/tvscreener-rs)
+- Docker Hub (legacy): [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs)
+- GHCR: [`ghcr.io/interchouette/tvscreener-rs`](https://github.com/Interchouette?tab=packages)
+- GHCR: [`ghcr.io/interchouette-itc/tvscreener-rs`](https://github.com/orgs/Interchouette-ITC/packages)
 
-## Results
+```bash
+docker pull interchouette/tvscreener-rs:dev
+docker run -d -p 6790:6790 interchouette/tvscreener-rs:dev          # MCP HTTP only
+docker run -it -p 6790:6790 interchouette/tvscreener-rs:dev         # TUI + MCP
+docker run --rm interchouette/tvscreener-rs:dev tvscreener --help   # one-shot CLI
+```
 
-`get()` returns **`Vec<ScreenerRow>`**: each row has a `symbol` string and a `data` map keyed by **column label** → JSON value.
+Details and tags: [`docker/README.md`](../docker/README.md).
 
-Terminal helpers: `format_cell` / `format_rows_table` (field-aware), plus `util::format_value` / `util::format_row`.
+```bash
+make docker-build-dev && make docker-push-dev   # :dev when you want (local)
+# GitHub Actions → "CI/CD Image dev" (workflow_dispatch) for :dev
+# GitHub Release tag vX.Y.Z → pushes :X.Y.Z and :latest (+ binaries)
+make version-show
+```
+
+## Documentation
+
+| Guide | Description |
+| ----- | ----------- |
+| [`OVERVIEW.md`](OVERVIEW.md) | Overview, build, Docker, module map |
+| [Quick start](getting-started/quickstart.md) | First scan in a few minutes |
+| [Filtering](guide/filtering.md) | Operators, conditions, merge rules |
+| [Selecting fields](guide/selecting-fields.md) | Columns, presets, `select_all` |
+| [Streaming](guide/streaming.md) | Periodic `stream` polls |
+| [TUI](guide/tui.md) | Ratatui: Results, Builder, Payload, Codegen |
+| [MCP](guide/mcp.md) | Stdio and Streamable HTTP (`tvscreener-mcp`) |
+| [Screeners](guide/screeners.md) | All six typed clients |
+| [Manual test plan](MANUAL_TEST_PLAN.md) | How to run tests |
+| [`CHANGELOG.md`](CHANGELOG.md) | Semver notes |
+| `make doc` → rustdoc | [`api-rust/tvscreener/`](api-rust/tvscreener/index.html) |
 
 ## Build and verify
 
-Rust **1.85+** (`rust-version` in `Cargo.toml`; required when building with `mcp` / `apps`).
+Rust **1.85+**.
 
 ```bash
-make test          # default test suite (--features apps)
-make check-lib     # lean lib only (empty features; no mcpkit/Ratatui)
-make lint          # fmt --check + clippy
-make verify        # format-check + clippy + check-lib + tests
+make test          # default suite (offline)
+make lint
+make verify        # format-check + clippy + tests
 make test-live     # against TradingView (TVSCREENER_LIVE=1)
-make doc           # rustdoc → docs/api-rust/
-make help          # all targets
+make doc           # API HTML under docs/api-rust/
+make run           # CLI (ARGS=…, default --help)
+make run-mcp       # MCP stdio server
+make run-tui       # TUI (ARGS=…, default --help)
+make help
 ```
 
-Or raw cargo:
+## Origin
 
-```bash
-cargo build
-cargo test
-cargo check --bins --examples
-cargo doc --no-deps --open
-```
+Rust port of [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener). Same unofficial TradingView scanner HTTP surface; this crate adds a first-class CLI, MCP server, and Ratatui TUI. See [License](#license).
 
-## Docker (Hub + GHCR)
+## License
 
-Public pulls: Docker Hub `interchouette/tvscreener-rs` (legacy `gregoshop/tvscreener-rs`), `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`.
-
-```bash
-make docker-build-dev && make docker-push-dev   # :dev on demand
-make version-show                               # suggested GitHub Release tag vX.Y.Z
-```
-
-Entrypoint starts TUI + MCP HTTP on **6790** when attached with a TTY; `-d` serves MCP only. CLI one-shot / interactive overrides are supported. Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
-
-Details: [`docker/README.md`](../docker/README.md).
-
-## Examples
-
-```bash
-cargo run --example manual_test
-cargo run --example example_crypto    # POST to scanner.tradingview.com
-```
-
-`example_crypto` requires network. See [MANUAL_TEST_PLAN.md](MANUAL_TEST_PLAN.md).
-
-## Tests
-
-| Kind        | Command                                                          |
-| ----------- | ---------------------------------------------------------------- |
-| **Default** | `make test` / `cargo test`                                       |
-| **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`)        |
-| **Verify**  | `make verify` (fmt + clippy + tests)                             |
-
-Default suite does not call the scanner. Live tests need the `live` feature and `TVSCREENER_LIVE=1`.
-
-## MCP binary (`mcpkit`)
-
-```bash
-cargo run --features apps --bin tvscreener-mcp
-# or: make run-mcp / tvscreener-mcp after cargo install --path . --features apps
-```
-
-Tools: `discover_fields`, `list_field_types`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets`, `get_preset`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_markets`, `list_index_symbols`, `build_payload`, `search_by_index`.
-
-## Module layout
-
-```
-src/
-  lib.rs           ScreenerRow, re-exports
-  error.rs         TvscreenerError
-  filter.rs        FilterOperator, ExtraFilter, Filter, FieldCondition
-  util.rs          get_url, headers, millify, format_value / format_row
-  beautify.rs      format_cell / format_rows_table (field-aware tones)
-  ta.rs            ADX / AO / Bollinger helpers for computed recommendations
-  logging.rs       env_debug_enabled; init_logging (feature `cli`)
-  core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
-  field/           FieldDef (label, field_name, format, interval, historical)
-  mcp/             tools + mcpkit server (feature `mcp`)
-  tui/             Ratatui pane (feature `tui`; `tvscreener-tui`)
-  bin/tvscreener/main.rs
-  bin/tvscreener_mcp.rs
-  bin/tvscreener_tui.rs
-  resolve.rs       Shared market/index/sector wire resolution
-examples/
-tests/
-docs/
-docker/
-```
-
-## CLI (`tvscreener`) / MCP (`tvscreener-mcp`)
-
-```bash
-cargo install --path . --features apps
-tvscreener --help
-tvscreener                 # interactive prompt
-tvscreener scan crypto --limit 5
-tvscreener scan stock --preset stock_price --index SP500 --limit 10
-tvscreener-mcp             # stdio
-tvscreener-mcp --http      # Streamable HTTP on :6790
-```
-
-Checkout without install: `make run` / `make run-mcp`, or `cargo run --features apps --bin …`.
-CLI checks: `tests/cli.rs` (included in `make test`).
+[Apache-2.0](../LICENSE). Based on [deepentropy/tvscreener](https://github.com/deepentropy/tvscreener).
