@@ -179,8 +179,8 @@ async fn main() -> Result<()> {
 ```bash
 tvscreener-mcp --help
 tvscreener-mcp                          # stdio (default; Cursor / local clients)
-tvscreener-mcp --http                   # Streamable HTTP on 0.0.0.0:8787
-tvscreener-mcp --http --listen 127.0.0.1:8787
+tvscreener-mcp --http                   # Streamable HTTP on 0.0.0.0:6790
+tvscreener-mcp --http --listen 127.0.0.1:6790
 
 # checkout shortcuts:
 make run-mcp
@@ -189,7 +189,7 @@ cargo run --features apps --bin tvscreener-mcp
 
 **Tools include:** `discover_fields`, `custom_query`, `search_stocks` / `search_crypto` / `search_forex`, `get_top_movers`, `list_presets` / `get_preset`, plus catalog helpers (`list_markets`, `list_sectors`, `list_countries`, `list_industries`, `list_exchanges`, `list_ratings`, `list_filter_operators`, `list_index_symbols`, `build_payload`, `search_by_index`, …).
 
-Docker image (CLI + TUI + MCP HTTP on **8787**), public pulls:
+Docker image (CLI + TUI + MCP HTTP on **6790**), public pulls:
 
 - Docker Hub: [`interchouette/tvscreener-rs`](https://hub.docker.com/r/interchouette/tvscreener-rs)
 - Docker Hub (legacy): [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs)
@@ -198,8 +198,8 @@ Docker image (CLI + TUI + MCP HTTP on **8787**), public pulls:
 
 ```bash
 docker pull interchouette/tvscreener-rs:dev
-docker run -d -p 8787:8787 interchouette/tvscreener-rs:dev          # MCP HTTP only
-docker run -it -p 8787:8787 interchouette/tvscreener-rs:dev         # TUI + MCP
+docker run -d -p 6790:6790 interchouette/tvscreener-rs:dev          # MCP HTTP only
+docker run -it -p 6790:6790 interchouette/tvscreener-rs:dev         # TUI + MCP
 docker run --rm interchouette/tvscreener-rs:dev tvscreener --help   # one-shot CLI
 ```
 

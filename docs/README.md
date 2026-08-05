@@ -104,7 +104,7 @@ Per-screener debug (URL + payload at DEBUG): `screener.set_debug(true)` (alias: 
 
 Errors: library uses **`thiserror`** (`TvscreenerError`); binaries use **`anyhow`** at the process edge.
 
-This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is `tvscreener-mcp` (stdio locally; Streamable HTTP with `--http` or via Docker on port **8787**).
+This repository does **not** ship a browser UI or host-app HTTP routes. Terminal UI: `make run-tui` / `tvscreener-tui`. MCP is `tvscreener-mcp` (stdio locally; Streamable HTTP with `--http` or via Docker on port **6790**).
 
 ## Results
 
@@ -144,7 +144,7 @@ make docker-build-dev && make docker-push-dev   # :dev on demand
 make version-show                               # suggested GitHub Release tag vX.Y.Z
 ```
 
-Entrypoint starts TUI + MCP HTTP on **8787** when attached with a TTY; `-d` serves MCP only. CLI one-shot / interactive overrides are supported. Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
+Entrypoint starts TUI + MCP HTTP on **6790** when attached with a TTY; `-d` serves MCP only. CLI one-shot / interactive overrides are supported. Tags `:dev` (manual), `:X.Y.Z` + `:latest` (GitHub Release).
 
 Details: [`docker/README.md`](../docker/README.md).
 
@@ -210,7 +210,7 @@ tvscreener                 # interactive prompt
 tvscreener scan crypto --limit 5
 tvscreener scan stock --preset stock_price --index SP500 --limit 10
 tvscreener-mcp             # stdio
-tvscreener-mcp --http      # Streamable HTTP on :8787
+tvscreener-mcp --http      # Streamable HTTP on :6790
 ```
 
 Checkout without install: `make run` / `make run-mcp`, or `cargo run --features apps --bin …`.

@@ -3,10 +3,10 @@ services:
     container_name: tvscreener-rs-test
     image: interchouette/tvscreener-rs:latest
     ports:
-      - "8787:8787"
+      - "6790:6790"
     environment:
       ENABLE_MCP: "1"
-      TVSCREENER_MCP_ADDR: "0.0.0.0:8787"
+      TVSCREENER_MCP_ADDR: "0.0.0.0:6790"
     stdin_open: true
     tty: true
     restart: "no"
