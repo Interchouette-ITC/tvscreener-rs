@@ -45,7 +45,6 @@ CI ?= 0
 	docker-push-dev-hub docker-push-dev-ghcr-personal docker-push-dev-ghcr-itc \
 	docker-push-release docker-push-release-hub \
 	docker-push-release-ghcr-personal docker-push-release-ghcr-itc \
-	docker-hub-description \
 	docker-run docker-run-test docker-stop docker-inspect \
 	version-show version-bump-patch version-bump-minor version-bump-major version-set \
 	clean
@@ -80,7 +79,6 @@ help:
 	@echo "  make docker-build    Build $(HUB_IMAGE):$(TAG) (+ :$(APP_VERSION))"
 	@echo "  make docker-build-dev  Build and tag :dev (Hub + Hub org + GHCR)"
 	@echo "  make docker-push-dev   Push :dev (local interactive logins)"
-	@echo "  make docker-hub-description  Sync Hub short + full description"
 	@echo "  make docker-push-release  Tag release images (CI uses split push targets)"
 	@echo "  make docker-push     Deprecated alias → prefer docker-push-dev / GitHub Release"
 	@echo "  make docker-run      Compose prod up -d"
@@ -288,12 +286,6 @@ docker-build-dev:
 docker-push-dev-hub:
 	docker push $(HUB_IMAGE):dev
 	docker push $(HUB_MIRROR_IMAGE):dev
-	$(MAKE) docker-hub-description
-
-## Sync short + full description on Docker Hub (interchouette + gregoshop mirror).
-## Uses `docker login` credentials or DOCKER_USERNAME / DOCKER_PASSWORD.
-docker-hub-description:
-	python3 docker/sync-hub-description.py
 
 docker-push-dev-ghcr-personal:
 	docker push $(GHCR_PERSONAL_IMAGE):dev
@@ -325,7 +317,6 @@ docker-push-release-hub:
 	docker tag $(HUB_IMAGE):latest $(HUB_MIRROR_IMAGE):latest
 	docker push $(HUB_MIRROR_IMAGE):$(APP_VERSION)
 	docker push $(HUB_MIRROR_IMAGE):latest
-	$(MAKE) docker-hub-description
 
 docker-push-release-ghcr-personal:
 	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_PERSONAL_IMAGE):$(APP_VERSION)

@@ -78,7 +78,7 @@ AI clients that support Streamable HTTP can use `http://localhost:6790/mcp` when
 | Versioned release images `:X.Y.Z` + `:latest` | Cut with GitHub Release tag `vX.Y.Z` (= `Cargo.toml`) |
 | Release binaries (`tvscreener`, `tvscreener-mcp`, `tvscreener-tui`) | Attached on that Release |
 
-First product release: tag **`v1.0.0`** when `Cargo.toml` is `1.0.0` (see root [`CHANGELOG.md`](../CHANGELOG.md)).
+First product release: tag **`v1.0.0`** when `Cargo.toml` is `1.0.0` (see [`CHANGELOG.md`](../docs/CHANGELOG.md)).
 
 To cut a release:
 
@@ -113,8 +113,6 @@ make version-show
 | `DOCKER_USERNAME` / `DOCKER_PASSWORD` | Docker Hub (`interchouette/...` and legacy `gregoshop/...`) |
 | `GHCR_USERNAME` / `GHCR_PAT` | Extra personal GHCR mirror (optional for docs) |
 | `GHCR_USERNAME_ITC` / `GHCR_PAT_ITC` | `ghcr.io/interchouette/...` and `ghcr.io/interchouette-itc/...` |
-
-Hub **Overview** text is maintained in [`DOCKERHUB.md`](DOCKERHUB.md) and synced with `make docker-hub-description` (also after Hub image pushes).
 
 ## Notes
 
