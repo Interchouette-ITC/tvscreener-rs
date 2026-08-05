@@ -9,7 +9,7 @@
 //! tvscreener-mcp
 //! tvscreener-mcp --http
 //! tvscreener-mcp --http --listen 0.0.0.0:6790
-//! TVSCREENER_MCP_HTTP=1 tvscreener-mcp
+//! MCP_HTTP=true tvscreener-mcp
 //! ```
 
 use anyhow::Result;
@@ -23,8 +23,12 @@ use tvscreener::mcp::server::{run, run_http, DEFAULT_HTTP_LISTEN};
     version
 )]
 struct Cli {
-    /// Serve Streamable HTTP instead of stdio (also: `TVSCREENER_MCP_HTTP=1`).
-    #[arg(long, env = "TVSCREENER_MCP_HTTP")]
+    /// Serve Streamable HTTP instead of stdio.
+    #[arg(
+        long,
+        env = "MCP_HTTP",
+        value_parser = clap::builder::BoolishValueParser::new()
+    )]
     http: bool,
 
     /// HTTP bind address when `--http` is set (also: `TVSCREENER_MCP_ADDR`).
