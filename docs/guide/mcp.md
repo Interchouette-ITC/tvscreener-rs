@@ -14,8 +14,8 @@ and scanner clients as the library and CLI.
 ```bash
 tvscreener-mcp --help
 tvscreener-mcp                          # stdio
-tvscreener-mcp --http                   # 0.0.0.0:8787
-tvscreener-mcp --http --listen 127.0.0.1:8787
+tvscreener-mcp --http                   # 0.0.0.0:6790
+tvscreener-mcp --http --listen 127.0.0.1:6790
 
 make run-mcp
 cargo run --features apps --bin tvscreener-mcp
@@ -25,11 +25,11 @@ HTTP listen address also accepts `TVSCREENER_MCP_ADDR`.
 
 ## Docker
 
-The image runs MCP over **HTTP on port 8787** (not stdio). See
+The image runs MCP over **HTTP on port 6790** (not stdio). See
 [`docker/README.md`](../../docker/README.md).
 
 ```bash
-docker run -d -p 8787:8787 interchouette/tvscreener-rs:dev
+docker run -d -p 6790:6790 interchouette/tvscreener-rs:dev
 ```
 
 ## Tools (summary)

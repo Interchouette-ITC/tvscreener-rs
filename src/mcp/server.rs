@@ -289,7 +289,7 @@ pub async fn run() -> Result<(), McpError> {
 }
 
 /// Default HTTP bind address for Streamable MCP (`mcpkit-axum`).
-pub const DEFAULT_HTTP_LISTEN: &str = "0.0.0.0:8787";
+pub const DEFAULT_HTTP_LISTEN: &str = "0.0.0.0:6790";
 
 /// Serves MCP over Streamable HTTP until the process is stopped.
 ///

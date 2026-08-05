@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 const BIN_DIR: &str = "/usr/local/bin";
-const DEFAULT_MCP_ADDR: &str = "0.0.0.0:8787";
+const DEFAULT_MCP_ADDR: &str = "0.0.0.0:6790";
 
 fn main() {
     let mcp_addr = env::var("TVSCREENER_MCP_ADDR").unwrap_or_else(|_| DEFAULT_MCP_ADDR.to_string());

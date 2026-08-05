@@ -1,6 +1,6 @@
 #
 # Multi-binary image: tvscreener, tvscreener-mcp, tvscreener-tui.
-# Default: TUI + MCP HTTP on :8787 (see tvscreener-entrypoint).
+# Default: TUI + MCP HTTP on :6790 (see tvscreener-entrypoint).
 # Build context: repository root.
 #
 #   docker build -f docker/Dockerfile -t interchouette/tvscreener-rs:latest .
@@ -94,9 +94,9 @@ USER nonroot:nonroot
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_DIR=/etc/ssl/certs \
     ENABLE_MCP=1 \
-    TVSCREENER_MCP_ADDR=0.0.0.0:8787
+    TVSCREENER_MCP_ADDR=0.0.0.0:6790
 
-EXPOSE 8787
+EXPOSE 6790
 
 LABEL org.opencontainers.image.title="tvscreener-rs" \
       org.opencontainers.image.description="Unofficial TradingView screener API client (Rust) - CLI, TUI, and MCP" \

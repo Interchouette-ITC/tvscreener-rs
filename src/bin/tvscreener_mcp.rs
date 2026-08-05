@@ -8,7 +8,7 @@
 //! ```bash
 //! tvscreener-mcp
 //! tvscreener-mcp --http
-//! tvscreener-mcp --http --listen 0.0.0.0:8787
+//! tvscreener-mcp --http --listen 0.0.0.0:6790
 //! TVSCREENER_MCP_HTTP=1 tvscreener-mcp
 //! ```
 

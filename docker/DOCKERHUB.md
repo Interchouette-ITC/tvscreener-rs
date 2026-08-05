@@ -21,14 +21,14 @@ Size-optimized multi-stage build → distroless `cc-debian13` (Debian 13, non-ro
 ```bash
 docker pull interchouette/tvscreener-rs:dev
 
-# MCP alone (Streamable HTTP on :8787 → /mcp)
-docker run -d -p 8787:8787 interchouette/tvscreener-rs:dev
+# MCP alone (Streamable HTTP on :6790 → /mcp)
+docker run -d -p 6790:6790 interchouette/tvscreener-rs:dev
 
 # TUI + MCP (default when attached with a TTY)
-docker run -it -p 8787:8787 interchouette/tvscreener-rs:dev
+docker run -it -p 6790:6790 interchouette/tvscreener-rs:dev
 
 # Interactive CLI + MCP
-docker run -it -p 8787:8787 interchouette/tvscreener-rs:dev tvscreener
+docker run -it -p 6790:6790 interchouette/tvscreener-rs:dev tvscreener
 
 # One-shot CLI (print and exit; MCP not started)
 docker run --rm interchouette/tvscreener-rs:dev tvscreener --help
@@ -41,9 +41,9 @@ docker run --rm interchouette/tvscreener-rs:dev tvscreener scan crypto --limit 5
 | Env | Default | Meaning |
 | --- | --- | --- |
 | `ENABLE_MCP` | `1` | Start MCP HTTP beside long-lived TUI / interactive CLI; ignored for one-shot CLI |
-| `TVSCREENER_MCP_ADDR` | `0.0.0.0:8787` | Bind address for MCP HTTP |
+| `TVSCREENER_MCP_ADDR` | `0.0.0.0:6790` | Bind address for MCP HTTP |
 
-AI clients that support Streamable HTTP can use `http://localhost:8787/mcp` when the port is published.
+AI clients that support Streamable HTTP can use `http://localhost:6790/mcp` when the port is published.
 
 ## Tags
 

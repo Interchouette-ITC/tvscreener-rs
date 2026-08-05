@@ -7,7 +7,7 @@ Size-optimized multi-stage build → `gcr.io/distroless/cc-debian13:nonroot` (De
 | Binaries | `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`, `tvscreener-entrypoint` |
 | Entrypoint | `/usr/local/bin/tvscreener-entrypoint` |
 | Builder | `rust:slim-trixie` |
-| MCP (Docker) | Streamable HTTP on **8787** (`/mcp`) |
+| MCP (Docker) | Streamable HTTP on **6790** (`/mcp`) |
 | MCP (local) | `tvscreener-mcp` stdio by default |
 | TLS | rustls + CA bundle copied into the image (no OpenSSL package) |
 | Compose | `docker-compose.prod.yml` / `docker-compose.test.yml` |
@@ -34,17 +34,17 @@ docker pull ghcr.io/interchouette-itc/tvscreener-rs:dev
 ```bash
 IMAGE=interchouette/tvscreener-rs:dev
 
-# MCP alone (Streamable HTTP on :8787)
-docker run -d -p 8787:8787 "$IMAGE"
+# MCP alone (Streamable HTTP on :6790)
+docker run -d -p 6790:6790 "$IMAGE"
 
 # TUI + MCP (default when attached with a TTY)
-docker run -it -p 8787:8787 "$IMAGE"
+docker run -it -p 6790:6790 "$IMAGE"
 
 # TUI only
-docker run -it -p 8787:8787 -e ENABLE_MCP=0 "$IMAGE"
+docker run -it -p 6790:6790 -e ENABLE_MCP=0 "$IMAGE"
 
 # Interactive CLI + MCP (no subcommand → prompt until quit / exit)
-docker run -it -p 8787:8787 "$IMAGE" tvscreener
+docker run -it -p 6790:6790 "$IMAGE" tvscreener
 
 # Interactive CLI only
 docker run -it --rm -e ENABLE_MCP=0 "$IMAGE" tvscreener
@@ -57,9 +57,9 @@ docker run --rm "$IMAGE" tvscreener payload crypto --limit 2
 | Env | Default | Meaning |
 | --- | --- | --- |
 | `ENABLE_MCP` | `1` | Start MCP HTTP beside long-lived TUI / interactive CLI; ignored for one-shot CLI |
-| `TVSCREENER_MCP_ADDR` | `0.0.0.0:8787` | Bind address for MCP HTTP |
+| `TVSCREENER_MCP_ADDR` | `0.0.0.0:6790` | Bind address for MCP HTTP |
 
-AI clients that support Streamable HTTP can use `http://localhost:8787/mcp` when the port is published. Local Cursor setups can keep spawning `tvscreener-mcp` on **stdio**.
+AI clients that support Streamable HTTP can use `http://localhost:6790/mcp` when the port is published. Local Cursor setups can keep spawning `tvscreener-mcp` on **stdio**.
 
 ## Tags
 

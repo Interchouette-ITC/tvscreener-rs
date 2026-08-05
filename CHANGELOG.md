@@ -49,14 +49,14 @@ Not affiliated with TradingView.
 
 - Stdio MCP server with discover, custom query, search helpers, catalog tools, payload preview
 - Stdio transport by default (`make run-mcp`)
-- Optional Streamable HTTP (`--http`, default listen `0.0.0.0:8787`)
+- Optional Streamable HTTP (`--http`, default listen `0.0.0.0:6790`)
 
 ### Docker
 
 - Image ships `tvscreener`, `tvscreener-mcp`, `tvscreener-tui`, and `tvscreener-entrypoint`
 - Runtime: distroless `cc-debian13` (Debian 13); builder `rust:slim-trixie` (no bookworm, no Alpine)
 - Entrypoint is a Rust binary (no shell) so Hub Scout is not flooded by perl/tar OS packages
-- Default attached run: TUI + MCP HTTP on **8787**; `-d` for MCP only; CLI overrides
+- Default attached run: TUI + MCP HTTP on **6790**; `-d` for MCP only; CLI overrides
 - Release attaches the three user-facing Linux binaries
 
 ### TUI (`tvscreener-tui`)
