@@ -11,3 +11,7 @@
 !/docs/api-rust/README.md
 
 .cargo
+
+# Nested itc-cursor / local secrets
+.cursor/
+.github_credentials
