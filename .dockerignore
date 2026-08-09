@@ -1,7 +1,6 @@
 # Build context helpers for docker/Dockerfile (context = repo root).
 .git
-.github
-.github_credentials
+.github*
 .cursor
 .gitignore
 .idea
