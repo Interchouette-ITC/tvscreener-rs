@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   validate:
     name: Validate Tag
@@ -48,7 +51,7 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v4
 
       - name: Set up Make
         run: sudo apt-get install -y make
@@ -74,16 +77,16 @@ jobs:
         run: make docker-build TAG=latest APP_VERSION=${{ needs.validate.outputs.version }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push :version and :latest to Docker Hub (interchouette + gregoshop mirror)
+      - name: Push :version and :latest to Docker Hub (interchouette)
         run: make docker-push-release-hub APP_VERSION=${{ needs.validate.outputs.version }}
 
       - name: Log in to GHCR (personal)
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
@@ -93,7 +96,7 @@ jobs:
         run: make docker-push-release-ghcr-personal APP_VERSION=${{ needs.validate.outputs.version }}
 
       - name: Log in to GHCR (Interchouette / ITC)
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME_ITC }}
@@ -112,7 +115,6 @@ jobs:
         run: |
           V="${{ needs.validate.outputs.version }}"
           echo "Pushed interchouette/tvscreener-rs:${V} and :latest"
-          echo "Pushed gregoshop/tvscreener-rs:${V} and :latest (legacy mirror)"
           echo "Pushed personal GHCR :${V} and :latest"
           echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"

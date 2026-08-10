@@ -13,8 +13,6 @@ NIGHTLY_FLAGS ?=
 TVSCREENER_LIVE ?= 1
 
 HUB_IMAGE ?= interchouette/tvscreener-rs
-# Legacy Docker Hub mirror
-HUB_MIRROR_IMAGE ?= gregoshop/tvscreener-rs
 # Extra personal GHCR mirror (GHCR_USERNAME / GHCR_PAT)
 GHCR_PERSONAL_IMAGE ?= ghcr.io/groussac/tvscreener-rs
 # Interchouette account + org GHCR (GHCR_USERNAME_ITC / GHCR_PAT_ITC)
@@ -91,7 +89,7 @@ help:
 	@echo "  make clean           cargo clean"
 	@echo ""
 	@echo "Overrides: CARGO_BIN=…  CARGO_FLAGS=… (default --features apps)  TVSCREENER_LIVE=0|1  TVSCREENER_DEBUG=0|1"
-	@echo "           HUB_IMAGE=$(HUB_IMAGE)  HUB_MIRROR_IMAGE=$(HUB_MIRROR_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
+	@echo "           HUB_IMAGE=$(HUB_IMAGE)  APP_VERSION=$(APP_VERSION)  CI=0|1  ARGS=…  PYTHON_ROOT=…"
 
 all: verify
 
@@ -269,14 +267,13 @@ docker-build-no-cache:
 		-f $(DOCKERFILE) \
 		.
 
-## Build once and retag :dev on Hub + Hub mirror + all GHCR names.
+## Build once and retag :dev on Hub + all GHCR names.
 docker-build-dev:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build \
 		--network=host \
 		--build-arg APP_VERSION=$(APP_VERSION) \
 		-t tvscreener-rs:dev \
 		-t $(HUB_IMAGE):dev \
-		-t $(HUB_MIRROR_IMAGE):dev \
 		-t $(GHCR_PERSONAL_IMAGE):dev \
 		-t $(GHCR_WORKER_IMAGE):dev \
 		-t $(GHCR_ORG_IMAGE):dev \
@@ -285,7 +282,6 @@ docker-build-dev:
 
 docker-push-dev-hub:
 	docker push $(HUB_IMAGE):dev
-	docker push $(HUB_MIRROR_IMAGE):dev
 
 docker-push-dev-ghcr-personal:
 	docker push $(GHCR_PERSONAL_IMAGE):dev
@@ -313,10 +309,6 @@ docker-push-dev:
 docker-push-release-hub:
 	docker push $(HUB_IMAGE):$(APP_VERSION)
 	docker push $(HUB_IMAGE):latest
-	docker tag $(HUB_IMAGE):$(APP_VERSION) $(HUB_MIRROR_IMAGE):$(APP_VERSION)
-	docker tag $(HUB_IMAGE):latest $(HUB_MIRROR_IMAGE):latest
-	docker push $(HUB_MIRROR_IMAGE):$(APP_VERSION)
-	docker push $(HUB_MIRROR_IMAGE):latest
 
 docker-push-release-ghcr-personal:
 	docker tag $(HUB_IMAGE):$(APP_VERSION) $(GHCR_PERSONAL_IMAGE):$(APP_VERSION)
@@ -342,10 +334,6 @@ docker-push:
 	@echo "note: make docker-push is Hub-only; prefer make docker-push-dev or a GitHub Release"
 	docker push $(HUB_IMAGE):$(TAG)
 	docker push $(HUB_IMAGE):$(APP_VERSION)
-	docker tag $(HUB_IMAGE):$(TAG) $(HUB_MIRROR_IMAGE):$(TAG)
-	docker tag $(HUB_IMAGE):$(APP_VERSION) $(HUB_MIRROR_IMAGE):$(APP_VERSION)
-	docker push $(HUB_MIRROR_IMAGE):$(TAG)
-	docker push $(HUB_MIRROR_IMAGE):$(APP_VERSION)
 
 docker-run:
 	docker compose -f $(COMPOSE_PROD) up -d --force-recreate
