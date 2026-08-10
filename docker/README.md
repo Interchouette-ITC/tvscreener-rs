@@ -17,11 +17,12 @@ Size-optimized multi-stage build → `gcr.io/distroless/cc-debian13:nonroot` (De
 | Registry | Image | Packages page |
 | --- | --- | --- |
 | Docker Hub | `interchouette/tvscreener-rs` | [hub.docker.com/r/interchouette/tvscreener-rs](https://hub.docker.com/r/interchouette/tvscreener-rs) |
-| Docker Hub | `gregoshop/tvscreener-rs` (legacy mirror) | [hub.docker.com/r/gregoshop/tvscreener-rs](https://hub.docker.com/r/gregoshop/tvscreener-rs) |
 | GHCR | `ghcr.io/interchouette/tvscreener-rs` | [Interchouette packages](https://github.com/Interchouette?tab=packages) |
 | GHCR | `ghcr.io/interchouette-itc/tvscreener-rs` | [Interchouette-ITC packages](https://github.com/orgs/Interchouette-ITC/packages) |
 
-Public pulls: Docker Hub `interchouette/tvscreener-rs` (and legacy `gregoshop/tvscreener-rs`), plus GHCR `ghcr.io/interchouette/tvscreener-rs` and `ghcr.io/interchouette-itc/tvscreener-rs`.
+Public pulls: Docker Hub `interchouette/tvscreener-rs`, plus GHCR `ghcr.io/interchouette/tvscreener-rs` and `ghcr.io/interchouette-itc/tvscreener-rs`.
+
+`gregoshop/tvscreener-rs` is a **deprecated Hub mirror** and is **no longer published**. Do not pull it for new installs.
 
 ```bash
 docker pull interchouette/tvscreener-rs:dev
@@ -110,7 +111,7 @@ make version-show
 
 | Secret | Use |
 | --- | --- |
-| `DOCKER_USERNAME` / `DOCKER_PASSWORD` | Docker Hub (`interchouette/...` and legacy `gregoshop/...`) |
+| `DOCKER_USERNAME` / `DOCKER_PASSWORD` | Docker Hub (`interchouette/...`) |
 | `GHCR_USERNAME` / `GHCR_PAT` | Extra personal GHCR mirror (optional for docs) |
 | `GHCR_USERNAME_ITC` / `GHCR_PAT_ITC` | `ghcr.io/interchouette/...` and `ghcr.io/interchouette-itc/...` |
 

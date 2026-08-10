@@ -79,7 +79,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push :version and :latest to Docker Hub (interchouette + gregoshop mirror)
+      - name: Push :version and :latest to Docker Hub (interchouette)
         run: make docker-push-release-hub APP_VERSION=${{ needs.validate.outputs.version }}
 
       - name: Log in to GHCR (personal)
@@ -112,7 +112,6 @@ jobs:
         run: |
           V="${{ needs.validate.outputs.version }}"
           echo "Pushed interchouette/tvscreener-rs:${V} and :latest"
-          echo "Pushed gregoshop/tvscreener-rs:${V} and :latest (legacy mirror)"
           echo "Pushed personal GHCR :${V} and :latest"
           echo "Pushed ghcr.io/interchouette/tvscreener-rs:${V} and :latest"
           echo "Pushed ghcr.io/interchouette-itc/tvscreener-rs:${V} and :latest"

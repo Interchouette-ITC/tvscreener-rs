@@ -137,7 +137,7 @@ cargo doc --no-deps --open
 
 ## Docker (Hub + GHCR)
 
-Public pulls: Docker Hub `interchouette/tvscreener-rs` (legacy `gregoshop/tvscreener-rs`), `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`.
+Public pulls: Docker Hub `interchouette/tvscreener-rs`, `ghcr.io/interchouette/tvscreener-rs`, `ghcr.io/interchouette-itc/tvscreener-rs`. The Hub name `gregoshop/tvscreener-rs` is a **deprecated mirror** and is **no longer published**.
 
 ```bash
 make docker-build-dev && make docker-push-dev   # :dev on demand

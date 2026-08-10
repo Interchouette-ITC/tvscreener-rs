@@ -192,9 +192,10 @@ cargo run --features apps --bin tvscreener-mcp
 Docker image (CLI + TUI + MCP HTTP on **6790**), public pulls:
 
 - Docker Hub: [`interchouette/tvscreener-rs`](https://hub.docker.com/r/interchouette/tvscreener-rs)
-- Docker Hub (legacy): [`gregoshop/tvscreener-rs`](https://hub.docker.com/r/gregoshop/tvscreener-rs)
 - GHCR: [`ghcr.io/interchouette/tvscreener-rs`](https://github.com/Interchouette?tab=packages)
 - GHCR: [`ghcr.io/interchouette-itc/tvscreener-rs`](https://github.com/orgs/Interchouette-ITC/packages)
+
+`gregoshop/tvscreener-rs` is a **deprecated Hub mirror** and is **no longer published**.
 
 ```bash
 docker pull interchouette/tvscreener-rs:dev
