@@ -2,6 +2,7 @@
 name = "tvscreener"
 version = "1.1.0"
 edition = "2021"
+authors = ["Interchouette <contact@interchouette.net>"]
 rust-version = "1.85"
 license = "Apache-2.0"
 description = "Unofficial TradingView Screener HTTP client (Rust); inspired by deepentropy/tvscreener"
@@ -11,7 +12,6 @@ keywords = ["tradingview", "screener", "finance", "crypto", "stocks"]
 categories = ["api-bindings", "finance"]
 repository = "https://github.com/Interchouette-ITC/tvscreener-rs"
 homepage = "https://github.com/Interchouette-ITC/tvscreener-rs"
-authors = ["Interchouette <contact@interchouette.net>"]
 
 [lib]
 name = "tvscreener"
