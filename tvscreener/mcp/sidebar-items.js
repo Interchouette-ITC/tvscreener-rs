@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["format","query","resolve","server","tools"]};
+window.SIDEBAR_ITEMS = {"mod":["format","query","resolve","server","tool_args","tools"]};

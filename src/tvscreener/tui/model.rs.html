@@ -596,7 +596,7 @@
 <a href=#596 id=596 data-nosnippet>596</a>        <span class="macro">assert_eq!</span>(model.config.asset, Asset::Crypto);
 <a href=#597 id=597 data-nosnippet>597</a>        <span class="macro">assert!</span>(model.config.markets.is_none());
 <a href=#598 id=598 data-nosnippet>598</a>        <span class="macro">assert!</span>(model.config.index.is_none());
-<a href=#599 id=599 data-nosnippet>599</a>        <span class="macro">assert!</span>(model.config.filters.is_empty());
+<a href=#599 id=599 data-nosnippet>599</a>        <span class="macro">assert_eq!</span>(model.config.filters.len(), <span class="number">0</span>);
 <a href=#600 id=600 data-nosnippet>600</a>        <span class="macro">assert!</span>(model.config.preset.is_none());
 <a href=#601 id=601 data-nosnippet>601</a>        <span class="macro">assert!</span>(model.status.contains(<span class="string">"asset changed"</span>));
 <a href=#602 id=602 data-nosnippet>602</a>    }

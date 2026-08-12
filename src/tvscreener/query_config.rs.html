@@ -250,8 +250,8 @@
 <a href=#250 id=250 data-nosnippet>250</a>        <span class="kw">let </span>list = parse_filters_json(<span class="string">r#"{"field":"close","op":"&gt;","value":100}"#</span>).expect(<span class="string">"obj"</span>);
 <a href=#251 id=251 data-nosnippet>251</a>        <span class="macro">assert_eq!</span>(list.len(), <span class="number">1</span>);
 <a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a>        <span class="macro">assert!</span>(parse_filters_arg(<span class="prelude-val">None</span>).unwrap().is_empty());
-<a href=#254 id=254 data-nosnippet>254</a>        <span class="macro">assert!</span>(parse_filters_arg(<span class="prelude-val">Some</span>(<span class="string">"  "</span>)).unwrap().is_empty());
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="macro">assert_eq!</span>(parse_filters_arg(<span class="prelude-val">None</span>).unwrap().len(), <span class="number">0</span>);
+<a href=#254 id=254 data-nosnippet>254</a>        <span class="macro">assert_eq!</span>(parse_filters_arg(<span class="prelude-val">Some</span>(<span class="string">"  "</span>)).unwrap().len(), <span class="number">0</span>);
 <a href=#255 id=255 data-nosnippet>255</a>        <span class="macro">assert!</span>(parse_filters_json(<span class="string">"true"</span>).is_err());
 <a href=#256 id=256 data-nosnippet>256</a>    }
 <a href=#257 id=257 data-nosnippet>257</a>
