@@ -3,17 +3,18 @@
 
 //! MCP server (`rmcp`) for `tvscreener-mcp` (stdio or Streamable HTTP).
 
-#![allow(clippy::unused_async)]
-#![allow(clippy::unused_async_trait_impl)]
-
 use std::sync::Arc;
 
 use rmcp::{
-    handler::server::wrapper::Parameters,
-    model::{CallToolResult, ContentBlock, ServerCapabilities, ServerInfo},
-    tool, tool_handler, tool_router,
+    handler::server::{tool::ToolCallContext, wrapper::Parameters},
+    model::{
+        CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, ListToolsResult,
+        PaginatedRequestParams, ServerCapabilities, ServerInfo, Tool,
+    },
+    service::RequestContext,
+    tool, tool_router,
     transport::stdio,
-    ErrorData as McpError, ServerHandler, ServiceExt,
+    ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
 };
 
 use crate::mcp::tool_args::{
@@ -374,7 +375,6 @@ pub async fn run_http(addr: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-#[tool_handler]
 impl ServerHandler for TvscreenerMcp {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
@@ -385,6 +385,29 @@ impl ServerHandler for TvscreenerMcp {
             .with_instructions(
                 "TradingView screener MCP tools: discover fields, custom_query, search helpers, catalog lists, build_payload, search_by_index.",
             )
+    }
+
+    fn get_tool(&self, name: &str) -> Option<Tool> {
+        Self::tool_router().get(name).cloned()
+    }
+
+    async fn call_tool(
+        &self,
+        request: CallToolRequestParams,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResponse, McpError> {
+        let tcc = ToolCallContext::new(self, request, context);
+        Self::tool_router().call(tcc).await
+    }
+
+    fn list_tools(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<ListToolsResult, McpError>> + '_ {
+        std::future::ready(Ok(ListToolsResult::with_all_items(
+            Self::tool_router().list_all(),
+        )))
     }
 }
 

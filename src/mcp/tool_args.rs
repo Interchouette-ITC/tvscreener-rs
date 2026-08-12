@@ -3,114 +3,112 @@
 
 //! JSON-schema parameter structs for rmcp `Parameters<T>` tool handlers.
 
-#![allow(missing_docs)]
-
 use schemars::JsonSchema;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct DiscoverFieldsArgs {
-    pub search_term: String,
+pub(crate) struct DiscoverFieldsArgs {
+    pub(crate) search_term: String,
     #[serde(default)]
-    pub asset_type: Option<String>,
+    pub(crate) asset_type: Option<String>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct AssetTypeArgs {
+pub(crate) struct AssetTypeArgs {
     #[serde(default)]
-    pub asset_type: Option<String>,
+    pub(crate) asset_type: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct CustomQueryArgs {
+pub(crate) struct CustomQueryArgs {
     #[serde(default)]
-    pub asset_type: Option<String>,
+    pub(crate) asset_type: Option<String>,
     #[serde(default)]
-    pub fields: Option<String>,
+    pub(crate) fields: Option<String>,
     #[serde(default)]
-    pub filters: Option<String>,
+    pub(crate) filters: Option<String>,
     #[serde(default)]
-    pub sort_by: Option<String>,
+    pub(crate) sort_by: Option<String>,
     #[serde(default)]
-    pub ascending: Option<bool>,
+    pub(crate) ascending: Option<bool>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct SearchStocksArgs {
+pub(crate) struct SearchStocksArgs {
     #[serde(default)]
-    pub price_range: Option<String>,
+    pub(crate) price_range: Option<String>,
     #[serde(default)]
-    pub market_cap_billions_range: Option<String>,
+    pub(crate) market_cap_billions_range: Option<String>,
     #[serde(default)]
-    pub sectors: Option<String>,
+    pub(crate) sectors: Option<String>,
     #[serde(default)]
-    pub sort_by: Option<String>,
+    pub(crate) sort_by: Option<String>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct SearchCryptoArgs {
+pub(crate) struct SearchCryptoArgs {
     #[serde(default)]
-    pub min_volume_millions: Option<f64>,
+    pub(crate) min_volume_millions: Option<f64>,
     #[serde(default)]
-    pub min_market_cap_billions: Option<f64>,
+    pub(crate) min_market_cap_billions: Option<f64>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct SearchForexArgs {
+pub(crate) struct SearchForexArgs {
     #[serde(default)]
-    pub min_volume_millions: Option<f64>,
+    pub(crate) min_volume_millions: Option<f64>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct GetTopMoversArgs {
+pub(crate) struct GetTopMoversArgs {
     #[serde(default)]
-    pub asset_type: Option<String>,
+    pub(crate) asset_type: Option<String>,
     #[serde(default)]
-    pub direction: Option<String>,
+    pub(crate) direction: Option<String>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct GetPresetArgs {
-    pub name: String,
+pub(crate) struct GetPresetArgs {
+    pub(crate) name: String,
 }
 
 #[derive(Debug, Default, Deserialize, JsonSchema)]
-pub struct BuildPayloadArgs {
+pub(crate) struct BuildPayloadArgs {
     #[serde(default)]
-    pub asset_type: Option<String>,
+    pub(crate) asset_type: Option<String>,
     #[serde(default)]
-    pub fields: Option<String>,
+    pub(crate) fields: Option<String>,
     #[serde(default)]
-    pub filters: Option<String>,
+    pub(crate) filters: Option<String>,
     #[serde(default)]
-    pub sort_by: Option<String>,
+    pub(crate) sort_by: Option<String>,
     #[serde(default)]
-    pub indices: Option<String>,
+    pub(crate) indices: Option<String>,
     #[serde(default)]
-    pub markets: Option<String>,
+    pub(crate) markets: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct SearchByIndexArgs {
-    pub indices: String,
+pub(crate) struct SearchByIndexArgs {
+    pub(crate) indices: String,
     #[serde(default)]
-    pub markets: Option<String>,
+    pub(crate) markets: Option<String>,
     #[serde(default)]
-    pub fields: Option<String>,
+    pub(crate) fields: Option<String>,
     #[serde(default)]
-    pub sort_by: Option<String>,
+    pub(crate) sort_by: Option<String>,
     #[serde(default)]
-    pub limit: Option<u32>,
+    pub(crate) limit: Option<u32>,
 }
