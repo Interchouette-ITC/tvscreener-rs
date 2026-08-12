@@ -1006,6 +1006,6 @@ mod tests {
     #[test]
     fn bond_defaults_or_preset_fallback() {
         let fields = default_bond_fields();
-        assert!(!fields.is_empty());
+        assert_ne!(fields.len(), 0);
     }
 }

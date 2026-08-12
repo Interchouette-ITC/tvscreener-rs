@@ -157,7 +157,7 @@ async fn live_crypto_stream_two_iterations() {
         !batches.is_empty(),
         "expected at least one successful stream batch"
     );
-    assert!(!batches[0].is_empty());
+    assert_ne!(batches[0].len(), 0);
 }
 
 #[tokio::test]
@@ -192,7 +192,7 @@ async fn live_crypto_filter_and_search() {
         .unwrap()
         .set_range(0, 2);
     let rows = with_retries("crypto search", || screener.get()).await;
-    assert!(!rows.is_empty());
+    assert_ne!(rows.len(), 0);
     let joined = rows
         .iter()
         .map(|r| r.symbol.to_ascii_uppercase())

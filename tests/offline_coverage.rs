@@ -45,21 +45,21 @@ fn fields_defaults_non_empty_for_all_assets() {
         default_fields(Asset::Stock).len(),
         default_stock_fields().len()
     );
-    assert!(!default_forex_fields().is_empty());
-    assert!(!default_bond_fields().is_empty());
-    assert!(!default_futures_fields().is_empty());
-    assert!(!default_coin_fields().is_empty());
+    assert_ne!(default_forex_fields().len(), 0);
+    assert_ne!(default_bond_fields().len(), 0);
+    assert_ne!(default_futures_fields().len(), 0);
+    assert_ne!(default_coin_fields().len(), 0);
 }
 
 #[test]
 fn fields_search_and_presets() {
     let hits = search_fields(Asset::Stock, "market cap");
-    assert!(!hits.is_empty());
+    assert_ne!(hits.len(), 0);
     let names = list_presets();
     assert!(names.iter().any(|n| n == "stock_valuation"));
     assert!(names.iter().any(|n| n == "crypto_price"));
     let valuation = get_preset("stock_valuation").expect("preset");
-    assert!(!valuation.is_empty());
+    assert_ne!(valuation.len(), 0);
     assert!(valuation.iter().any(|f| {
         f.field_name.contains("market_cap") || f.label.to_ascii_lowercase().contains("market")
     }));
@@ -188,7 +188,7 @@ fn base_screener_parse_rows_rejects_bad_shape() {
 #[test]
 fn stock_screener_defaults_markets_and_symbol_types() {
     let mut ss = StockScreener::new();
-    assert!(!ss.inner().selected_fields().is_empty());
+    assert_ne!(ss.inner().selected_fields().len(), 0);
     let payload = ss.inner().build_payload().unwrap();
     assert_eq!(payload["markets"], json!([Market::america().value]));
 

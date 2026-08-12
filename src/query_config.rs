@@ -250,8 +250,8 @@ mod tests {
         let list = parse_filters_json(r#"{"field":"close","op":">","value":100}"#).expect("obj");
         assert_eq!(list.len(), 1);
 
-        assert!(parse_filters_arg(None).unwrap().is_empty());
-        assert!(parse_filters_arg(Some("  ")).unwrap().is_empty());
+        assert_eq!(parse_filters_arg(None).unwrap().len(), 0);
+        assert_eq!(parse_filters_arg(Some("  ")).unwrap().len(), 0);
         assert!(parse_filters_json("true").is_err());
     }
 

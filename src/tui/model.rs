@@ -596,7 +596,7 @@ mod tests {
         assert_eq!(model.config.asset, Asset::Crypto);
         assert!(model.config.markets.is_none());
         assert!(model.config.index.is_none());
-        assert!(model.config.filters.is_empty());
+        assert_eq!(model.config.filters.len(), 0);
         assert!(model.config.preset.is_none());
         assert!(model.status.contains("asset changed"));
     }

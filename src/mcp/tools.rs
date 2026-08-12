@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Offline-friendly helpers shared by MCP tools (no mcpkit dependency).
+//! Offline-friendly helpers shared by MCP tools (no rmcp dependency).
 
 pub use super::format::{
     format_discover_fields, format_field_types, format_get_preset, format_list_countries,
