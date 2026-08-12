@@ -1,12 +1,7 @@
 # tvscreener-rs - developer targets (`make help`)
 
-# Prefer the repo `target/` for builds (unset inherited sandbox target dirs).
-unexport CARGO_TARGET_DIR
-unexport PLAYWRIGHT_BROWSERS_PATH
-
 CARGO_BIN ?= cargo
-# Strip inherited target/browser paths even if a parent re-exports them.
-CARGO = env -u CARGO_TARGET_DIR -u PLAYWRIGHT_BROWSERS_PATH $(CARGO_BIN)
+CARGO = $(CARGO_BIN)
 # App surfaces (CLI/MCP/TUI). Lean lib check: `make check-lib` (no features).
 CARGO_FLAGS ?= --features apps
 NIGHTLY_FLAGS ?=
