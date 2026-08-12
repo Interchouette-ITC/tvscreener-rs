@@ -373,7 +373,7 @@ mod tests {
     #[test]
     fn resolve_fields_uses_preset() {
         let fields = sample_config().resolve_fields().expect("fields");
-        assert!(!fields.is_empty());
+        assert_ne!(fields.len(), 0);
         let preset_only = get_preset("crypto_price").expect("preset");
         assert_eq!(fields.len(), preset_only.len());
         assert_ne!(fields, default_fields(Asset::Crypto));

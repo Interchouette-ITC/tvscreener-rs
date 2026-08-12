@@ -6,7 +6,7 @@ This repository is a **Rust port and translation** of the Python library **[deep
 | ------------------------ | ---------------------------------------------------------------------------------------- |
 | **Upstream (Python)**    | [github.com/deepentropy/tvscreener](https://github.com/deepentropy/tvscreener)           |
 | **Python documentation** | [deepentropy.github.io/tvscreener/docs/](https://deepentropy.github.io/tvscreener/docs/) |
-| **This crate (Rust)**    | **tvscreener-rs** - Rust port (Docker Hub: `interchouette/tvscreener-rs`) |
+| **This crate (Rust)**    | **tvscreener-rs** - Rust port (Docker Hub: `interchouette/tvscreener-rs`)                |
 
 ## License and attribution
 
@@ -77,14 +77,14 @@ tvscreener = { git = "https://github.com/Interchouette-ITC/tvscreener-rs", branc
 
 **This crate’s Cargo features:**
 
-| Feature     | What it enables                                      |
-| ----------- | ---------------------------------------------------- |
-| _(default)_ | Lean library only (no mcpkit / Ratatui / clap)       |
-| `cli`       | `tvscreener` CLI binary + `init_logging`             |
-| `mcp`       | `tvscreener-mcp` + `tvscreener::mcp` (includes `cli`) |
-| `tui`       | `tvscreener-tui` + `tvscreener::tui` (includes `cli`) |
-| `apps`      | Meta: `cli` + `mcp` + `tui` (Make / Docker / install) |
-| `live`      | Live HTTP tests (`make test-live`)                   |
+| Feature     | What it enables                                           |
+| ----------- | --------------------------------------------------------- |
+| _(default)_ | Lean library only (no rmcp / Ratatui / clap)              |
+| `cli`       | `tvscreener` CLI binary + `init_logging`                  |
+| `mcp`       | `tvscreener-mcp` + `tvscreener::mcp` (includes `cli`)     |
+| `tui`       | `tvscreener-tui` + `tvscreener::tui` (includes `cli`)     |
+| `apps`      | Meta: `cli` + `mcp` + `tui` (Make / Docker / install)     |
+| `live`      | Live HTTP tests (`make test-live`)                        |
 | `regen`     | `tvscreener regen-fields` maintainer cmd (includes `cli`) |
 
 Path/git consumers (e.g. OT) get the lean default. Repo tooling uses `--features apps` via Make.
@@ -118,7 +118,7 @@ Rust **1.85+** (`rust-version` in `Cargo.toml`; required when building with `mcp
 
 ```bash
 make test          # default test suite (--features apps)
-make check-lib     # lean lib only (empty features; no mcpkit/Ratatui)
+make check-lib     # lean lib only (empty features; no rmcp/Ratatui)
 make lint          # fmt --check + clippy
 make verify        # format-check + clippy + check-lib + tests
 make test-live     # against TradingView (TVSCREENER_LIVE=1)
@@ -159,15 +159,15 @@ cargo run --example example_crypto    # POST to scanner.tradingview.com
 
 ## Tests
 
-| Kind        | Command                                                          |
-| ----------- | ---------------------------------------------------------------- |
-| **Default** | `make test` / `cargo test`                                       |
-| **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`)        |
-| **Verify**  | `make verify` (fmt + clippy + tests)                             |
+| Kind        | Command                                                   |
+| ----------- | --------------------------------------------------------- |
+| **Default** | `make test` / `cargo test`                                |
+| **Live**    | `make test-live` (`TVSCREENER_LIVE=1`, `--features live`) |
+| **Verify**  | `make verify` (fmt + clippy + tests)                      |
 
 Default suite does not call the scanner. Live tests need the `live` feature and `TVSCREENER_LIVE=1`.
 
-## MCP binary (`mcpkit`)
+## MCP binary (`rmcp`)
 
 ```bash
 cargo run --features apps --bin tvscreener-mcp
@@ -189,7 +189,7 @@ src/
   logging.rs       env_debug_enabled; init_logging (feature `cli`)
   core/            Screener builder + Stock/Crypto/Forex/Bond/Futures/Coin
   field/           FieldDef (label, field_name, format, interval, historical)
-  mcp/             tools + mcpkit server (feature `mcp`)
+  mcp/             tools + rmcp server (feature `mcp`)
   tui/             Ratatui pane (feature `tui`; `tvscreener-tui`)
   bin/tvscreener/main.rs
   bin/tvscreener_mcp.rs

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dependencies
+
+- Bumped crates to current crates.io releases (including `reqwest` 0.13)
+- MCP server migrated from `mcpkit` to `rmcp` 3.1 (stdio + Streamable HTTP)
+
 ### CLI
 
 - Interactive prompt: ↑/↓ recall prior commands (via rustyline); history persisted in `~/.tvscreener_history`

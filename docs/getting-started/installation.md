@@ -26,7 +26,7 @@ make doc            # rustdoc → docs/api-rust/
 
 ## As a path dependency
 
-Default features are **lean** (no mcpkit / Ratatui / clap). Suitable for embedding the scanner client (e.g. OT):
+Default features are **lean** (no rmcp / Ratatui / clap). Suitable for embedding the scanner client:
 
 ```toml
 [dependencies]
@@ -36,15 +36,15 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 ## Features
 
-| Feature     | Purpose                                              |
-| ----------- | ---------------------------------------------------- |
-| _(default)_ | Lean library only                                    |
-| `cli`       | `tvscreener` CLI + `init_logging`                    |
-| `mcp`       | MCP binary + `tvscreener::mcp` (includes `cli`)      |
-| `tui`       | TUI binary + `tvscreener::tui` (includes `cli`)      |
-| `apps`      | Meta: `cli` + `mcp` + `tui`                          |
-| `live`      | Live HTTP tests (`make test-live`)                   |
-| `regen`     | `tvscreener regen-fields` (includes `cli`)           |
+| Feature     | Purpose                                         |
+| ----------- | ----------------------------------------------- |
+| _(default)_ | Lean library only                               |
+| `cli`       | `tvscreener` CLI + `init_logging`               |
+| `mcp`       | MCP binary + `tvscreener::mcp` (includes `cli`) |
+| `tui`       | TUI binary + `tvscreener::tui` (includes `cli`) |
+| `apps`      | Meta: `cli` + `mcp` + `tui`                     |
+| `live`      | Live HTTP tests (`make test-live`)              |
+| `regen`     | `tvscreener regen-fields` (includes `cli`)      |
 
 ```bash
 cargo test --features apps,live   # still needs TVSCREENER_LIVE=1 for e2e

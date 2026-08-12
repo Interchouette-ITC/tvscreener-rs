@@ -48,7 +48,7 @@ help:
 	@echo "  make build           Debug build (lib + bins + examples; --features apps)"
 	@echo "  make build-release   Release build"
 	@echo "  make check           cargo check --all-targets (--features apps)"
-	@echo "  make check-lib       Lean lib only (no mcpkit/Ratatui; empty features)"
+	@echo "  make check-lib       Lean lib only (no rmcp/Ratatui; empty features)"
 	@echo "  make test            Default test suite"
 	@echo "  make test-live       Live e2e (TVSCREENER_LIVE=1)"
 	@echo "  make test-all        Default suite + live"

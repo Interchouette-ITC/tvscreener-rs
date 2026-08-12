@@ -1,7 +1,7 @@
 // Copyright 2026 tvscreener-rs contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! MCP tool helpers and mcpkit server (stdio or Streamable HTTP).
+//! MCP tool helpers and rmcp server (stdio or Streamable HTTP).
 //!
 //! Tools:
 //!
@@ -19,4 +19,5 @@ pub mod format;
 pub mod query;
 pub mod resolve;
 pub mod server;
+pub mod tool_args;
 pub mod tools;
