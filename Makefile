@@ -33,6 +33,8 @@ CI ?= 0
 	example-crypto example-manual \
 	run run-mcp run-tui \
 	audit deny regen-fields \
+	coverage coverage-summary coverage-html tarpaulin machete outdated fuzz fuzz-build geiger \
+	ci \
 	docker-build docker-build-no-cache docker-push \
 	docker-build-dev docker-push-dev \
 	docker-push-dev-hub docker-push-dev-ghcr-personal docker-push-dev-ghcr-itc \
@@ -67,6 +69,11 @@ help:
 	@echo "                       e.g. make run-tui ARGS='crypto --limit 10'"
 	@echo "  make audit           cargo audit"
 	@echo "  make deny            cargo deny check"
+	@echo "  make coverage        cargo llvm-cov --locked → coverage/lcov.info"
+	@echo "  make coverage-summary / coverage-html / tarpaulin  local coverage"
+	@echo "  make machete / outdated / geiger  local supply-chain reports"
+	@echo "  make fuzz / fuzz-build  nightly cargo-fuzz (needs fuzz/)"
+	@echo "  make ci              lint + test + doc + audit + deny"
 	@echo "  make regen-fields    Rebuild data/fields.json (needs PYTHON_ROOT=…)"
 	@echo "                       e.g. make regen-fields PYTHON_ROOT=../tvscreener"
 	@echo "  make docker-build    Build $(HUB_IMAGE):$(TAG) (+ :$(APP_VERSION))"
@@ -218,6 +225,49 @@ run-tui:
 # Supply chain / catalog
 # ---------------------------------------------------------------------------
 
+## Requires cargo-llvm-cov + llvm-tools-preview. Writes coverage/lcov.info.
+coverage:
+	mkdir -p coverage
+	RUSTUP_TOOLCHAIN=stable $(CARGO) llvm-cov --workspace --locked $(CARGO_FLAGS) --lcov \
+		--ignore-filename-regex 'examples/' \
+		--output-path coverage/lcov.info
+
+coverage-summary:
+	RUSTUP_TOOLCHAIN=stable $(CARGO) llvm-cov --workspace --locked $(CARGO_FLAGS) --summary-only \
+		--ignore-filename-regex 'examples/'
+
+coverage-html:
+	mkdir -p coverage
+	RUSTUP_TOOLCHAIN=stable $(CARGO) llvm-cov --workspace --locked $(CARGO_FLAGS) --html \
+		--ignore-filename-regex 'examples/' \
+		--output-dir coverage/html
+
+tarpaulin:
+	mkdir -p coverage/tarpaulin
+	$(CARGO) tarpaulin --workspace --locked $(CARGO_FLAGS) \
+		--exclude-files 'examples/*' \
+		--out Html --out Xml --output-dir coverage/tarpaulin
+
+machete:
+	$(CARGO) machete
+
+outdated:
+	$(CARGO) outdated --workspace
+
+FUZZ_TARGET ?=
+FUZZ_TIME ?= 10
+
+fuzz-build:
+	@test -d fuzz || (echo "no fuzz/; skip or add a cargo-fuzz workspace"; exit 1)
+	cargo +nightly fuzz build
+
+fuzz:
+	@test -n "$(FUZZ_TARGET)" || (echo "set FUZZ_TARGET=…"; exit 1)
+	cargo +nightly fuzz run $(FUZZ_TARGET) -- -max_total_time=$(FUZZ_TIME)
+
+geiger:
+	$(CARGO) geiger --workspace || true
+
 ## Requires `cargo install cargo-audit`.
 audit:
 	$(CARGO) audit
@@ -225,6 +275,8 @@ audit:
 ## Requires `cargo install cargo-deny`.
 deny:
 	$(CARGO) deny check
+
+ci: lint test doc audit deny
 
 ## Rebuild `data/fields.json` + generated consts from a deepentropy/tvscreener clone.
 ## Example: `make regen-fields PYTHON_ROOT=../tvscreener`
