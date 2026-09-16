@@ -7,14 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-16
+
 ### Dependencies
 
 - Bumped crates to current crates.io releases (including `reqwest` 0.13)
-- MCP server migrated from `mcpkit` to `rmcp` 3.1 (stdio + Streamable HTTP)
+- MCP server migrated from `mcpkit` to `rmcp` (stdio + Streamable HTTP); follow-up `rmcp` bumps through 3.3.0
+- Dependabot, cargo hygiene Make targets, and related CI wiring
 
 ### CLI
 
 - Interactive prompt: ↑/↓ recall prior commands (via rustyline); history persisted in `~/.tvscreener_history`
+
+### Packaging
+
+- Default MCP HTTP port 6790; Hub publish docs align on `interchouette` only
+- Drop Cursor sandbox env wrappers from Make
 
 ## [1.1.0] - 2026-08-02
 
