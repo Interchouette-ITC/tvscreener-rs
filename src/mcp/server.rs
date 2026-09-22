@@ -9,7 +9,7 @@ use rmcp::{
     handler::server::{tool::ToolCallContext, wrapper::Parameters},
     model::{
         CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, ListToolsResult,
-        PaginatedRequestParams, ServerCapabilities, ServerInfo, Tool,
+        PaginatedRequestParams, ServerCapabilities, ServerConfig, Tool,
     },
     service::RequestContext,
     tool, tool_router,
@@ -376,8 +376,8 @@ pub async fn run_http(addr: &str) -> std::io::Result<()> {
 }
 
 impl ServerHandler for TvscreenerMcp {
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(rmcp::model::Implementation::new(
                 "tvscreener-rs",
                 env!("CARGO_PKG_VERSION"),
