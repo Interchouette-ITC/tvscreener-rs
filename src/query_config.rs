@@ -5,9 +5,9 @@
 
 use crate::core::Screener;
 use crate::error::{Result, TvscreenerError};
-use crate::field::{resolve_field, Asset, FieldDef};
+use crate::field::{Asset, FieldDef, resolve_field};
 use crate::filter::{FieldCondition, FilterOperator};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Resolves a field const / technical / label name for `asset`.
 ///
@@ -282,9 +282,11 @@ mod tests {
         apply_filters(&mut s, Asset::Stock, &[cond]).expect("apply");
         let payload = s.build_payload().expect("payload");
         let filters = payload["filter"].as_array().expect("filters");
-        assert!(filters
-            .iter()
-            .any(|f| f["left"] == "close" && f["operation"] == "greater"));
+        assert!(
+            filters
+                .iter()
+                .any(|f| f["left"] == "close" && f["operation"] == "greater")
+        );
 
         let mut s = Screener::new("stock");
         s.select([name]);
@@ -292,8 +294,10 @@ mod tests {
         apply_filters_json(&mut s, Asset::Stock, &list).expect("apply json");
         let payload = s.build_payload().expect("payload");
         let filters = payload["filter"].as_array().expect("filters");
-        assert!(filters
-            .iter()
-            .any(|f| f["left"] == "close" && f["operation"] == "greater"));
+        assert!(
+            filters
+                .iter()
+                .any(|f| f["left"] == "close" && f["operation"] == "greater")
+        );
     }
 }

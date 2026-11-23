@@ -10,9 +10,9 @@ pub use super::format::{
     format_list_sectors, format_rows_markdown,
 };
 pub use super::query::{
-    build_payload, custom_query, custom_query_payload_preview, get_top_movers, search_by_index,
-    search_crypto, search_forex, search_stocks, BuildPayloadOpts, CustomQueryOpts,
-    PayloadPreviewOpts, SearchStocksOpts,
+    BuildPayloadOpts, CustomQueryOpts, PayloadPreviewOpts, SearchStocksOpts, build_payload,
+    custom_query, custom_query_payload_preview, get_top_movers, search_by_index, search_crypto,
+    search_forex, search_stocks,
 };
 pub use super::resolve::{
     parse_asset, parse_f64_range, resolve_index_wires, resolve_market_wires, resolve_sector_wires,
@@ -79,9 +79,11 @@ mod tests {
         assert!(payload["columns"].as_array().unwrap().len() >= 2);
         assert_eq!(payload["range"], serde_json::json!([0, 10]));
         let filters = payload["filter"].as_array().unwrap();
-        assert!(filters
-            .iter()
-            .any(|f| f["left"] == "close" || f["operation"] == "greater"));
+        assert!(
+            filters
+                .iter()
+                .any(|f| f["left"] == "close" || f["operation"] == "greater")
+        );
     }
 
     #[test]

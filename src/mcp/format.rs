@@ -3,15 +3,15 @@
 
 //! Text-formatting helpers for MCP tool responses.
 
+use crate::ScreenerRow;
 use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
 use crate::error::Result;
 use crate::field::{
-    all_countries, all_exchanges, all_index_symbols, all_industries, all_markets, all_ratings,
-    all_sectors, get_preset, list_presets, resolve_field, search_fields, to_symbolset_wire, Asset,
-    NamedValue,
+    Asset, NamedValue, all_countries, all_exchanges, all_index_symbols, all_industries,
+    all_markets, all_ratings, all_sectors, get_preset, list_presets, resolve_field, search_fields,
+    to_symbolset_wire,
 };
 use crate::util::format_value;
-use crate::ScreenerRow;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 

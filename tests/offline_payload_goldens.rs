@@ -6,8 +6,8 @@
 //! No network - asserts `build_payload` wire shape only.
 
 use serde_json::json;
-use tvscreener::core::stock::StockScreener;
 use tvscreener::core::Screener;
+use tvscreener::core::stock::StockScreener;
 use tvscreener::field::index_symbol;
 use tvscreener::field::{FieldDef, Market};
 use tvscreener::filter::FilterOperator;
