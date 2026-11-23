@@ -16,17 +16,17 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use clap::{ArgAction, Parser, ValueEnum};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use ratatui::backend::CrosstermBackend;
 use tvscreener::filter::FieldCondition;
 use tvscreener::query_config::{parse_filter_conditions_from_cli, parse_filter_value};
 use tvscreener::tui::{
-    configure_screener, copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen,
-    install_panic_hook, install_signal_handlers, is_quit_key, payload_pretty, render_codegen,
-    AppModel, BuilderFocus, InputMode, ScanConfig, TerminalGuard, ViewMode,
-    DEFAULT_WATCH_INTERVAL_SECS, FILTER_OPS, MIN_TUI_REFRESH_SECS, STOP,
+    AppModel, BuilderFocus, DEFAULT_WATCH_INTERVAL_SECS, FILTER_OPS, InputMode,
+    MIN_TUI_REFRESH_SECS, STOP, ScanConfig, TerminalGuard, ViewMode, configure_screener,
+    copy_via_osc52, draw, hard_reset_tty, inside_gnu_screen, install_panic_hook,
+    install_signal_handlers, is_quit_key, payload_pretty, render_codegen,
 };
-use tvscreener::{field::Asset, ScreenerRow};
+use tvscreener::{ScreenerRow, field::Asset};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum AssetArg {

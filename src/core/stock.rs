@@ -8,8 +8,8 @@
 use super::Screener;
 use crate::error::{Result, TvscreenerError};
 use crate::field::{
-    default_stock_fields, stock_market_capitalization, symbol_type, type_filter, Market,
-    SymbolType, TypeFilter,
+    Market, SymbolType, TypeFilter, default_stock_fields, stock_market_capitalization, symbol_type,
+    type_filter,
 };
 use crate::filter::FilterOperator;
 use serde_json::json;
@@ -153,7 +153,7 @@ impl_typed_screener_common!(StockScreener);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
 
     #[test]
     fn set_symbol_types_common_stock_adds_depository_receipt() {

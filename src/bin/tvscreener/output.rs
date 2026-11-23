@@ -8,8 +8,8 @@ use std::io::{self, IsTerminal};
 use anyhow::Result;
 use clap::ValueEnum;
 use tvscreener::{
-    format_row, format_rows_table, FieldDef, ScreenerRow, TableFormatOptions,
-    DEFAULT_TABLE_MAX_COLUMNS,
+    DEFAULT_TABLE_MAX_COLUMNS, FieldDef, ScreenerRow, TableFormatOptions, format_row,
+    format_rows_table,
 };
 
 /// How `scan` prints rows.

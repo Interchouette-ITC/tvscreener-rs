@@ -5,10 +5,10 @@
 
 use std::time::{Duration, Instant};
 
-use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
-use crate::field::{default_fields, get_preset, search_fields, Asset, FieldDef};
-use crate::filter::{FieldCondition, FilterOperator};
 use crate::ScreenerRow;
+use crate::beautify::DEFAULT_TABLE_MAX_COLUMNS;
+use crate::field::{Asset, FieldDef, default_fields, get_preset, search_fields};
+use crate::filter::{FieldCondition, FilterOperator};
 
 use super::scan::{preset_index, preset_options};
 

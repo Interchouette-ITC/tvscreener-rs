@@ -5,11 +5,11 @@
 
 use serde_json::Value;
 
-use crate::core::{with_asset_screener, Screener};
-use crate::field::{list_presets, Asset};
+use crate::Result;
+use crate::core::{Screener, with_asset_screener};
+use crate::field::{Asset, list_presets};
 use crate::query_config::{apply_filters, apply_sort};
 use crate::resolve::apply_stock_index_markets;
-use crate::Result;
 
 use super::model::ScanConfig;
 

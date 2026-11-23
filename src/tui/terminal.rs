@@ -4,15 +4,15 @@
 //! Terminal raw-mode / alternate-screen lifecycle.
 
 use std::env;
-use std::io::{self, stdout, Write};
+use std::io::{self, Write, stdout};
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use crossterm::ExecutableCommand;
 use crossterm::cursor;
 use crossterm::event::{KeyCode, KeyModifiers};
 use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
+    Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
-use crossterm::ExecutableCommand;
 
 /// Set by SIGINT/SIGTERM so the loop can restore the tty before exit.
 pub static STOP: AtomicBool = AtomicBool::new(false);

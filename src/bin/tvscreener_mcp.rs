@@ -14,7 +14,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use tvscreener::mcp::server::{run, run_http, DEFAULT_HTTP_LISTEN};
+use tvscreener::mcp::server::{DEFAULT_HTTP_LISTEN, run, run_http};
 
 #[derive(Debug, Parser)]
 #[command(

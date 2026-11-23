@@ -19,7 +19,7 @@ use tvscreener::core::forex::ForexScreener;
 use tvscreener::core::futures::FuturesScreener;
 use tvscreener::core::stock::StockScreener;
 use tvscreener::field::index_symbol;
-use tvscreener::field::{get_preset, Market};
+use tvscreener::field::{Market, get_preset};
 use tvscreener::filter::{FieldCondition, FilterOperator};
 use tvscreener::{Result, ScreenerRow, TvscreenerError};
 

@@ -10,10 +10,10 @@
 //! Does not call the scanner. For live scans see `example_crypto`.
 
 use reqwest::header::HeaderName;
-use tvscreener::field::{get_preset, list_presets, search_fields, Asset};
+use tvscreener::ScreenerRow;
+use tvscreener::field::{Asset, get_preset, list_presets, search_fields};
 use tvscreener::util::{format_recommendation, format_row};
 use tvscreener::util::{get_url, millify, request_headers};
-use tvscreener::ScreenerRow;
 
 fn main() {
     println!("tvscreener-rs manual_test\n");

@@ -17,15 +17,15 @@ pub mod forex;
 pub mod futures;
 pub mod stock;
 
+use crate::ScreenerRow;
 use crate::error::{Result, TvscreenerError};
 use crate::field::FieldDef;
 use crate::filter::{ExtraFilter, FieldCondition, Filter, FilterOperator};
 use crate::util::{
-    get_columns_to_request, get_url, is_status_code_ok, request_headers, DEFAULT_TIMEOUT_SECS,
-    MIN_STREAM_INTERVAL_SECS,
+    DEFAULT_TIMEOUT_SECS, MIN_STREAM_INTERVAL_SECS, get_columns_to_request, get_url,
+    is_status_code_ok, request_headers,
 };
-use crate::ScreenerRow;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::HashMap;
 use std::time::Duration;
 

@@ -10,10 +10,10 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json::Value;
 
-use crate::field::{rating_find, FieldDef};
+use crate::ScreenerRow;
+use crate::field::{FieldDef, rating_find};
 use crate::ta::{self, Signal};
 use crate::util::{add_rec, format_recommendation, millify};
-use crate::ScreenerRow;
 
 /// Semantic color for a formatted cell (map to ANSI / Ratatui later).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]

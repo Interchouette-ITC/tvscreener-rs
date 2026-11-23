@@ -7,7 +7,7 @@
 //! [`crate::core::Screener::add_filter`] merges values and may promote the operator
 //! to [`FilterOperator::InRange`].
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Comparison operators sent as `"operation"` in `TradingView` filter objects.
 ///

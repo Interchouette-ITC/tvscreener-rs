@@ -6,21 +6,21 @@
 //! Default `cargo test` path. Live HTTP is in `e2e_live`.
 
 use serde_json::json;
+use tvscreener::TvscreenerError;
+use tvscreener::core::Screener;
 use tvscreener::core::bond::BondScreener;
 use tvscreener::core::coin::CoinScreener;
 use tvscreener::core::crypto::CryptoScreener;
 use tvscreener::core::forex::ForexScreener;
 use tvscreener::core::futures::FuturesScreener;
 use tvscreener::core::stock::StockScreener;
-use tvscreener::core::Screener;
 use tvscreener::field::index_symbol;
 use tvscreener::field::{
-    default_bond_fields, default_coin_fields, default_crypto_fields, default_fields,
-    default_forex_fields, default_futures_fields, default_stock_fields, get_preset, list_presets,
-    search_fields, Asset, FieldDef, Market,
+    Asset, FieldDef, Market, default_bond_fields, default_coin_fields, default_crypto_fields,
+    default_fields, default_forex_fields, default_futures_fields, default_stock_fields, get_preset,
+    list_presets, search_fields,
 };
 use tvscreener::filter::{ExtraFilter, FieldCondition, FilterOperator};
-use tvscreener::TvscreenerError;
 
 // --- Fields / presets -------------------------------------------------------------
 
@@ -87,12 +87,16 @@ fn filters_numeric_string_list_and_search_payload() {
 
     let payload = s.build_payload().expect("payload");
     let filters = payload["filter"].as_array().expect("filter array");
-    assert!(filters
-        .iter()
-        .any(|f| f["left"] == "close" && f["operation"] == "greater"));
-    assert!(filters
-        .iter()
-        .any(|f| f["left"] == ExtraFilter::Search.field_name()));
+    assert!(
+        filters
+            .iter()
+            .any(|f| f["left"] == "close" && f["operation"] == "greater")
+    );
+    assert!(
+        filters
+            .iter()
+            .any(|f| f["left"] == ExtraFilter::Search.field_name())
+    );
     assert!(filters.iter().any(|f| {
         f["left"] == "exchange" && f["right"].as_array().is_some_and(|a| a.len() == 2)
     }));
@@ -275,15 +279,21 @@ fn errors_display_variants() {
     };
     assert!(http.to_string().contains("400"));
     assert!(TvscreenerError::Timeout.to_string().contains("timed out"));
-    assert!(TvscreenerError::Json("x".into())
-        .to_string()
-        .contains("JSON"));
-    assert!(TvscreenerError::InvalidRequest("x".into())
-        .to_string()
-        .contains("invalid"));
-    assert!(TvscreenerError::InvalidFieldName("nope".into())
-        .to_string()
-        .contains("invalid field name"));
+    assert!(
+        TvscreenerError::Json("x".into())
+            .to_string()
+            .contains("JSON")
+    );
+    assert!(
+        TvscreenerError::InvalidRequest("x".into())
+            .to_string()
+            .contains("invalid")
+    );
+    assert!(
+        TvscreenerError::InvalidFieldName("nope".into())
+            .to_string()
+            .contains("invalid field name")
+    );
 }
 
 #[tokio::test]

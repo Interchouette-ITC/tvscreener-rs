@@ -13,11 +13,11 @@ mod terminal;
 pub use clipboard::copy_via_osc52;
 pub use draw::draw;
 pub use model::{
-    AppModel, BuilderFocus, BuilderUi, InputMode, ScanConfig, ViewMode,
-    DEFAULT_WATCH_INTERVAL_SECS, FILTER_OPS, MIN_TUI_REFRESH_SECS,
+    AppModel, BuilderFocus, BuilderUi, DEFAULT_WATCH_INTERVAL_SECS, FILTER_OPS, InputMode,
+    MIN_TUI_REFRESH_SECS, ScanConfig, ViewMode,
 };
 pub use scan::{build_payload, configure_screener, payload_pretty, render_codegen};
 pub use terminal::{
-    hard_reset_tty, inside_gnu_screen, install_panic_hook, install_signal_handlers, is_quit_key,
-    TerminalGuard, STOP,
+    STOP, TerminalGuard, hard_reset_tty, inside_gnu_screen, install_panic_hook,
+    install_signal_handlers, is_quit_key,
 };

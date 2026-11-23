@@ -3,9 +3,9 @@
 
 //! Regenerate `data/fields.json` and `src/field/generated/` from a Python tvscreener clone.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use regex::Regex;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};

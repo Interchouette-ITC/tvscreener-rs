@@ -3,17 +3,17 @@
 
 //! Ratatui draw routines for the screener TUI.
 
+use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
-use ratatui::Frame;
 use serde_json::Value;
 
-use super::model::{AppModel, BuilderFocus, InputMode, ViewMode, FILTER_OPS};
+use super::model::{AppModel, BuilderFocus, FILTER_OPS, InputMode, ViewMode};
 use super::scan::{payload_pretty, render_codegen};
 use super::style::tone_color;
-use crate::beautify::{format_cell_for_field, select_table_fields, RowTechMap};
+use crate::beautify::{RowTechMap, format_cell_for_field, select_table_fields};
 use crate::util::get_columns_to_request;
 
 const LABEL: Style = Style::new().fg(Color::DarkGray);
@@ -85,9 +85,7 @@ fn draw_footer(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
         MUTED
     };
     let keys = match model.view {
-        ViewMode::Results => {
-            "Tab views · r refresh · a watch · c copy rows · h help · ↑↓ scroll"
-        }
+        ViewMode::Results => "Tab views · r refresh · a watch · c copy rows · h help · ↑↓ scroll",
         ViewMode::Builder => {
             "Tab views · ←→ asset/preset · +/- limit · s search · t/u sort · m/i scope · f filter · Enter scan · j/k focus"
         }
@@ -433,9 +431,9 @@ fn draw_results(frame: &mut Frame<'_>, area: Rect, model: &AppModel) {
 mod tests {
     use super::*;
     use crate::field::{Asset, FieldDef};
-    use crate::tui::model::{ScanConfig, DEFAULT_WATCH_INTERVAL_SECS};
-    use ratatui::backend::TestBackend;
+    use crate::tui::model::{DEFAULT_WATCH_INTERVAL_SECS, ScanConfig};
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
     use serde_json::json;
 
     fn sample_model() -> AppModel {

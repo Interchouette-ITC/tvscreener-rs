@@ -22,20 +22,20 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{ArgAction, CommandFactory, Parser, Subcommand, ValueEnum};
-use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
+use rustyline::error::ReadlineError;
+use tvscreener::ScreenerRow;
 use tvscreener::core::Screener;
 use tvscreener::field::{
-    all_markets, all_sectors, default_fields, get_preset, list_presets, search_fields, Asset,
-    FieldDef,
+    Asset, FieldDef, all_markets, all_sectors, default_fields, get_preset, list_presets,
+    search_fields,
 };
 use tvscreener::query_config::{
     apply_filters, apply_filters_json, apply_sort, parse_filter_token, parse_filters_arg,
 };
 use tvscreener::resolve::apply_stock_index_markets;
-use tvscreener::ScreenerRow;
 
-use output::{print_scan_rows, ColorWhen, ScanFormat};
+use output::{ColorWhen, ScanFormat, print_scan_rows};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum AssetArg {

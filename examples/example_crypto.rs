@@ -5,11 +5,11 @@
 //!
 //! Run: `cargo run --example example_crypto`
 
+use tvscreener::Result;
 use tvscreener::core::crypto::CryptoScreener;
 use tvscreener::field::{crypto_price, crypto_rsi_14, get_preset};
 use tvscreener::filter::{FieldCondition, FilterOperator};
 use tvscreener::util::format_value;
-use tvscreener::Result;
 
 fn print_row(index: usize, row: &tvscreener::ScreenerRow, labels: &[&str]) {
     println!("  {}: {}", index, row.symbol);

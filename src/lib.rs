@@ -65,13 +65,13 @@ pub mod tui;
 pub mod util;
 
 pub use beautify::{
-    format_cell, format_cell_for_field, format_rows_table, CellTone, FormattedCell, RowTechMap,
-    TableFormatOptions, DEFAULT_TABLE_MAX_COLUMNS,
+    CellTone, DEFAULT_TABLE_MAX_COLUMNS, FormattedCell, RowTechMap, TableFormatOptions,
+    format_cell, format_cell_for_field, format_rows_table,
 };
 pub use error::{Result, TvscreenerError};
 pub use field::{
-    catalog_len, get_preset, list_fields, list_presets, resolve_field, search_fields, Asset,
-    FieldDef, IndexSymbolDef, Market, NamedValue, RatingBand,
+    Asset, FieldDef, IndexSymbolDef, Market, NamedValue, RatingBand, catalog_len, get_preset,
+    list_fields, list_presets, resolve_field, search_fields,
 };
 pub use filter::{ExtraFilter, FieldCondition, Filter, FilterOperator};
 pub use util::{format_recommendation, format_row, format_value};

@@ -931,15 +931,16 @@ mod tests {
     #[test]
     fn list_presets_includes_crypto_price() {
         let names = list_presets();
-        assert!(names.contains(&"crypto_price".to_string()));
+        assert!(names.iter().any(|name| name == "crypto_price"));
     }
 
     #[test]
     fn search_fields_finds_volume() {
         let hits = search_fields(Asset::Crypto, "volume");
-        assert!(hits
-            .iter()
-            .any(|f| f.field_name.contains("vol") || f.label.contains("Volume")));
+        assert!(
+            hits.iter()
+                .any(|f| f.field_name.contains("vol") || f.label.contains("Volume"))
+        );
     }
 
     #[test]

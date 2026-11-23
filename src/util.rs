@@ -3,8 +3,8 @@
 
 //! URL helpers, request headers, millify, display formatting, and column-name utilities.
 
-use crate::field::FieldDef;
 use crate::ScreenerRow;
+use crate::field::FieldDef;
 use serde_json::Value;
 
 /// Base URL for scan endpoints: `{SCANNER_ORIGIN}/{subtype}/scan`.
@@ -35,7 +35,7 @@ pub fn get_url(subtype: &str) -> String {
 
 /// HTTP headers for `TradingView` scanner POSTs.
 pub fn request_headers() -> reqwest::header::HeaderMap {
-    use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, ORIGIN, REFERER, USER_AGENT};
+    use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGENT};
 
     let mut headers = HeaderMap::new();
     headers.insert(USER_AGENT, HeaderValue::from_static(DEFAULT_USER_AGENT));

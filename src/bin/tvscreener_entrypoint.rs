@@ -6,7 +6,7 @@
 //! Replaces `docker/entrypoint.sh` so the runtime image can be distroless (no `/bin/sh`).
 
 use std::env;
-use std::io::{stdin, stdout, IsTerminal};
+use std::io::{IsTerminal, stdin, stdout};
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
