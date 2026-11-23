@@ -6,7 +6,7 @@
 <a href=#6 id=6 data-nosnippet>6</a>//! Replaces `docker/entrypoint.sh` so the runtime image can be distroless (no `/bin/sh`).
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a></span><span class="kw">use </span>std::env;
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>std::io::{stdin, stdout, IsTerminal};
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>std::io::{IsTerminal, stdin, stdout};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>std::os::unix::process::CommandExt;
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>std::path::{Path, PathBuf};
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>std::process::{Command, Stdio};

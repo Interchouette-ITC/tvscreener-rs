@@ -931,82 +931,83 @@
 <a href=#931 id=931 data-nosnippet>931</a>    <span class="attr">#[test]
 <a href=#932 id=932 data-nosnippet>932</a>    </span><span class="kw">fn </span>list_presets_includes_crypto_price() {
 <a href=#933 id=933 data-nosnippet>933</a>        <span class="kw">let </span>names = list_presets();
-<a href=#934 id=934 data-nosnippet>934</a>        <span class="macro">assert!</span>(names.contains(<span class="kw-2">&amp;</span><span class="string">"crypto_price"</span>.to_string()));
+<a href=#934 id=934 data-nosnippet>934</a>        <span class="macro">assert!</span>(names.iter().any(|name| name == <span class="string">"crypto_price"</span>));
 <a href=#935 id=935 data-nosnippet>935</a>    }
 <a href=#936 id=936 data-nosnippet>936</a>
 <a href=#937 id=937 data-nosnippet>937</a>    <span class="attr">#[test]
 <a href=#938 id=938 data-nosnippet>938</a>    </span><span class="kw">fn </span>search_fields_finds_volume() {
 <a href=#939 id=939 data-nosnippet>939</a>        <span class="kw">let </span>hits = search_fields(Asset::Crypto, <span class="string">"volume"</span>);
-<a href=#940 id=940 data-nosnippet>940</a>        <span class="macro">assert!</span>(hits
-<a href=#941 id=941 data-nosnippet>941</a>            .iter()
-<a href=#942 id=942 data-nosnippet>942</a>            .any(|f| f.field_name.contains(<span class="string">"vol"</span>) || f.label.contains(<span class="string">"Volume"</span>)));
-<a href=#943 id=943 data-nosnippet>943</a>    }
-<a href=#944 id=944 data-nosnippet>944</a>
-<a href=#945 id=945 data-nosnippet>945</a>    <span class="attr">#[test]
-<a href=#946 id=946 data-nosnippet>946</a>    </span><span class="kw">fn </span>full_catalog_is_much_larger_than_defaults() {
-<a href=#947 id=947 data-nosnippet>947</a>        <span class="macro">assert!</span>(catalog_len(Asset::Crypto) &gt; <span class="number">3000</span>);
-<a href=#948 id=948 data-nosnippet>948</a>        <span class="macro">assert!</span>(catalog_len(Asset::Stock) &gt; <span class="number">3000</span>);
-<a href=#949 id=949 data-nosnippet>949</a>        <span class="macro">assert_eq!</span>(list_fields(Asset::Crypto).len(), catalog_len(Asset::Crypto));
-<a href=#950 id=950 data-nosnippet>950</a>        <span class="macro">assert!</span>(default_crypto_fields().len() &lt; catalog_len(Asset::Crypto));
-<a href=#951 id=951 data-nosnippet>951</a>    }
-<a href=#952 id=952 data-nosnippet>952</a>
-<a href=#953 id=953 data-nosnippet>953</a>    <span class="attr">#[test]
-<a href=#954 id=954 data-nosnippet>954</a>    </span><span class="kw">fn </span>index_symbol_sp500_wire_and_catalog() {
-<a href=#955 id=955 data-nosnippet>955</a>        <span class="macro">assert_eq!</span>(index_symbol::SP500, <span class="string">"SP;SPX"</span>);
-<a href=#956 id=956 data-nosnippet>956</a>        <span class="macro">assert_eq!</span>(index_symbol_value(<span class="string">"SP500"</span>), <span class="prelude-val">Some</span>(<span class="string">"SP;SPX"</span>));
-<a href=#957 id=957 data-nosnippet>957</a>        <span class="macro">assert_eq!</span>(to_symbolset_wire(<span class="string">"SP;SPX"</span>), <span class="string">"SYML:SP;SPX"</span>);
-<a href=#958 id=958 data-nosnippet>958</a>        <span class="macro">assert_eq!</span>(to_symbolset_wire(<span class="string">"SYML:SP;SPX"</span>), <span class="string">"SYML:SP;SPX"</span>);
-<a href=#959 id=959 data-nosnippet>959</a>        <span class="macro">assert_eq!</span>(
-<a href=#960 id=960 data-nosnippet>960</a>            all_index_symbols().len(),
-<a href=#961 id=961 data-nosnippet>961</a>            index_symbol::ALL_CONST_NAMES.len()
-<a href=#962 id=962 data-nosnippet>962</a>        );
-<a href=#963 id=963 data-nosnippet>963</a>        <span class="macro">assert!</span>(all_index_symbols().len() &gt;= <span class="number">50</span>);
-<a href=#964 id=964 data-nosnippet>964</a>    }
-<a href=#965 id=965 data-nosnippet>965</a>
-<a href=#966 id=966 data-nosnippet>966</a>    <span class="attr">#[test]
-<a href=#967 id=967 data-nosnippet>967</a>    </span><span class="kw">fn </span>market_america_value() {
-<a href=#968 id=968 data-nosnippet>968</a>        <span class="macro">assert_eq!</span>(Market::america().value, <span class="string">"america"</span>);
-<a href=#969 id=969 data-nosnippet>969</a>    }
-<a href=#970 id=970 data-nosnippet>970</a>
-<a href=#971 id=971 data-nosnippet>971</a>    <span class="attr">#[test]
-<a href=#972 id=972 data-nosnippet>972</a>    </span><span class="kw">fn </span>sector_country_industry_exchange_catalog() {
-<a href=#973 id=973 data-nosnippet>973</a>        <span class="macro">assert_eq!</span>(sector::TECHNOLOGY_SERVICES, <span class="string">"Technology Services"</span>);
-<a href=#974 id=974 data-nosnippet>974</a>        <span class="macro">assert_eq!</span>(
-<a href=#975 id=975 data-nosnippet>975</a>            sector_value(<span class="string">"TECHNOLOGY_SERVICES"</span>),
-<a href=#976 id=976 data-nosnippet>976</a>            <span class="prelude-val">Some</span>(<span class="string">"Technology Services"</span>)
-<a href=#977 id=977 data-nosnippet>977</a>        );
-<a href=#978 id=978 data-nosnippet>978</a>        <span class="macro">assert_eq!</span>(
-<a href=#979 id=979 data-nosnippet>979</a>            resolve_sector(<span class="string">"Technology Services"</span>),
-<a href=#980 id=980 data-nosnippet>980</a>            <span class="prelude-val">Some</span>(<span class="string">"Technology Services"</span>)
-<a href=#981 id=981 data-nosnippet>981</a>        );
-<a href=#982 id=982 data-nosnippet>982</a>        <span class="macro">assert_eq!</span>(all_sectors().len(), sector::ALL_CONST_NAMES.len());
-<a href=#983 id=983 data-nosnippet>983</a>        <span class="macro">assert_eq!</span>(country::UNITED_STATES, <span class="string">"United States"</span>);
-<a href=#984 id=984 data-nosnippet>984</a>        <span class="macro">assert_eq!</span>(resolve_country(<span class="string">"UNITED_STATES"</span>), <span class="prelude-val">Some</span>(<span class="string">"United States"</span>));
-<a href=#985 id=985 data-nosnippet>985</a>        <span class="macro">assert_eq!</span>(resolve_country(<span class="string">"United States"</span>), <span class="prelude-val">Some</span>(<span class="string">"United States"</span>));
-<a href=#986 id=986 data-nosnippet>986</a>        <span class="macro">assert_eq!</span>(all_countries().len(), country::ALL_CONST_NAMES.len());
-<a href=#987 id=987 data-nosnippet>987</a>        <span class="macro">assert_eq!</span>(industry::SEMICONDUCTORS, <span class="string">"Semiconductors"</span>);
-<a href=#988 id=988 data-nosnippet>988</a>        <span class="macro">assert_eq!</span>(resolve_industry(<span class="string">"SEMICONDUCTORS"</span>), <span class="prelude-val">Some</span>(<span class="string">"Semiconductors"</span>));
-<a href=#989 id=989 data-nosnippet>989</a>        <span class="macro">assert_eq!</span>(all_industries().len(), industry::ALL_CONST_NAMES.len());
-<a href=#990 id=990 data-nosnippet>990</a>        <span class="macro">assert_eq!</span>(exchange::NASDAQ, <span class="string">"NASDAQ"</span>);
-<a href=#991 id=991 data-nosnippet>991</a>        <span class="macro">assert_eq!</span>(resolve_exchange(<span class="string">"NASDAQ"</span>), <span class="prelude-val">Some</span>(<span class="string">"NASDAQ"</span>));
-<a href=#992 id=992 data-nosnippet>992</a>        <span class="macro">assert_eq!</span>(all_exchanges().len(), exchange::ALL_CONST_NAMES.len());
-<a href=#993 id=993 data-nosnippet>993</a>        <span class="macro">assert_eq!</span>(all_ratings().len(), rating::ALL_CONST_NAMES.len());
-<a href=#994 id=994 data-nosnippet>994</a>    }
-<a href=#995 id=995 data-nosnippet>995</a>
-<a href=#996 id=996 data-nosnippet>996</a>    <span class="attr">#[test]
-<a href=#997 id=997 data-nosnippet>997</a>    </span><span class="kw">fn </span>rating_find_bands() {
-<a href=#998 id=998 data-nosnippet>998</a>        <span class="macro">assert_eq!</span>(rating_find(<span class="number">0.7</span>).const_name, <span class="string">"STRONG_BUY"</span>);
-<a href=#999 id=999 data-nosnippet>999</a>        <span class="macro">assert_eq!</span>(rating_find(<span class="number">0.0</span>).const_name, <span class="string">"NEUTRAL"</span>);
-<a href=#1000 id=1000 data-nosnippet>1000</a>        <span class="macro">assert_eq!</span>(rating_find(-<span class="number">0.9</span>).const_name, <span class="string">"STRONG_SELL"</span>);
-<a href=#1001 id=1001 data-nosnippet>1001</a>        <span class="macro">assert_eq!</span>(rating_find(f64::NAN).const_name, <span class="string">"UNKNOWN"</span>);
-<a href=#1002 id=1002 data-nosnippet>1002</a>        <span class="macro">assert_eq!</span>(rating(<span class="string">"BUY"</span>).map(|r| r.label), <span class="prelude-val">Some</span>(<span class="string">"Buy"</span>));
-<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="macro">assert_eq!</span>(rating::BUY.range(), <span class="prelude-val">Some</span>([<span class="number">0.1</span>, <span class="number">0.5</span>]));
-<a href=#1004 id=1004 data-nosnippet>1004</a>    }
-<a href=#1005 id=1005 data-nosnippet>1005</a>
-<a href=#1006 id=1006 data-nosnippet>1006</a>    <span class="attr">#[test]
-<a href=#1007 id=1007 data-nosnippet>1007</a>    </span><span class="kw">fn </span>bond_defaults_or_preset_fallback() {
-<a href=#1008 id=1008 data-nosnippet>1008</a>        <span class="kw">let </span>fields = default_bond_fields();
-<a href=#1009 id=1009 data-nosnippet>1009</a>        <span class="macro">assert_ne!</span>(fields.len(), <span class="number">0</span>);
-<a href=#1010 id=1010 data-nosnippet>1010</a>    }
-<a href=#1011 id=1011 data-nosnippet>1011</a>}
+<a href=#940 id=940 data-nosnippet>940</a>        <span class="macro">assert!</span>(
+<a href=#941 id=941 data-nosnippet>941</a>            hits.iter()
+<a href=#942 id=942 data-nosnippet>942</a>                .any(|f| f.field_name.contains(<span class="string">"vol"</span>) || f.label.contains(<span class="string">"Volume"</span>))
+<a href=#943 id=943 data-nosnippet>943</a>        );
+<a href=#944 id=944 data-nosnippet>944</a>    }
+<a href=#945 id=945 data-nosnippet>945</a>
+<a href=#946 id=946 data-nosnippet>946</a>    <span class="attr">#[test]
+<a href=#947 id=947 data-nosnippet>947</a>    </span><span class="kw">fn </span>full_catalog_is_much_larger_than_defaults() {
+<a href=#948 id=948 data-nosnippet>948</a>        <span class="macro">assert!</span>(catalog_len(Asset::Crypto) &gt; <span class="number">3000</span>);
+<a href=#949 id=949 data-nosnippet>949</a>        <span class="macro">assert!</span>(catalog_len(Asset::Stock) &gt; <span class="number">3000</span>);
+<a href=#950 id=950 data-nosnippet>950</a>        <span class="macro">assert_eq!</span>(list_fields(Asset::Crypto).len(), catalog_len(Asset::Crypto));
+<a href=#951 id=951 data-nosnippet>951</a>        <span class="macro">assert!</span>(default_crypto_fields().len() &lt; catalog_len(Asset::Crypto));
+<a href=#952 id=952 data-nosnippet>952</a>    }
+<a href=#953 id=953 data-nosnippet>953</a>
+<a href=#954 id=954 data-nosnippet>954</a>    <span class="attr">#[test]
+<a href=#955 id=955 data-nosnippet>955</a>    </span><span class="kw">fn </span>index_symbol_sp500_wire_and_catalog() {
+<a href=#956 id=956 data-nosnippet>956</a>        <span class="macro">assert_eq!</span>(index_symbol::SP500, <span class="string">"SP;SPX"</span>);
+<a href=#957 id=957 data-nosnippet>957</a>        <span class="macro">assert_eq!</span>(index_symbol_value(<span class="string">"SP500"</span>), <span class="prelude-val">Some</span>(<span class="string">"SP;SPX"</span>));
+<a href=#958 id=958 data-nosnippet>958</a>        <span class="macro">assert_eq!</span>(to_symbolset_wire(<span class="string">"SP;SPX"</span>), <span class="string">"SYML:SP;SPX"</span>);
+<a href=#959 id=959 data-nosnippet>959</a>        <span class="macro">assert_eq!</span>(to_symbolset_wire(<span class="string">"SYML:SP;SPX"</span>), <span class="string">"SYML:SP;SPX"</span>);
+<a href=#960 id=960 data-nosnippet>960</a>        <span class="macro">assert_eq!</span>(
+<a href=#961 id=961 data-nosnippet>961</a>            all_index_symbols().len(),
+<a href=#962 id=962 data-nosnippet>962</a>            index_symbol::ALL_CONST_NAMES.len()
+<a href=#963 id=963 data-nosnippet>963</a>        );
+<a href=#964 id=964 data-nosnippet>964</a>        <span class="macro">assert!</span>(all_index_symbols().len() &gt;= <span class="number">50</span>);
+<a href=#965 id=965 data-nosnippet>965</a>    }
+<a href=#966 id=966 data-nosnippet>966</a>
+<a href=#967 id=967 data-nosnippet>967</a>    <span class="attr">#[test]
+<a href=#968 id=968 data-nosnippet>968</a>    </span><span class="kw">fn </span>market_america_value() {
+<a href=#969 id=969 data-nosnippet>969</a>        <span class="macro">assert_eq!</span>(Market::america().value, <span class="string">"america"</span>);
+<a href=#970 id=970 data-nosnippet>970</a>    }
+<a href=#971 id=971 data-nosnippet>971</a>
+<a href=#972 id=972 data-nosnippet>972</a>    <span class="attr">#[test]
+<a href=#973 id=973 data-nosnippet>973</a>    </span><span class="kw">fn </span>sector_country_industry_exchange_catalog() {
+<a href=#974 id=974 data-nosnippet>974</a>        <span class="macro">assert_eq!</span>(sector::TECHNOLOGY_SERVICES, <span class="string">"Technology Services"</span>);
+<a href=#975 id=975 data-nosnippet>975</a>        <span class="macro">assert_eq!</span>(
+<a href=#976 id=976 data-nosnippet>976</a>            sector_value(<span class="string">"TECHNOLOGY_SERVICES"</span>),
+<a href=#977 id=977 data-nosnippet>977</a>            <span class="prelude-val">Some</span>(<span class="string">"Technology Services"</span>)
+<a href=#978 id=978 data-nosnippet>978</a>        );
+<a href=#979 id=979 data-nosnippet>979</a>        <span class="macro">assert_eq!</span>(
+<a href=#980 id=980 data-nosnippet>980</a>            resolve_sector(<span class="string">"Technology Services"</span>),
+<a href=#981 id=981 data-nosnippet>981</a>            <span class="prelude-val">Some</span>(<span class="string">"Technology Services"</span>)
+<a href=#982 id=982 data-nosnippet>982</a>        );
+<a href=#983 id=983 data-nosnippet>983</a>        <span class="macro">assert_eq!</span>(all_sectors().len(), sector::ALL_CONST_NAMES.len());
+<a href=#984 id=984 data-nosnippet>984</a>        <span class="macro">assert_eq!</span>(country::UNITED_STATES, <span class="string">"United States"</span>);
+<a href=#985 id=985 data-nosnippet>985</a>        <span class="macro">assert_eq!</span>(resolve_country(<span class="string">"UNITED_STATES"</span>), <span class="prelude-val">Some</span>(<span class="string">"United States"</span>));
+<a href=#986 id=986 data-nosnippet>986</a>        <span class="macro">assert_eq!</span>(resolve_country(<span class="string">"United States"</span>), <span class="prelude-val">Some</span>(<span class="string">"United States"</span>));
+<a href=#987 id=987 data-nosnippet>987</a>        <span class="macro">assert_eq!</span>(all_countries().len(), country::ALL_CONST_NAMES.len());
+<a href=#988 id=988 data-nosnippet>988</a>        <span class="macro">assert_eq!</span>(industry::SEMICONDUCTORS, <span class="string">"Semiconductors"</span>);
+<a href=#989 id=989 data-nosnippet>989</a>        <span class="macro">assert_eq!</span>(resolve_industry(<span class="string">"SEMICONDUCTORS"</span>), <span class="prelude-val">Some</span>(<span class="string">"Semiconductors"</span>));
+<a href=#990 id=990 data-nosnippet>990</a>        <span class="macro">assert_eq!</span>(all_industries().len(), industry::ALL_CONST_NAMES.len());
+<a href=#991 id=991 data-nosnippet>991</a>        <span class="macro">assert_eq!</span>(exchange::NASDAQ, <span class="string">"NASDAQ"</span>);
+<a href=#992 id=992 data-nosnippet>992</a>        <span class="macro">assert_eq!</span>(resolve_exchange(<span class="string">"NASDAQ"</span>), <span class="prelude-val">Some</span>(<span class="string">"NASDAQ"</span>));
+<a href=#993 id=993 data-nosnippet>993</a>        <span class="macro">assert_eq!</span>(all_exchanges().len(), exchange::ALL_CONST_NAMES.len());
+<a href=#994 id=994 data-nosnippet>994</a>        <span class="macro">assert_eq!</span>(all_ratings().len(), rating::ALL_CONST_NAMES.len());
+<a href=#995 id=995 data-nosnippet>995</a>    }
+<a href=#996 id=996 data-nosnippet>996</a>
+<a href=#997 id=997 data-nosnippet>997</a>    <span class="attr">#[test]
+<a href=#998 id=998 data-nosnippet>998</a>    </span><span class="kw">fn </span>rating_find_bands() {
+<a href=#999 id=999 data-nosnippet>999</a>        <span class="macro">assert_eq!</span>(rating_find(<span class="number">0.7</span>).const_name, <span class="string">"STRONG_BUY"</span>);
+<a href=#1000 id=1000 data-nosnippet>1000</a>        <span class="macro">assert_eq!</span>(rating_find(<span class="number">0.0</span>).const_name, <span class="string">"NEUTRAL"</span>);
+<a href=#1001 id=1001 data-nosnippet>1001</a>        <span class="macro">assert_eq!</span>(rating_find(-<span class="number">0.9</span>).const_name, <span class="string">"STRONG_SELL"</span>);
+<a href=#1002 id=1002 data-nosnippet>1002</a>        <span class="macro">assert_eq!</span>(rating_find(f64::NAN).const_name, <span class="string">"UNKNOWN"</span>);
+<a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="macro">assert_eq!</span>(rating(<span class="string">"BUY"</span>).map(|r| r.label), <span class="prelude-val">Some</span>(<span class="string">"Buy"</span>));
+<a href=#1004 id=1004 data-nosnippet>1004</a>        <span class="macro">assert_eq!</span>(rating::BUY.range(), <span class="prelude-val">Some</span>([<span class="number">0.1</span>, <span class="number">0.5</span>]));
+<a href=#1005 id=1005 data-nosnippet>1005</a>    }
+<a href=#1006 id=1006 data-nosnippet>1006</a>
+<a href=#1007 id=1007 data-nosnippet>1007</a>    <span class="attr">#[test]
+<a href=#1008 id=1008 data-nosnippet>1008</a>    </span><span class="kw">fn </span>bond_defaults_or_preset_fallback() {
+<a href=#1009 id=1009 data-nosnippet>1009</a>        <span class="kw">let </span>fields = default_bond_fields();
+<a href=#1010 id=1010 data-nosnippet>1010</a>        <span class="macro">assert_ne!</span>(fields.len(), <span class="number">0</span>);
+<a href=#1011 id=1011 data-nosnippet>1011</a>    }
+<a href=#1012 id=1012 data-nosnippet>1012</a>}
 </code></pre></div></section></main></body></html>

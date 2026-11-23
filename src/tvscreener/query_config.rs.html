@@ -5,9 +5,9 @@
 <a href=#5 id=5 data-nosnippet>5</a>
 <a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">use </span><span class="kw">crate</span>::core::Screener;
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::error::{<span class="prelude-ty">Result</span>, TvscreenerError};
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::field::{resolve_field, Asset, FieldDef};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::field::{Asset, FieldDef, resolve_field};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::filter::{FieldCondition, FilterOperator};
-<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>serde_json::{json, Value};
+<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>serde_json::{Value, json};
 <a href=#11 id=11 data-nosnippet>11</a>
 <a href=#12 id=12 data-nosnippet>12</a><span class="doccomment">/// Resolves a field const / technical / label name for `asset`.
 <a href=#13 id=13 data-nosnippet>13</a>///
@@ -282,19 +282,23 @@
 <a href=#282 id=282 data-nosnippet>282</a>        apply_filters(<span class="kw-2">&amp;mut </span>s, Asset::Stock, <span class="kw-2">&amp;</span>[cond]).expect(<span class="string">"apply"</span>);
 <a href=#283 id=283 data-nosnippet>283</a>        <span class="kw">let </span>payload = s.build_payload().expect(<span class="string">"payload"</span>);
 <a href=#284 id=284 data-nosnippet>284</a>        <span class="kw">let </span>filters = payload[<span class="string">"filter"</span>].as_array().expect(<span class="string">"filters"</span>);
-<a href=#285 id=285 data-nosnippet>285</a>        <span class="macro">assert!</span>(filters
-<a href=#286 id=286 data-nosnippet>286</a>            .iter()
-<a href=#287 id=287 data-nosnippet>287</a>            .any(|f| f[<span class="string">"left"</span>] == <span class="string">"close" </span>&amp;&amp; f[<span class="string">"operation"</span>] == <span class="string">"greater"</span>));
-<a href=#288 id=288 data-nosnippet>288</a>
-<a href=#289 id=289 data-nosnippet>289</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = Screener::new(<span class="string">"stock"</span>);
-<a href=#290 id=290 data-nosnippet>290</a>        s.select([name]);
-<a href=#291 id=291 data-nosnippet>291</a>        <span class="kw">let </span>list = parse_filters_json(<span class="string">r#"[{"field":"close","op":"&gt;","value":100}]"#</span>).expect(<span class="string">"json"</span>);
-<a href=#292 id=292 data-nosnippet>292</a>        apply_filters_json(<span class="kw-2">&amp;mut </span>s, Asset::Stock, <span class="kw-2">&amp;</span>list).expect(<span class="string">"apply json"</span>);
-<a href=#293 id=293 data-nosnippet>293</a>        <span class="kw">let </span>payload = s.build_payload().expect(<span class="string">"payload"</span>);
-<a href=#294 id=294 data-nosnippet>294</a>        <span class="kw">let </span>filters = payload[<span class="string">"filter"</span>].as_array().expect(<span class="string">"filters"</span>);
-<a href=#295 id=295 data-nosnippet>295</a>        <span class="macro">assert!</span>(filters
-<a href=#296 id=296 data-nosnippet>296</a>            .iter()
-<a href=#297 id=297 data-nosnippet>297</a>            .any(|f| f[<span class="string">"left"</span>] == <span class="string">"close" </span>&amp;&amp; f[<span class="string">"operation"</span>] == <span class="string">"greater"</span>));
-<a href=#298 id=298 data-nosnippet>298</a>    }
-<a href=#299 id=299 data-nosnippet>299</a>}
+<a href=#285 id=285 data-nosnippet>285</a>        <span class="macro">assert!</span>(
+<a href=#286 id=286 data-nosnippet>286</a>            filters
+<a href=#287 id=287 data-nosnippet>287</a>                .iter()
+<a href=#288 id=288 data-nosnippet>288</a>                .any(|f| f[<span class="string">"left"</span>] == <span class="string">"close" </span>&amp;&amp; f[<span class="string">"operation"</span>] == <span class="string">"greater"</span>)
+<a href=#289 id=289 data-nosnippet>289</a>        );
+<a href=#290 id=290 data-nosnippet>290</a>
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = Screener::new(<span class="string">"stock"</span>);
+<a href=#292 id=292 data-nosnippet>292</a>        s.select([name]);
+<a href=#293 id=293 data-nosnippet>293</a>        <span class="kw">let </span>list = parse_filters_json(<span class="string">r#"[{"field":"close","op":"&gt;","value":100}]"#</span>).expect(<span class="string">"json"</span>);
+<a href=#294 id=294 data-nosnippet>294</a>        apply_filters_json(<span class="kw-2">&amp;mut </span>s, Asset::Stock, <span class="kw-2">&amp;</span>list).expect(<span class="string">"apply json"</span>);
+<a href=#295 id=295 data-nosnippet>295</a>        <span class="kw">let </span>payload = s.build_payload().expect(<span class="string">"payload"</span>);
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">let </span>filters = payload[<span class="string">"filter"</span>].as_array().expect(<span class="string">"filters"</span>);
+<a href=#297 id=297 data-nosnippet>297</a>        <span class="macro">assert!</span>(
+<a href=#298 id=298 data-nosnippet>298</a>            filters
+<a href=#299 id=299 data-nosnippet>299</a>                .iter()
+<a href=#300 id=300 data-nosnippet>300</a>                .any(|f| f[<span class="string">"left"</span>] == <span class="string">"close" </span>&amp;&amp; f[<span class="string">"operation"</span>] == <span class="string">"greater"</span>)
+<a href=#301 id=301 data-nosnippet>301</a>        );
+<a href=#302 id=302 data-nosnippet>302</a>    }
+<a href=#303 id=303 data-nosnippet>303</a>}
 </code></pre></div></section></main></body></html>
